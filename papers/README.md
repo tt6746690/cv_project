@@ -127,6 +127,31 @@
 ### Structured Light
 
 
+##### Structured light Q&A
+
++ phase shifting
+    + algorithm for determining correspondence of the different phases
++ terminology 
+    + spatial sinusoids
+        + black stripes have intensity of 1 and white stripes have intensity of 0 and they corresponds to spatial sinusoids
+    + frequency
+        + 1 pattern with varying width column stripes 
+    + shift N times
+        + 1 pattern that is shifted by some N times, each by amount of phase
+    + phase
+        + each phase corresponds to a column stripe in a spatial sinusoids
++ where did the formula relating intensity and amplitude, offset, phase changes are ?
+    + https://en.wikipedia.org/wiki/Phase_(waves)#Phase_shift
++ phase wrapping/unwrapping from interferometry paper (relation to phase shifting)
++ what is light transport coefficient a_{qc}
+    + describes intensity of reflected light from point q that is received by point c?
++ why amplitude is a function of both frequency and amount of defocus?
++ why higher mean frequency -> resistance to global illumination
++ why frequency measured with respect to pixels
+    + spatial frequency ?
+    + w = 16 pixel period means how many 16 pixel in the image
+
+
 + [1991_automatic_processing_of_fringe_pattern_in_interger_interferometers](1991_automatic_processing_of_fringe_pattern_in_interger_interferometers.pdf)
     + original paper explaining micro-phasing theory
     + goal
@@ -428,7 +453,21 @@
             + so might not be the most feasible ....
         + relating to the project
             + 
-            
+
+
+
+
+#### Demosaiking reviews
+
++ [2005_demosaicking_color_filter_array_interpolation](2005_demosaicking_color_filter_array_interpolation.pdf)
+    + 
+
++ [2008_image_demosaicing_a_systematic_survey.pdf](2008_image_demosaicing_a_systematic_survey.pdf)
+    + 
+
++ [2011_color_image_demosaicking_an_overview](2011_color_image_demosaicking_an_overview.pdf)
+    + 
+
 
 
 ##### In-painting
@@ -438,47 +477,3 @@
     + problem
 
         + estimating missing regions in an image (in-painting)
-
-### Questions
-
-
-##### Structured light
-
-+ phase shifting
-    + algorithm for determining correspondence of the different phases
-+ terminology 
-    + spatial sinusoids
-        + black stripes have intensity of 1 and white stripes have intensity of 0 and they corresponds to spatial sinusoids
-    + frequency
-        + 1 pattern with varying width column stripes 
-    + shift N times
-        + 1 pattern that is shifted by some N times, each by amount of phase
-    + phase
-        + each phase corresponds to a column stripe in a spatial sinusoids
-+ where did the formula relating intensity and amplitude, offset, phase changes are ?
-    + https://en.wikipedia.org/wiki/Phase_(waves)#Phase_shift
-+ phase wrapping/unwrapping from interferometry paper (relation to phase shifting)
-+ what is light transport coefficient a_{qc}
-    + describes intensity of reflected light from point q that is received by point c?
-+ why amplitude is a function of both frequency and amount of defocus?
-+ why higher mean frequency -> resistance to global illumination
-+ why frequency measured with respect to pixels
-    + spatial frequency ?
-    + w = 16 pixel period means how many 16 pixel in the image
-
-
-todo
-+ approaches
-    + increase number of projections
-        + 5 pattern can still be embed in 4 pixels
-        + adapting demosaicing
-
-
-+ each illumination pixel is a vector of size #pattern
-+ also true for camera pixel
-
-
-##### Demosaicing
-
-+ 
-
