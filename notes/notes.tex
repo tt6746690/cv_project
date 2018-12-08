@@ -117,9 +117,28 @@
     \item \textbf{sequential demosaicing methods} 
     \begin{itemize}
         \item \textbf{idea} luminance (G) channel is less alised than the other two (B,R). Idea is to interpolate $G$ channels first then interpolate the other two.
+        \item \textbf{luminance (green) channel interpolation} with heuristic edge-directed interpolation methods in the frequency domain. Or recovering in the frequency domain.
+        \item \textbf{chrominance (red/blue) channel interpolation} based on assumption that hue (color ratios or differences) is constant wihtin boundary of objects. This assumption works less well for higher quality dataset. 
+        \item \textbf{refinement techniques} used to mediate artifacts (false color, zipper, etc.). Median filtering, etc.
+        \item \textbf{problems} errors rendered during interpolation of luminance (G) channel is propagated to the chrominance channels. This can be alleviated by iterative optimization.
+    \end{itemize}
+    \item \textbf{learning-based methods} learn the relationship between CFA pattern and the surrounding pixels.
+    \item \textbf{performance evaluation}
+    \begin{itemize}
+        \item mean squared error (MSE) or equivalently peak signal to noise ratio (PSNR) 
+        \item mean absolute difference (MAD) and normalized color difference (NCD)
+        \item euclidean distance in perceptually uniform CIELab spaces and s-CIELab
+    \end{itemize}
+    \item \textbf{experimental results}
+    \begin{itemize}
+        \item 11 inter-channel demosaicing algorithms
+        \item 2 benchmark dataset: KodaK PhotoCD (512$\times$768) and IMAX high-quality imamges (4M)
+        \item 2 metrics: PSNR and S-CIELab meeasure.
+        \item take away: important to jointly exploiting spatial and spectral correlations for images with high saturation and varying-hue.
+        \item good algorithms: variance color-difference (VCD)$^9$, directional minimum mean squared-error estimation (DLMMSE)$^{79}$, local polynomial approximation (LPA)$^{61}$
     \end{itemize}
 \end{itemize}
-
+ 
 
 
 \end{document}

@@ -469,7 +469,10 @@
 + [2008_image_demosaicing_a_systematic_survey.pdf](2008_image_demosaicing_a_systematic_survey.pdf)
     + points
         + have problem understanding signal processing stuff.
-        + dont really understand frequency domain formulation
+        + dont really understand frequency domain formulation, i.e. figure 3
+    + relating to the project
+        + sequential demosaicing methods: interpolate G channel first then R,B channels. Reduced aliasing because G is sampled more frequently. 
+            + not applicable to our project, since there is no channel that is sampled more. So cannot exploit this particular aspect.
 
 + [2011_color_image_demosaicking_an_overview](2011_color_image_demosaicking_an_overview.pdf)
     + 
