@@ -1,6 +1,6 @@
 
 
-##### General Idea
+#### General Idea
 
 todo
 + approaches
@@ -10,7 +10,7 @@ todo
 + each illumination pixel is a vector of size #pattern
 + also true for camera pixel
 
-##### Nov 9 meeting with Mian/kyros
+#### Nov 9 meeting with Mian/kyros
 
 + what was tried before
     + linear interpolation from matlab `demosaic`

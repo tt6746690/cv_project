@@ -452,18 +452,24 @@
             + although training would take days and weeks, and input dataset is not as abundant. 
             + so might not be the most feasible ....
         + relating to the project
-            + 
-
-
 
 
 #### Demosaiking reviews
 
 + [2005_demosaicking_color_filter_array_interpolation](2005_demosaicking_color_filter_array_interpolation.pdf)
-    + 
+    + a survey of heuristic-based, reconstruction-based, image model based interpolation techniques for bayer color filter array (CFA)
+    + metrics
+        + MSE
+        + S-CIELAB, measures color reconstruction accuracy in a uniform color space
+        + subjective assessment of aliasing
+    + interesting points
+        + assumptions and heuritstics
+            + constant-hue ... 
 
 + [2008_image_demosaicing_a_systematic_survey.pdf](2008_image_demosaicing_a_systematic_survey.pdf)
-    + 
+    + points
+        + have problem understanding signal processing stuff.
+        + dont really understand frequency domain formulation
 
 + [2011_color_image_demosaicking_an_overview](2011_color_image_demosaicking_an_overview.pdf)
     + 
