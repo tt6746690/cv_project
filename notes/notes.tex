@@ -6,7 +6,7 @@
 
 % arg1=pdfurl arg2=pagenum arg3=text
 \newcommand{\linkpaper}[3][.]{
-    \noindent\href[page=#2]{#1}{\uscore{#3}} \\
+    \noindent\href[page=#2]{#1}{\uscore{#3}}
 } 
 \newcommand{\bx}{\mathbf{x}}
 \renewcommand{\argmax}{\arg\!\max}
@@ -16,8 +16,12 @@
 
 \begin{document}
 
+\tableofcontents
+\newpage
 
-\subsection*{
+\section{Color CFA Demosaicing}
+
+\subsection{
     \linkpaper[../papers/2005_demosaicking_color_filter_array_interpolation.pdf]{1}{2005_demosaicking_color_filter_array_interpolation}
 }
 
@@ -79,7 +83,7 @@
 \end{itemize}
 
 
-\subsection*{
+\subsection{
     \linkpaper[../papers/2008_image_demosaicing_a_systematic_survey.pdf]{1}{2008_image_demosaicing_a_systematic_survey}
 }
 
@@ -131,14 +135,82 @@
     \end{itemize}
     \item \textbf{experimental results}
     \begin{itemize}
-        \item 11 inter-channel demosaicing algorithms
-        \item 2 benchmark dataset: KodaK PhotoCD (512$\times$768) and IMAX high-quality imamges (4M)
-        \item 2 metrics: PSNR and S-CIELab meeasure.
-        \item take away: important to jointly exploiting spatial and spectral correlations for images with high saturation and varying-hue.
-        \item good algorithms: variance color-difference (VCD)$^9$, directional minimum mean squared-error estimation (DLMMSE)$^{79}$, local polynomial approximation (LPA)$^{61}$
+        \item 11 inter-channel demosaicing algorithms \linkpaper[../papers/2008_image_demosaicing_a_systematic_survey.pdf]{13}{references}
+        \begin{center}
+            \includegraphics[width=0.8\textwidth]{images/2008_survey_1.png}
+        \end{center}
+        \item 2 benchmark dataset: KodaK PhotoCD (512$\times$768) and IMAX high-quality images (4M)
+        \item 2 metrics: PSNR and S-CIELab measure.
+        \item take away: important to jointly exploiting spatial and spectral correlations for images with high saturation and varying-hue. Constant-hue assumption fails for algorithms that rely on them, and so performs worse on the more difficult IMAX image dataset. Also the performance are quite good close to each other.
+        \item For Kodak dataset 
+        \begin{itemize}
+            \item 2006 Color demosaicing using variance of color differences.
+            \item 2005 Color demosaicking via directional linear minimum mean square-error estimation.
+            \item 2007 Spatially adaptive color filter array interpolation for noiseless and noisy data.
+        \end{itemize}
+        \item For IMAX dataset, constant-hue assumption breaks down ...
+        \begin{itemize}
+            \item 2001 New edge directed interpolation (NEDI: intra-channel approach)
+            \item 2007 Adaptive filtering for color filter array demosaicking.
+        \end{itemize}
     \end{itemize}
 \end{itemize}
  
+\subsection{
+    \linkpaper[../papers/2011_color_image_demosaicking_an_overview.pdf]{1}{2011_color_image_demosaicking_an_overview}
+}
+
+\begin{itemize}
+    \item \textbf{heuristic methods} assumes hue is smoother than color within boundaries. So interpolate G channel first, then recosntruct R, B by interpolation of color ratio/differences. Adaptive methods based on first determine the direction for interpolation to avoid interpolating cross edges.
+    \item \textbf{directional interpolation} interpolate along vertical and horizontal directions, and pick the better one a posteriori.
+    \item \textbf{frequency domain} 
+    \item \textbf{Quality Assessment}
+    \begin{itemize}
+        \item \textbf{means square error (MSE)}
+        \[
+            MSE(X) = \frac{1}{N_1 N_2} \sum_{n_1=1}^{N_1} \sum_{n_2=1}^{N_2} 
+            \left(
+                \hat{X}(n_1, n_2) - X(n_1, n_2)
+            \right)^2
+            \qquad
+            X \in \{R, G, B\}
+        \]
+        where $X$ represent each of 3 color channels. 
+        \item \textbf{(color) peak Signal-to-noise ratio (CPSNR)}
+        \[
+            CPSNR = 10 \log_{10} \frac{255^2}{\frac{1}{3} \sum_{X\in \{R,G,B\}} MSE(X)}
+        \]
+        \item \textbf{S-CIELAB} quantify performance catered to human percecption 
+        \item \textbf{visual inspection} in detailed regions
+    \end{itemize}
+    \item \textbf{Results} 19, 38, 75 has good performance. Good performance from directional approaches. Good to analyze dmosaiking jointly with zooming, denoising, super-resolution. 
+    \begin{itemize}
+        \item 19: 2006 Color demosaicing using variance of color differences. (good PSNR, good S-CIELAB, almost no zipper)
+        \item 38: 2007 Demosaicing based on wavelet analysis of the luminance component. 
+        \item 75: 2008 Sparse representation for color image restoration 
+    \end{itemize}
+\end{itemize}
+
+
+
+\section{Related to the project}
+
+\subsection{
+    \linkpaper[../papers/2018_coded_two_bucket_cameras_for_computer_vision.pdf]{1}{2018_coded_two_bucket_cameras_for_computer_vision}
+}
+
+
+\begin{itemize}
+    \item \textbf{abstract} 
+\end{itemize}
+
+
+\section{Terminologies}
+
+\begin{enumerate}
+    \item \textbf{photometric stereo} \href{https://en.wikipedia.org/wiki/Photometric_stereo}{wiki} technique for estimating surface normal by observing objects under different lighting conditions
+    \item \textbf{albedo} \href{https://en.wikipedia.org/wiki/Albedo}{wiki} is the measure of the diffuse reflection of solar radiation out of the total solar radiation received by an astronomical body, scales from 0 (absorbs all light) to 1 (reflects all light).
+\end{enumerate}
 
 
 \end{document}
