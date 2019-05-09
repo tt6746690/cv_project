@@ -62,7 +62,19 @@
 
 
 + [2006_color_demosaicing_using_variance_of_color_differences](2006_color_demosaicing_using_variance_of_color_differences.pdf)
-    + 
+    + abstract
+        + missing green first estimated based on variances of color dfferences alone edge directions, missing red/blue estimated based on interpolated green plane
+        + goodness
+            + preserves textures details, reduce color artifacts
+    + previously 
+        + (ACPI) adaptive color plane interpolation
+            + a base method
+            + extensions
+                + (PCSD) same interpolation direction for each color component of a pixel reduces color artifacts 
+                + (AHDDA) local homogeneity as indicator to pick direction for interpolation
+        + ACPI
+            + steps
+                + interpolate green along direction of smallest gradient
 
             
 + [2014_rethinking_color_cameras](2014_rethinking_color_cameras.pdf)
@@ -151,7 +163,14 @@
             + no color captured in sparse locations?
             + so what is the take-away idea from this paper?
 
+### Joint demosaicing and denoising
+
++ [2013_joint_demosacing_and_denoising_via_learned_nonparametric_random_fields](2013_joint_demosacing_and_denoising_via_learned_nonparametric_random_fields.pdf)
+    + 
+
+
 + [2016_deep_joint_demosaicking_and_denoising](2016_deep_joint_demosaicking_and_denoising.pdf)
+    + slides (https://groups.csail.mit.edu/graphics/demosaicnet/data/demosaicnet_slides.pdf)
     + idea
         + train deep learning model on LARGE datasets (including hard cases) that does demosaicking and denoising jointly, exploiting regularities in natural images
     + challenges
@@ -230,6 +249,10 @@
             + so might not be the most feasible ....
         + relating to the project
 
++ [2018_deep_image_demosaicking_using_a_cascade_of_convolutional_residual_denoising_networks](2018_deep_image_demosaicking_using_a_cascade_of_convolutional_residual_denoising_networks.pdf)
+    + basically 2016 paper but extended with majority maximization ...
+
++ [2018_deep_residual_network_for_joint_demosaicing_and_superresolution](2018_deep_residual_network_for_joint_demosaicing_and_superresolution.pdf)
 
 ### Demosaicing reviews
 

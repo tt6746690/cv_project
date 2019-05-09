@@ -28,7 +28,7 @@
 ## Questions
 
 
-+ demosaicing thoughts
++ demosaicing 
     + _assorted pixels_: 
         + exploits: {intra,inter}-channel redundancies
         + model: lower order polynomial of nearby pixel/channel intensities
@@ -42,10 +42,9 @@
             + RGB imaging: minimize a function that captures 1) spatial smoothness 2) color correlation (constant hue assumption)
                 + sequential demosaicing: as G sampled 2x than R,B, interpolate G first, then compute R,B with constant hue assumption
         + _learning-based methods_
-
-    + constant hue assumption 
++ constant hue assumption 
         + is valid for multispectral imaging, since all C2B camera doing is spatially sampling view of the scene under different illumination conditions. For the setting of {R,G,B} imaging, methods like assorted pixels, etc. (that exploit the constant hue assumption) definitely an improvement over the existing interpolation schemes. 
-        + for downstream reconstruction tasks like, structured light, photometric stereo, etc. would not expect methods that exploits this assumption to work
+        + for downstream reconstruction tasks like, structured light, photometric stereo, etc. would not expect methods that exploits this assumption to work. Inter-channel correlation is low locally, so methods like bicubic interpolation (that works independently on each channel) might be best it can be. However, for structured light, illumination patterns are shifted spatially, so color intensities might correlate cross-channel but at some spatial offset. 
 + feasibility
     + datasets (some demosaicing methods are data-driven, i.e. assorted pixels)
         + full-res ground truth image, downsampled to fit the resolution of spatial sampling, train a model to minimize some reconstruction error
@@ -53,7 +52,11 @@
             + take S number of photos, fixed illumination for 1 frame, light all go to bucket1 ... 
             + each of S frames is ground truth for that channel
         + size:
-            + number of images relatively small
-            + but lots of patches in them, so ...
+            + simpler models: number of images relatively small
+            + deep nets: mined from Flickr, not really applicable in this case (simulated images? )
 + todo
     + might be good to generate some datasets ...
+
+
+
++ near infrared 750-950 demosaicing
