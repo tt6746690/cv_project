@@ -16,7 +16,6 @@
                 + potential for different tiles (4x4 -> recover 16 frames)
 
 
-
 ### Points
 
 + What metrics used in demosaicking papers ?

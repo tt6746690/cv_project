@@ -76,6 +76,9 @@
             + steps
                 + interpolate green along direction of smallest gradient
 
++ [2011_malvar_he_cutler_lienar_image_demosaicking](2011_malvar_he_cutler_lienar_image_demosaicking.pdf)
+    + method used by opencv `demosaic`: https://docs.opencv.org/3.4/db/d8c/group__cudaimgproc__color.html
+
             
 + [2014_rethinking_color_cameras](2014_rethinking_color_cameras.pdf)
     + traditionally

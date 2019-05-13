@@ -1,8 +1,4 @@
-
-darpademo/
-softwares/
-masks/
-
+data/*
 
 *.aux
 *.fdb_latexmk
@@ -11,7 +7,7 @@ masks/
 *.out
 *.synctex.gz
 
-
 *.pyc
+__pycache__
 
-.ipynb_checkpoints/*
+.ipynb_checkpoints

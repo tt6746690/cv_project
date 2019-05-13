@@ -4,4 +4,5 @@ dependencies:
     - opencv
     - matplotlib
     - numpy
+    - jupyter
     - nb_conda
