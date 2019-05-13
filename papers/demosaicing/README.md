@@ -163,11 +163,15 @@
             + no color captured in sparse locations?
             + so what is the take-away idea from this paper?
 
++ [2014_flexISP_a_flexible_camera_image_processing_framework](2014_flexISP_a_flexible_camera_image_processing_framework.pdf)
+
+
+
+
 ### Joint demosaicing and denoising
 
 + [2013_joint_demosacing_and_denoising_via_learned_nonparametric_random_fields](2013_joint_demosacing_and_denoising_via_learned_nonparametric_random_fields.pdf)
     + 
-
 
 + [2016_deep_joint_demosaicking_and_denoising](2016_deep_joint_demosaicking_and_denoising.pdf)
     + slides (https://groups.csail.mit.edu/graphics/demosaicnet/data/demosaicnet_slides.pdf)
@@ -248,6 +252,9 @@
             + although training would take days and weeks, and input dataset is not as abundant. 
             + so might not be the most feasible ....
         + relating to the project
+
++ [2017_joint_demosaicing_and_denoising_of_nioisy_bayer_images_with_ADMM](2017_joint_demosaicing_and_denoising_of_nioisy_bayer_images_with_ADMM.pdf)
+    + codebase: https://github.com/TomHeaven/Joint-Demosaic-and-Denoising-with-ADMM
 
 + [2018_deep_image_demosaicking_using_a_cascade_of_convolutional_residual_denoising_networks](2018_deep_image_demosaicking_using_a_cascade_of_convolutional_residual_denoising_networks.pdf)
     + basically 2016 paper but extended with majority maximization ...

@@ -1,0 +1,7 @@
+name: cv_project
+dependencies:
+    - python=3.7
+    - opencv
+    - matplotlib
+    - numpy
+    - nb_conda

@@ -1,4 +1,20 @@
 
+
+
+```
+# python-opencv tutorial
+https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_tutorials.html
+
+# conda env support in jupyter notebook
+conda install nb_conda
+
+# select conda env for jupyter notebook
+conda env create -f cv_project.yml
+conda activate cv_project
+```
+
+
+
 ## Todo
 
 + project
@@ -57,6 +73,3 @@
 + todo
     + might be good to generate some datasets ...
 
-
-
-+ near infrared 750-950 demosaicing

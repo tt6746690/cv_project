@@ -10,3 +10,8 @@ masks/
 *.log
 *.out
 *.synctex.gz
+
+
+*.pyc
+
+.ipynb_checkpoints/*
