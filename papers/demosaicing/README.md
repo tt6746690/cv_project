@@ -11,6 +11,32 @@
     + original method that 
         + bilinear interpolate G channel
         + constant-hue assumption: interpolate R,B to maintain constant chrominance
+    + intro
+        + green is representative of luminance (response curve peaks ~550nm)
+        + linear interpolation fails at edges
+        + performance metrics
+            + MSE in RBB color space
+            + delta E error in CIELAB color space
+        + imaging model 
+            + locally, red/blue perfectly correlated with green over a small neighborhood and differ from green by only an offset
+                + `G_ij = R_ij + k`
+        + constant hue assumption
+            + hue: the he degree to which a stimulus can be described as similar to or different from stimuli that are described as red, green, blue, and yellow
+            + chrominance: red, blue
+            + lumimnance: green
+            + hue
+                + `R/G, B/G`
+                + allowed to change gradually (reduce color fringe)
+            + if constant hue
+                + `R_ij / R_kl = G_ij / G_kl` 
+                    + ratio `log(A/B)=logA-logB`, since exposure is logarithmic
+                + known R_ij, G_ij as measured values, G_lk is interpolated
+                    + the missing chrominance `R_kl = G_kl (R_ij / G_ij)`
+        + idea
+            + interpolate G using bilinear interpolation
+            + compute hue in R,B (`R<-R/G, B<-B/G`)
+            + interpolate hue in R,B with bilinear interpolation
+            + determine chrominance (B,R) from hue (`R = hue[0]*G`)
 
 
 + [2003_enhancing_resolution_along_multiple_imaging_dimensions_using_assorted_pixels](2003_enhancing_resolution_along_multiple_imaging_dimensions_using_assorted_pixels.pdf)

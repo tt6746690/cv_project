@@ -11,6 +11,7 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
 
 + opencv
     + https://docs.opencv.org/3.1.0/d7/d1b/group__imgproc__misc.html#gga4e0972be5de079fed4e3a10e24ef5ef0a8945844ab075687f4d4196abe1ce0db4
+        + bilinear
         + variable number of gradients
         + Edge-Aware Demosaicing.
 
@@ -38,3 +39,11 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
 
 + 2018 Deep Joint Design of Color Filter Arrays and Demosaicing
     + https://github.com/bernardohenz/deep_joint_design_cfa_demosaicing
+
+
+## Python
+
+
++ type hints: https://docs.python.org/3/library/typing.html
++ python3 upgrades: https://github.com/arogozhnikov/python3_with_pleasure
+

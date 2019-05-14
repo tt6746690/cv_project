@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import cv2 as cv
 import numpy as np
 
@@ -7,7 +9,7 @@ import numpy as np
 #    R  G
 #    G  B
 # 
-def bayer_idx(shape):
+def bayer_idx(shape: Tuple[int,int]) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     assert(len(shape) == 2)
     assert(all(np.array(shape) % 2 == np.zeros(2)))
 
@@ -30,7 +32,7 @@ def bayer_idx(shape):
     
 # Get masks for bayer mosaics,
 #     where `shape` is a 2-tuple
-def bayer_mask(shape):
+def bayer_mask(shape: Tuple[int,int]) -> np.ndarray:
     B_idx, G_idx, R_idx = bayer_idx(shape)
     mask = np.zeros((*shape, 3), dtype=np.uint8)
 
@@ -43,7 +45,7 @@ def bayer_mask(shape):
     
 # Downsampling `img` according to `RGGB` pattern
 # 
-def bayer_downsample(img):
+def bayer_downsample(img: np.ndarray) -> np.ndarray:
     mask = bayer_mask(img.shape[:2])
     c = img * mask
     return c

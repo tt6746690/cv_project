@@ -38,11 +38,17 @@ conda activate cv_project
 ## Random
 
 + can do hrdr with 2-bit camera as well
++ for c2b, rgb packed into rggb, g channel does not have additional information since they are simply the same subsampled image duplicated.
++ regarding goals for different reconstruction tasks
+    + spectral imaging: constant-hue, no abrupt hue change over edges
+    + structured light, stereo: devoid of artifacts
 
 
 
-## Questions
+## Weekly
 
+
+### May 7
 
 + demosaicing 
     + _assorted pixels_: 
@@ -73,3 +79,6 @@ conda activate cv_project
 + todo
     + might be good to generate some datasets ...
 
+
+
+### May 14
