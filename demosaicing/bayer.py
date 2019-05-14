@@ -32,26 +32,18 @@ def bayer_idx(shape):
 #     where `shape` is a 2-tuple
 def bayer_mask(shape):
     B_idx, G_idx, R_idx = bayer_idx(shape)
+    mask = np.zeros((*shape, 3), dtype=np.uint8)
 
-    B_mask = np.zeros(shape,dtype=np.uint8)
-    G_mask = np.zeros(shape,dtype=np.uint8)
-    R_mask = np.zeros(shape,dtype=np.uint8)
+    mask[(*B_idx,0)] = 1
+    mask[(*G_idx,1)] = 1
+    mask[(*R_idx,2)] = 1
 
-    B_mask[B_idx] = 1
-    G_mask[G_idx] = 1
-    R_mask[R_idx] = 1
-
-    return B_mask, G_mask, R_mask
+    return mask
     
     
 # Downsampling `img` according to `RGGB` pattern
 # 
 def bayer_downsample(img):
-    B_mask,G_mask,R_mask = bayer_mask(img.shape[:2])
-
-    c = img.copy()
-    c[:,:,0] = c[:,:,0] * B_mask
-    c[:,:,1] = c[:,:,1] * G_mask
-    c[:,:,2] = c[:,:,2] * R_mask
-    
+    mask = bayer_mask(img.shape[:2])
+    c = img * mask
     return c

@@ -1,5 +1,16 @@
 
+### Reports 
+
++ [part7.3_demosaicing](part7.3_demosaicing.pdf)
+    + outlines some basic demosaicing methods
+
+
 ### Demosaicing
+
++ [2002_demosaicking_methods_for_bayer_color_arrays](2002_demosaicking_methods_for_bayer_color_arrays.pdf)
+    + original method that 
+        + bilinear interpolate G channel
+        + constant-hue assumption: interpolate R,B to maintain constant chrominance
 
 
 + [2003_enhancing_resolution_along_multiple_imaging_dimensions_using_assorted_pixels](2003_enhancing_resolution_along_multiple_imaging_dimensions_using_assorted_pixels.pdf)
@@ -59,6 +70,9 @@
             + compute number of coefficients, why + P not * P
         + is the project currently using bicubic interpolation?
 
+
++ [2004_high_quality_linear_interpolation_for_demosaicing_of_bayer_patterned_color_images](2004_high_quality_linear_interpolation_for_demosaicing_of_bayer_patterned_color_images.pdf)
+    + a new 5x5 demosacing linear filter 
 
 
 + [2006_color_demosaicing_using_variance_of_color_differences](2006_color_demosaicing_using_variance_of_color_differences.pdf)
