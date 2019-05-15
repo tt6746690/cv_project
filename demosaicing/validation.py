@@ -7,6 +7,8 @@ from .bayer import bayer_downsample
 
 def kodak_dataset(kodak_dir="../data/kodak/"):
     kodak_images = list(map(lambda x: f'{kodak_dir}{x}', os.listdir(kodak_dir)))
+    kodak_images = sorted(kodak_images)
+    kodak_images = filter(lambda x: x.endswith('.png'), kodak_images)
     kodak = list(map(lambda x: cv.imread(x, -1), kodak_images))
     return kodak
 

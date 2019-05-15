@@ -15,8 +15,6 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
         + variable number of gradients
         + Edge-Aware Demosaicing.
 
-
-
 + bilinear interpolation 
     + https://en.wikipedia.org/wiki/Bilinear_interpolation
     + https://github.com/csrjtan/CDM-CNN/blob/master/src/utillities/bilinear.m
@@ -31,6 +29,9 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
 + nearest-neighbor interpolation 
     + https://github.com/scivision/pysumix/blob/master/pysumix/demosaic.py
 
++ alternating projection 
+    + https://lu.seas.harvard.edu/software/demosaicking-matlab-code-implementing-fast-demosaicking-algorithm-described-following
+
 + Joint Demosaicing and Denoising of Noisy Bayer Images with ADMM
     + https://github.com/TomHeaven/Joint-Demosaic-and-Denoising-with-ADMM
 
@@ -40,6 +41,9 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
 + 2018 Deep Joint Design of Color Filter Arrays and Demosaicing
     + https://github.com/bernardohenz/deep_joint_design_cfa_demosaicing
 
+
++ a list of demosaicing code
+    + http://www.cis.upenn.edu/~danielkh/files/2013_2014_demosaicing/demosaicing.html
 
 ## Python
 

@@ -17,6 +17,11 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
 ```
 
 
+## Questions 
+
+
++ is R,G,B in exposure space or log of that ...
+
 
 ## Todo
 
@@ -34,6 +39,8 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
     + compressive sensing 
         + http://www.cs.toronto.edu/~kyros/courses/2530/papers/Lecture-10/Hitomi2011.pdf
         + https://ieeexplore.ieee.org/document/7442841?tp=&arnumber=7442841
+    + computational photography
+        + https://stanford.edu/class/ee367/
 + reading demosaicing algorithms ...
     + think about substituting color prior with other prior 
 
