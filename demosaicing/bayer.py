@@ -42,10 +42,25 @@ def bayer_mask(shape: Tuple[int,int]) -> np.ndarray:
 
     return mask
     
-    
 # Downsampling `img` according to `RGGB` pattern
 # 
 def bayer_downsample(img: np.ndarray) -> np.ndarray:
     mask = bayer_mask(img.shape[:2])
     c = img * mask
     return c
+
+
+# Split image into 3 channels according to bayer pattern
+#       mxnx1 -> mxnx3
+def bayer_split(img: np.ndarray) -> np.ndarray:
+    assert(len(img.shape) == 2)
+    
+    shape = img.shape
+    B_idx, G_idx, R_idx = bayer_idx(shape)
+
+    out = np.zeros((*shape, 3), dtype=np.uint8)
+    out[(*B_idx,0)] = img[B_idx]
+    out[(*G_idx,1)] = img[G_idx]
+    out[(*R_idx,2)] = img[R_idx]
+
+    return out

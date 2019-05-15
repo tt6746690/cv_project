@@ -15,7 +15,7 @@ import argparse
 from urllib.request import urlretrieve
 
 examples='''examples:
-  python3 scripts/download_kodak.py --output-dir=data/kodak
+  python3 demosaicing/download_kodak.py --output-dir=data/kodak
 '''
 
 def main():

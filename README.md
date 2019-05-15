@@ -11,6 +11,9 @@ conda install nb_conda
 # select conda env for jupyter notebook
 conda env create -f cv_project.yml
 conda activate cv_project
+
+# download the datasets 
+python3 demosaicing/download_kodak.py --output-dir=data/kodak
 ```
 
 
