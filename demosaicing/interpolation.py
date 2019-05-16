@@ -78,7 +78,7 @@ def demosaic_smooth_hue(img: np.ndarray, log_space=True) -> np.ndarray:
 
 
 # Smooth-hue Interpolation with median filtering (Freeman)
-#       https://patents.google.com/patent/US4642678A/en
+#       https://patents.google.com/patent/US4724395A/en
 #       https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=1207407
 #
 # The algorithm
@@ -128,4 +128,58 @@ def demosaic_median_filter(img: np.ndarray, log_space=True) -> np.ndarray:
         interp[:,:,2] = np.clip(hue[:,:,1] * interp[:,:,1],0,1)
 
     interp = (interp*255).astype(np.uint8)
+    return interp
+
+
+# Laplacian-corrected linear filter (MATLAB's demosaic)
+#       https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=1326587
+#       https://www.ipol.im/pub/art/2011/g_mhcd/article.pdf
+# 
+def demosaic_laplacian_corrected(img, gain_factors=(1/2,5/8,3/4)):
+    assert(len(img.shape) in [2,3])
+
+    if len(img.shape) == 2:
+        img = bayer_split(img)
+        
+    alpha,beta,gamma = gain_factors
+
+    K_L = 1/4 * np.array([
+        [0,0,-1,0,0],
+        [0,0,0,0,0],
+        [-1,0,4,0,-1],
+        [0,0,0,0,0],
+        [0,0,-1,0,0],
+    ])
+
+    K_B = 1/4 * np.array([ [1,2,1], [2,4,2], [1,2,1] ])
+    K_G = 1/4 * np.array([ [0,1,0], [1,4,1], [0,1,0] ])
+    K_R = K_B
+
+    interp = img.copy().astype(np.float32) / 255.
+    laplacian = interp.copy()
+    B_idx, G_idx, R_idx = bayer_idx(interp.shape[:2])
+
+    # Interpolate R,G,B
+    interp[:,:,0] = cv.filter2D(interp[:,:,0], cv.CV_32F, K_B)
+    interp[:,:,1] = cv.filter2D(interp[:,:,1], cv.CV_32F, K_G)
+    interp[:,:,2] = cv.filter2D(interp[:,:,2], cv.CV_32F, K_R)
+
+    # Compute discrete laplacian in 5x5 neighborhood
+    laplacian[:,:,0] = cv.filter2D(laplacian[:,:,0], cv.CV_32F, K_L)
+    laplacian[:,:,1] = cv.filter2D(laplacian[:,:,1], cv.CV_32F, K_L)
+    laplacian[:,:,2] = cv.filter2D(laplacian[:,:,2], cv.CV_32F, K_L)
+
+    # Laplacian correction
+    # Green
+    interp[(*R_idx,1)] = interp[(*R_idx,1)] + alpha*laplacian[(*R_idx,2)]
+    interp[(*B_idx,1)] = interp[(*B_idx,1)] + alpha*laplacian[(*B_idx,0)]
+    # Red
+    interp[(*G_idx,2)] = interp[(*G_idx,2)] + beta*laplacian[(*G_idx,1)]
+    interp[(*B_idx,2)] = interp[(*B_idx,2)] + beta*laplacian[(*B_idx,0)]
+    # Blue
+    interp[(*G_idx,0)] = interp[(*G_idx,0)] + gamma*laplacian[(*G_idx,1)]
+    interp[(*R_idx,0)] = interp[(*R_idx,0)] + gamma*laplacian[(*R_idx,2)]
+
+    interp = (np.clip(interp*255,0,255)).astype(np.uint8)
+
     return interp
