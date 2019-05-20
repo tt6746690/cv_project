@@ -297,6 +297,47 @@
 
 + [2017_joint_demosaicing_and_denoising_of_nioisy_bayer_images_with_ADMM](2017_joint_demosaicing_and_denoising_of_nioisy_bayer_images_with_ADMM.pdf)
     + codebase: https://github.com/TomHeaven/Joint-Demosaic-and-Denoising-with-ADMM
+    + abstract
+        + unified objective function with hidden priors and optimize with ADMM for recovering color image from noisy Bayer input
+        + perform better in PSNR and human vision
+        + more robust to variations of noise levels
+    + intro 
+        + recent research in jointly demosaic and denoise (good place to see what is SOTA)
+    + problem formulation
+        + image formation 
+            + `b = Ax + \eta`
+                + `b` bayer iamge
+                + `A` downsampling operator
+                + `x \in \R^{3n}`
+                + `\eta` noise vector
+        + image recovery 
+            + inverse problem 
+            + `\min || Ax-b || + T(x)`
+                + where `T` are prior functions
+        + priors
+            + flat areas: smoothness prior
+            + edge: edge-preserving denoising prior
+            + bayer mosaic pattern: structural information
+            + total variation 
+            + (CBM3D) attenuation of additive white Gaussian noise from 
+            + cross-channel prior (basically 2004 paper that MATLAB `demosaic` uses)
+        + handwavy about parts of objective function as _hidden function_, i.e. did not establish convexity of BM3D/demosaocing prior (ability to do follow up work)
+    + optimization with ADMM
+        + standard algo i think
+    + experiments
+        + Kodak + McM
+        + inputs
+            + downsample -> Gaussian white noise
+            + noise level is known
+        + methods compared 
+            + FlexISP
+            + deep joint 2016
+        + results
+            + better result for noisy inputs
+            + slow (900s vs 4s for deepjoint)
+    + follow up
+        + faster algo
+        + convergence of ADMM not determined
 
 + [2018_deep_image_demosaicking_using_a_cascade_of_convolutional_residual_denoising_networks](2018_deep_image_demosaicking_using_a_cascade_of_convolutional_residual_denoising_networks.pdf)
     + basically 2016 paper but extended with majority maximization ...
