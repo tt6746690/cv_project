@@ -42,6 +42,8 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
     + computational photography
         + http://www.cs.toronto.edu/~kyros/courses/2530/
         + https://stanford.edu/class/ee367/
+    + discrete differential geometry 
+        + https://graphics.stanford.edu/courses/cs468-13-spring/
 + reading demosaicing algorithms ...
     + think about substituting color prior with other prior 
 
@@ -53,3 +55,4 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
 + regarding goals for different reconstruction tasks
     + spectral imaging: constant-hue, no abrupt hue change over edges
     + structured light, stereo: devoid of artifacts
++ arbitrary mosaic tiling: adaptive graph laplacian

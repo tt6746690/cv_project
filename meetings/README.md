@@ -88,7 +88,7 @@ I think from last meeting with Kyros and you, it seems that a more general frame
 ## 2019.05.28
 
 
-+ __what i have done so far__
++ so far
     + background learning on 
         + convex optimization (ongoing)
     + implemented a few (interpolation) method in python and did some comparison 
@@ -114,3 +114,44 @@ I think from last meeting with Kyros and you, it seems that a more general frame
                 + bilateral filter
                 + nonlocal mean filter
             + methods that uses laplacian as a regularizer for denoising
++ plans
+    + create a benchmark dataset to evaluate the performance of image processing methods for c2b camera
+        + each frame captures 
+    + try Redner/PnP on demosaicing/denoising tasks
+        + since they didn't use demosaicing as a reconstruction tasks, so need to verify if this is indeed a performant method
+            + a ee367 course project indicates ADMM+TV performed worse than bilinear/matlab `demosaic`
+            + but the results seem a bit off, so need to reproduce this as soon as possible
++ questions
+    + what is goal of different reconstruction tasks
+        + rgb: look as natural to human as possible ?
+        + multispectral imaging 
+        + structured light
+    + cfa design, i.e. tile as a free variable in optimization 
+
+
+
++ todo
+    + a complete picture for state of art for the problem
+        + primarily demosaicing and maybe denoising
+        + implementation easy/hard
+            + data sufficiency, flexibility
+            + a blog for what i have done
+        + pro/con of methods ...
+        + state of arts 
+        + cvpr 2018, see paper that cited that...
+        + flexisp
+    + dataset generation for benchmarking purposes
+        + structured light: shapenet dataset, project light with mitsuba (ask parsa/wenjian)
+        + multispectral imaging: not for now ... 
+    + start using the cameras
+        + camera noise characterization, optimize for specific camera
+    + question
+        + specific priors for different reconstuction 
+        + arbitrary tiling (cfa design)
+
++ read papers 
+    + michael brown
+        + noise characterization of cellphone
+    + http://people.csail.mit.edu/billf/publications/Noise-Optimal_Capture.pdf
+        + explanation for noise model
+    + 
