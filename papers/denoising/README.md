@@ -9,8 +9,12 @@
     + white noise vector where each component assumes a gaussian distribution 
         + the vector is a multivariate gaussian distribution
 
-
-
++ nonlocal means: https://en.wikipedia.org/wiki/Non-local_means
+    + weighted sum of all pixels' local mean filter
++ bilateral filter: https://en.wikipedia.org/wiki/Bilateral_filter
++ total variation: https://en.wikipedia.org/wiki/Total_variation_denoising
+    + denoising but edge perserving
+    + 2D problem harder to solve (primal dual: https://link.springer.com/content/pdf/10.1023%2FB%3AJMIV.0000011325.36760.1e.pdf)
 
 ## Paper
 
@@ -32,6 +36,13 @@
     + some follow-ups
         + primal-dual method for minimizing total variation
             + https://www.uni-muenster.de/AMM/num/Vorlesungen/MathemBV_SS16/literature/Chambolle2004.pdf
+
+
++ [1998_bilateral_filtering_for_gray_and_color_images](1998_bilateral_filtering_for_gray_and_color_images.pdf)
+    + bilateral filtering
+
++ [2008_nonlocal_image_and_movie_denoising](2008_nonlocal_image_and_movie_denoising.pdf)
+    + nonlocal mean filtering
 
 + [2010_fast_image_recovery_using_variable_splitting_and_constraint_optimization](2010_fast_image_recovery_using_variable_splitting_and_constraint_optimization.pdf)
     + abstract
@@ -60,6 +71,22 @@
     + proposed algo: split augmented Lagrangian shrinkage algorithm (SALSA)
         + a variant of ADMM
 
++ [2014_progressive_image_denoising_through_hybrid_graph_laplacian_regularization](2014_progressive_image_denoising_through_hybrid_graph_laplacian_regularization.pdf)
+    + abstract
+        + laplacian regularized image denoising
+        + semisupervised learning
+    + intro
+        + variational problem
+            + minimize _data fidelity term_ and _regularization term_
+        + priors
+            + _locally smooth_ (nearby pixels more likely to have same/similar intensity values)
+            + _non-local self-similarity_ (pixels on same structure likely to have same or similar intensity)
+    + graph laplacian regularized regression
+        + graph laplacian regularizer
+            + `R(f) = \sum_{i,j} (f(x_i) - f(x_j))^2 w_{ij}`
+            + `w_ij` is edge weight which reflects affinity between two vertices `x_i` and `x_j` 
+                + want to design filters that is edge-preserving (bilateral filtering) 
+
 
 
 #### Plug and Play P3 Prior
@@ -67,7 +94,6 @@
 + [2013_plug_and_play_priors_for_model_based_reconstruction](2013_plug_and_play_priors_for_model_based_reconstruction.pdf)
 + [2016_algorithm_induced_prior_for_image_restoration](2016_algorithm_induced_prior_for_image_restoration.pdf)
 + [2016_plug_and_play_admm_for_image_restoration_fixed_point_convergence_and_applications](2016_plug_and_play_admm_for_image_restoration_fixed_point_convergence_and_applications.pdf)
-
 
 
 + [2017_regularization_by_denoising](2017_regularization_by_denoising.pdf)
@@ -87,3 +113,10 @@
             + applications
                 + single-image superresolution 
                 + blurring
+
+
+## Review 
+
+
++ [2010_review_image_denoising_algorithm_with_a_new_one](2010_review_image_denoising_algorithm_with_a_new_one.pdf)
+    + 

@@ -1,5 +1,10 @@
 
 
+```
+# resize pdfs
+gs -sDEVICE=pdfwrite -dPDFSETTINGS=/ebook -q -o output.pdf file.pdf
+gs -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -q -o output.pdf file.pdf
+```
 
 ### Camera
 
