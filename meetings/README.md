@@ -1,16 +1,7 @@
 
+# Meeting Notes
 
-#### General Idea
-
-todo
-+ approaches
-    + increase number of projections
-        + 5 pattern can still be embed in 4 pixels
-        + adapting demosaicing
-+ each illumination pixel is a vector of size #pattern
-+ also true for camera pixel
-
-#### 2018.11.09
+## 2018.11.09
 
 + what was tried before
     + linear interpolation from matlab `demosaic`
@@ -48,7 +39,7 @@ todo
     + at what level / how to model correlation for stereo-imaging
 
 
-### 2019.05.07
+## 2019.05.07
 
 + demosaicing 
     + _assorted pixels_: 
@@ -81,16 +72,45 @@ todo
 
 
 
-#### 2019.05.09 (slack)
+## 2019.05.09 (slack)
 
 In summary, there are several categories of methods
 
-*non-adaptive methods*, which includes various kinds of interpolation, mostly working on a single channel at once and so would not be able to exploit inter-channel relationship.
+__non-adaptive methods__, which includes various kinds of interpolation, mostly working on a single channel at once and so would not be able to exploit inter-channel relationship.
 
-*heuristic-based methods*. One heuristic would be to avoid interpolation cross edges; This might not work well with structured light illumination, the gradient estimates most likely perpendicular to the spatial sinusoidals, but this probably works fine for multispectral imaging. Another heuristic would be to interpolate channels that is sampled more frequently (Green in Bayer tile) to achieve better SNR. This is not readily adaptable to C2B camera, although in some cases this heuristic is applicable (i.e. RGGB tilling the ECCV paper figures). This could work though, if we add a constraint that 1 type of code tensor is shared by say 50% of the pixels. A heuristic that often use in conjunction with the previous heuristic exploits the constant hue assumption: ratio/difference between channels are approximately constant within boundary of objects. The method would use the full-res green channel to determine values for other channels. I still need to check if this applies to IR images. But again, if the aim is a general framework that works for any type of subsequent reconstruction, then this heuristic would not be applicable for structured light.
+__heuristic-based methods__. One heuristic would be to avoid interpolation cross edges; This might not work well with structured light illumination, the gradient estimates most likely perpendicular to the spatial sinusoidals, but this probably works fine for multispectral imaging. Another heuristic would be to interpolate channels that is sampled more frequently (Green in Bayer tile) to achieve better SNR. This is not readily adaptable to C2B camera, although in some cases this heuristic is applicable (i.e. RGGB tilling the ECCV paper figures). This could work though, if we add a constraint that 1 type of code tensor is shared by say 50% of the pixels. A heuristic that often use in conjunction with the previous heuristic exploits the constant hue assumption: ratio/difference between channels are approximately constant within boundary of objects. The method would use the full-res green channel to determine values for other channels. I still need to check if this applies to IR images. But again, if the aim is a general framework that works for any type of subsequent reconstruction, then this heuristic would not be applicable for structured light.
 
-*learning-based methods*
+__learning-based methods__
 the methods are data-driven. Older methods like assorted pixels to construct an over-determined system of linear equations relating polynomial coefficients with pixel intensities. The model is optimized with least squared via pseudo-inverse. The model is trained over ~20 images (a lot more patches within ~20 images) and could capture intra- and inter-channel dependencies. By the virtual of its small size, the dataset could be easily created by taking `S` frames of photos, each frame has a fixed illumination, where each pixel in each `s=1,...,S` frames collects light on bucket-1. This would result in `S` full-res ground-truth images for training. More recent methods uses deep networks that requires   larger datasets (millions of images) and perhaps not feasible for C2B camera. Or it might work with _transfer learning_ , not sure ? But there is lot's of *joint-* methods that combines demosaicing with superresolution and denoising. `demosaicnet` achieved state of arts performance, that surpasses traditional methods by sizable margin (see benchmark from 2016 paper's slides).
 
 I think from last meeting with Kyros and you, it seems that a more general framework would be more desirable. Even if the performance might not be better than those _deep_ models, Ideally, the goal would be a general framework for demosaicing/upsampling for the C2B camera, where we could inject different priors for different downstream reconstruction tasks.
 
+## 2019.05.28
+
+
++ __what i have done so far__
+    + background learning on 
+        + convex optimization (ongoing)
+    + implemented a few (interpolation) method in python and did some comparison 
+        + bilinear filtering
+        + smooth hue
+        + median hue
+        + laplacian corrected
+    + experiments with additive white noise, performance drops with higher noise level
+    + literature search on 
+        + demosaicing method
+            + read more carelly some early papers on interpolation based methods
+            + did not read too carefully on some of the more sophisticated methods
+            + deep learning methods outperforms classical methods by 5dB (PSNR) 
+            + there is one paper that uses ADMM for optimization, but did not prove convexity of some prior terms
+        + regularization as denoising (redner 2017)
+            + denoising residual as regularizer, optimization with ADMM
+            + energy minimization, seems pretty easy to generalize
+            + proofs on convexity of objective (denoiser has some constraint) and guarantees global convergence
+            + seems pretty good performance, for a variety of tasks
+        + image denoising
+            + classical method (not implemented yet)
+                + total variation
+                + bilateral filter
+                + nonlocal mean filter
+            + methods that uses laplacian as a regularizer for denoising
