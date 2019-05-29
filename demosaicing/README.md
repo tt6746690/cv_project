@@ -46,6 +46,9 @@
 + a list of demosaicing code
     + http://www.cis.upenn.edu/~danielkh/files/2013_2014_demosaicing/demosaicing.html
 
++ CNN for denoising + demosaiking
+    + https://github.com/kunzmi/NNDemosaicAndDenoise
+
 ## Python
 
 

@@ -16,7 +16,7 @@
     + denoising but edge perserving
     + 2D problem harder to solve (primal dual: https://link.springer.com/content/pdf/10.1023%2FB%3AJMIV.0000011325.36760.1e.pdf)
 
-## Paper
+## Denoising
 
 
 + [1992_nonlinear_total_variantion_based_noise_removal_algorithms](1992_nonlinear_total_variantion_based_noise_removal_algorithms.pdf)
@@ -89,7 +89,7 @@
 
 
 
-#### Plug and Play P3 Prior
+## Plug and Play P3 Prior
 
 + [2013_plug_and_play_priors_for_model_based_reconstruction](2013_plug_and_play_priors_for_model_based_reconstruction.pdf)
 + [2016_algorithm_induced_prior_for_image_restoration](2016_algorithm_induced_prior_for_image_restoration.pdf)
@@ -114,9 +114,26 @@
                 + single-image superresolution 
                 + blurring
 
+## Learning denoising prior for inverse problems 
+
+
++ [2017_learning_deep_cnn_denoiser_prior_for_image_restoration](2017_learning_deep_cnn_denoiser_prior_for_image_restoration.pdf)
+    + abstract
+        + use CNN to learn powerful denoiser priors, then plug into ADMM, HQS (half quadratic splittings)
+
++ [2017_learning_proximal_operators_using_denoising_networks_for_regularizing_inverse_image_problems](2017_learning_proximal_operators_using_denoising_networks_for_regularizing_inverse_image_problems.pdf)
+    + abstract
+        + use CNN to learn proximal operators
+        + did not perform better than flexISP for demosaiking
+
+
+
 
 ## Review 
 
 
 + [2010_review_image_denoising_algorithm_with_a_new_one](2010_review_image_denoising_algorithm_with_a_new_one.pdf)
-    + 
+
++ [2018_modern_regularization_methods_for_inverse_problems](2018_modern_regularization_methods_for_inverse_problems.pdf)
+    + linear/nonlinear regularization for inverse problems
+    + pretty involved discussion 

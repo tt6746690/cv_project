@@ -476,8 +476,6 @@
         + convergence of ADMM not determined
 
 
-
-
 ## Reviews
 
 + [2005_demosaicking_color_filter_array_interpolation](2005_demosaicking_color_filter_array_interpolation.pdf)
