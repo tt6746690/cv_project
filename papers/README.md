@@ -6,7 +6,7 @@ gs -sDEVICE=pdfwrite -dPDFSETTINGS=/ebook -q -o output.pdf file.pdf
 gs -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -q -o output.pdf file.pdf
 ```
 
-### Camera
+## Camera
 
 + [2018_coded_two_bucket_cameras_for_computer_vision](2018_coded_two_bucket_cameras_for_computer_vision.pdf)
     + abstract 
@@ -21,7 +21,7 @@ gs -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -q -o output.pdf file.pdf
                 + potential for different tiles (4x4 -> recover 16 frames)
 
 
-### Points
+## Points
 
 + What metrics used in demosaicking papers ?
     + color
@@ -42,3 +42,6 @@ gs -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -q -o output.pdf file.pdf
 
 + http://people.duke.edu/~sf59/TIP_Demos_Final_Color.pdf
     + considers super-resolution and demosaicing as the same problem
+
+
+

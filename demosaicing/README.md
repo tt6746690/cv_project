@@ -31,6 +31,9 @@
 + Joint Demosaicing and Denoising of Noisy Bayer Images with ADMM
     + https://github.com/TomHeaven/Joint-Demosaic-and-Denoising-with-ADMM
 
++ 2016 sequential energy minimization 
+    + https://github.com/VLOGroup/joint-demosaicing-denoising-sem
+
 + 2016 demosaicnet
     + https://github.com/mgharbi/demosaicnet_torch/
 

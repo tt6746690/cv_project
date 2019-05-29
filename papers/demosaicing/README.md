@@ -212,6 +212,56 @@
 + [2013_joint_demosacing_and_denoising_via_learned_nonparametric_random_fields](2013_joint_demosacing_and_denoising_via_learned_nonparametric_random_fields.pdf)
     + 
 
++ [2016_klatzer_learning_joint_demosaicing_and_denoising_based_on_sequential_energy_minimization](2016_klatzer_learning_joint_demosaicing_and_denoising_based_on_sequential_energy_minimization.pdf)
+    + abstract
+        + demosacing+denoising as image restoration problem
+        + method learngs efficient regularization by a variational energy minimization 
+    + introduction
+        + challenges
+            + interpolating edges/corners
+            + error propagation with interpolating channels separately/sequentially
+            + noise maybe non-Gaussian, maybe a complex distribution
+        + dataset
+            + images already processed, 
+            + [Khashbi] introduces the Microsoft Demosaicing dataset
+    + related work
+        + demosaicing 
+            + interpolation 
+                + heuristic-based, 
+                + some jointly demosaic+denoise but only in Gaussian settings
+            + learning based
+                + [Khashbi] regression tree fields
+            + inverse problem 
+                + priors for regularization: TV, color difference, hue smoothness, denoiser (BM3D)
+                + hand-crafted demosaicing not able to capture image statistics 
+        + this method
+            + learning+reconstrction based
+            + demosaicing in linRBG space
+            + adaptable to different CFA pattern and camera types
+            + jointly denoise and demosaic under non-Gaussian noise
+            + regularization does not rely on handcrafted correlation, but learns 
+    + method
+        + upper level 
+            + L2 loss between ground truth `g` and a sequence of reconstructed images `u^s`
+        + lower level quadratic energy `Q`
+            + gradient descent given `grad f`
+            + backpropagation
+        + energy function `f`
+            + `f(u) = R(u) + D(u)`
+                + `R` fields of experts prior
+                    + nonlinearity with radial basis function (to learn image priors from data)
+                + `D` data fidelity 
+                    + nonlinearity with radial basis function (to learn non-Gaussian noise)
+            + can compute `grad(f)` 
+        + noise model 
+            + mixture of poisson+gaussian (Microsoft dataset)
+        + optimization 
+            + lbfgs-b
+    + experiments & results
+        + mean of psnr for 200 images
+        + slightly better (1dB) over FlexISP
+            
+
 + [2016_deep_joint_demosaicking_and_denoising](2016_deep_joint_demosaicking_and_denoising.pdf)
     + slides (https://groups.csail.mit.edu/graphics/demosaicnet/data/demosaicnet_slides.pdf)
     + abstract
@@ -342,7 +392,7 @@
             + ...
             + ADMM applied to image processing literature
     + optimization 
-        + inverse problem 
+        + inverse problem
             + `z = Ax + \eta`
             + `min_x 1/2 ||z-Ax||^2 + R(x)`
             + converted to standard constrained optimization 

@@ -85,6 +85,17 @@ the methods are data-driven. Older methods like assorted pixels to construct an 
 
 I think from last meeting with Kyros and you, it seems that a more general framework would be more desirable. Even if the performance might not be better than those _deep_ models, Ideally, the goal would be a general framework for demosaicing/upsampling for the C2B camera, where we could inject different priors for different downstream reconstruction tasks.
 
+## 2019.05.11
+
+
++ project
+    + demosaicing ... 
+        + shape prior instead of color prio?
+        + does it perform better than normal color demosaicing?
+        + Random code matrix or tiled (tiled for now because using interpolation methods for demosaicing)?
+        + demosaicing might taylor to downstream 3d reconstruction ...
+
+
 ## 2019.05.28
 
 
@@ -127,6 +138,7 @@ I think from last meeting with Kyros and you, it seems that a more general frame
         + multispectral imaging 
         + structured light
     + cfa design, i.e. tile as a free variable in optimization 
+        + maybe looking into it
 
 
 
@@ -139,7 +151,7 @@ I think from last meeting with Kyros and you, it seems that a more general frame
         + pro/con of methods ...
         + state of arts 
         + cvpr 2018, see paper that cited that...
-        + flexisp
+        + flexisp (read)
     + dataset generation for benchmarking purposes
         + structured light: shapenet dataset, project light with mitsuba (ask parsa/wenjian)
         + multispectral imaging: not for now ... 
@@ -147,6 +159,7 @@ I think from last meeting with Kyros and you, it seems that a more general frame
         + camera noise characterization, optimize for specific camera
     + question
         + specific priors for different reconstuction 
+            + maybe denoising prior is enough 
         + arbitrary tiling (cfa design)
 
 + read papers 

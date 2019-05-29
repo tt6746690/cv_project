@@ -19,33 +19,26 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
 
 ## Questions 
 
-
 + is R,G,B in exposure space or log of that ...
++ psnr comparison 
+    + numbers are different (even for bilinear)
+    + the results are often times conflicting, i.e. 2016 Klatz is a lot worse than 2014 flexISP in `demosaicnet` but the reverse is true in Klatz's paper
 
 
-## Todo
+## Learning
 
-+ project
-    + demosaicing ... 
-        + shape prior instead of color prio?
-        + does it perform better than normal color demosaicing?
-        + Random code matrix or tiled (tiled for now because using interpolation methods for demosaicing)?
-        + demosaicing might taylor to downstream 3d reconstruction ...
-+ learning
-    + light transport, lambertian reflectance, albedo, image formation model (Forsyth 2503 multiview geometry)
-    + photometric stereo (2503 slides+a1)
-    + structured light
-        + https://www.osapublishing.org/DirectPDFAccess/FBC163A9-EDFF-9962-3464BD70B5AC1546_211561/aop-3-2-128.pdf?da=1&id=211561&seq=0&mobile=no
-    + compressive sensing 
-        + http://www.cs.toronto.edu/~kyros/courses/2530/papers/Lecture-10/Hitomi2011.pdf
-        + https://ieeexplore.ieee.org/document/7442841?tp=&arnumber=7442841
-    + computational photography
-        + http://www.cs.toronto.edu/~kyros/courses/2530/
-        + https://stanford.edu/class/ee367/
-    + discrete differential geometry 
-        + https://graphics.stanford.edu/courses/cs468-13-spring/
-+ reading demosaicing algorithms ...
-    + think about substituting color prior with other prior 
++ light transport, lambertian reflectance, albedo, image formation model (Forsyth 2503 multiview geometry)
++ photometric stereo (2503 slides+a1)
++ structured light
+    + https://www.osapublishing.org/DirectPDFAccess/FBC163A9-EDFF-9962-3464BD70B5AC1546_211561/aop-3-2-128.pdf?da=1&id=211561&seq=0&mobile=no
++ compressive sensing 
+    + http://www.cs.toronto.edu/~kyros/courses/2530/papers/Lecture-10/Hitomi2011.pdf
+    + https://ieeexplore.ieee.org/document/7442841?tp=&arnumber=7442841
++ computational photography
+    + http://www.cs.toronto.edu/~kyros/courses/2530/
+    + https://stanford.edu/class/ee367/
++ discrete differential geometry 
+    + https://graphics.stanford.edu/courses/cs468-13-spring/
 
 
 ## Random
