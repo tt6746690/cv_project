@@ -5,7 +5,7 @@
     + outlines some basic demosaicing methods
 
 
-### Demosaicing
+### Interpolation-based demosaicing
 
 + [2002_demosaicking_methods_for_bayer_color_arrays](2002_demosaicking_methods_for_bayer_color_arrays.pdf)
     + original method that 
@@ -39,63 +39,6 @@
             + determine chrominance (B,R) from hue (`R = hue[0]*G`)
 
 
-+ [2003_enhancing_resolution_along_multiple_imaging_dimensions_using_assorted_pixels](2003_enhancing_resolution_along_multiple_imaging_dimensions_using_assorted_pixels.pdf)
-    + goal
-        + enhance resolution using local structure models (polynomial funtion of intensities) learnt offline from images
-    + multisampling 
-        + a framework for using pixels to sample simultaneously multiple dimension of an image (space, time, spectrum - color, brightness - dynamic range, and polarization)
-    + learn structured model
-        + https://en.wikipedia.org/wiki/Nyquist_frequency
-            + interpolation methods enhances spatial resolution but introduce errors in blurring and aliasing
-        + different dimension of imaging highly correlated with reach other (due to reflectance and illumination of scene)
-        + local structured model
-            + learn a local mapping function from data, 
-                + inputs: low-res multisampled images
-                + labels: correct high-resolution images
-            + model is a polynomial function of brightness measured within a local neighborhood
-                + learn local mapping `f`
-                + `H(i, j) = f(M(X, Y))` where
-                    + `H` is high quality value at pixel i, j
-                    + `M` is measured low-res value at pixel `x,y` in a neighbhorhood `X,Y` around `i,j`
-            + use a single structured model for each type of local sampling pattern
-        + previous methods
-            + Markov model, bayesian, kernel
-        + novel
-            + resolution enhancement over multiple dimensions
-    + SVC and models
-        + SVC (spatially varying color)
-            + bayes color mosaic
-                + mosaic of R, G, B in digital color sensors
-                + have 4 different sampling pattern for a neighborhood of 3x3
-        + goal  
-            + compute value of (R,G,B) at each pixel
-        + model 
-            + `M_p(\lambda) = A_p C_p(\lambda)`
-                + `p` represent pattern, `\lambda` represent color
-                + `A_P` are measurements of neighborhood having pattern `P`
-                    + where each row has all relevant powers of measured data `M_P` within a neighborhood
-                + `C_P(\lambda)` coefficients of polynomial mapping function
-            + optimize with least squared
-                + `C = (A^TA)^{-1} A^T H`
-        + performance
-            + visual and luminance error
-            + stability of learnt model
-                + good on training data, or test data similar to training data
-                + if trainnig data is large, then random test data has larger error but is stable
-    + SVEC (spatially varying exposure and color)
-        + simutaneous sampling of space, color, and exposure
-            + given 8 bit single color -> construct 12 bit for each 3 color values at each pixel
-        + pattern
-            + base pattern
-        + still the same model,
-    + questions 
-        + SVC model
-            + why is the polynomial model for SVC accounts for correlation between different color channels, seems the coefficients for the model is computed independently
-            + to get high quality value from low-res value in the neighborhood, why the model multiplies measurement for each pixel and every other pixel
-                + to model pairwise correlation between pixels?
-            + compute number of coefficients, why + P not * P
-        + is the project currently using bicubic interpolation?
-
 
 + [2004_high_quality_linear_interpolation_for_demosaicing_of_bayer_patterned_color_images](2004_high_quality_linear_interpolation_for_demosaicing_of_bayer_patterned_color_images.pdf)
     + a summary: [2011_malvar_he_cutler_lienar_image_demosaicking](2011_malvar_he_cutler_lienar_image_demosaicking.pdf)
@@ -118,7 +61,7 @@
             + steps
                 + interpolate green along direction of smallest gradient
 
-            
+
 + [2014_rethinking_color_cameras](2014_rethinking_color_cameras.pdf)
     + traditionally
         + camera sub-sample measurements at alternating pixel locations and then demosaick measurements to create full color image by up-sampling
@@ -205,28 +148,103 @@
             + no color captured in sparse locations?
             + so what is the take-away idea from this paper?
 
-+ [2014_flexISP_a_flexible_camera_image_processing_framework](2014_flexISP_a_flexible_camera_image_processing_framework.pdf)
+
+## Data-driven learning based
 
 
-
-
-### Joint demosaicing and denoising
++ [2003_enhancing_resolution_along_multiple_imaging_dimensions_using_assorted_pixels](2003_enhancing_resolution_along_multiple_imaging_dimensions_using_assorted_pixels.pdf)
+    + goal
+        + enhance resolution using local structure models (polynomial funtion of intensities) learnt offline from images
+    + multisampling 
+        + a framework for using pixels to sample simultaneously multiple dimension of an image (space, time, spectrum - color, brightness - dynamic range, and polarization)
+    + learn structured model
+        + https://en.wikipedia.org/wiki/Nyquist_frequency
+            + interpolation methods enhances spatial resolution but introduce errors in blurring and aliasing
+        + different dimension of imaging highly correlated with reach other (due to reflectance and illumination of scene)
+        + local structured model
+            + learn a local mapping function from data, 
+                + inputs: low-res multisampled images
+                + labels: correct high-resolution images
+            + model is a polynomial function of brightness measured within a local neighborhood
+                + learn local mapping `f`
+                + `H(i, j) = f(M(X, Y))` where
+                    + `H` is high quality value at pixel i, j
+                    + `M` is measured low-res value at pixel `x,y` in a neighbhorhood `X,Y` around `i,j`
+            + use a single structured model for each type of local sampling pattern
+        + previous methods
+            + Markov model, bayesian, kernel
+        + novel
+            + resolution enhancement over multiple dimensions
+    + SVC and models
+        + SVC (spatially varying color)
+            + bayes color mosaic
+                + mosaic of R, G, B in digital color sensors
+                + have 4 different sampling pattern for a neighborhood of 3x3
+        + goal  
+            + compute value of (R,G,B) at each pixel
+        + model 
+            + `M_p(\lambda) = A_p C_p(\lambda)`
+                + `p` represent pattern, `\lambda` represent color
+                + `A_P` are measurements of neighborhood having pattern `P`
+                    + where each row has all relevant powers of measured data `M_P` within a neighborhood
+                + `C_P(\lambda)` coefficients of polynomial mapping function
+            + optimize with least squared
+                + `C = (A^TA)^{-1} A^T H`
+        + performance
+            + visual and luminance error
+            + stability of learnt model
+                + good on training data, or test data similar to training data
+                + if trainnig data is large, then random test data has larger error but is stable
+    + SVEC (spatially varying exposure and color)
+        + simutaneous sampling of space, color, and exposure
+            + given 8 bit single color -> construct 12 bit for each 3 color values at each pixel
+        + pattern
+            + base pattern
+        + still the same model,
+    + questions 
+        + SVC model
+            + why is the polynomial model for SVC accounts for correlation between different color channels, seems the coefficients for the model is computed independently
+            + to get high quality value from low-res value in the neighborhood, why the model multiplies measurement for each pixel and every other pixel
+                + to model pairwise correlation between pixels?
+            + compute number of coefficients, why + P not * P
+        + is the project currently using bicubic interpolation?
 
 + [2013_joint_demosacing_and_denoising_via_learned_nonparametric_random_fields](2013_joint_demosacing_and_denoising_via_learned_nonparametric_random_fields.pdf)
     + 
 
 + [2016_deep_joint_demosaicking_and_denoising](2016_deep_joint_demosaicking_and_denoising.pdf)
     + slides (https://groups.csail.mit.edu/graphics/demosaicnet/data/demosaicnet_slides.pdf)
-    + idea
-        + train deep learning model on LARGE datasets (including hard cases) that does demosaicking and denoising jointly, exploiting regularities in natural images
-    + challenges
-        + datasets not enough hard cases
-        + need to fine-tune network for different ISO, camera, etc...
-    + dataset
-        + inputs
+    + abstract
+        + data-driven (instead of hand-crafted priors) approach to demosaicing and denoising using deep neural nets
+        + goal 
+            + reduce computation speed
+            + reduce artifacts
+        + dataset
             + millions of sRGB images, mosaicked, and added noise
-        + outputs
-            + image with RGB triplets per pixel
+            + metrics to identify difficult patches
+            + inject noise
+    + introduction 
+        + compare to flexISP (2014) 
+            + non-local natural image priors is still handcrafted, and incoporation of optimization and non-local priors leads to increase in computation cost
+        + contribution
+            + `demosaicnet` uses data-driven local filtering approach for efficiency
+            + capable of handling wide range of noise
+            + method of building training set rich in challenging artifacts (moire, etc)
+            + SOTA results
+            + runs faster
+    + related work 
+        + demosaicing
+            + filters, smooth hue priors
+            + replace hand-crafted filters with deep learning
+        + self-similarity
+            + some methods uses neural nets
+            + but trained on small datasets
+            + this work builds a larger dataset
+        + joint denoising and demosaicking
+            + Heide [2014] use a global primal-dual optimization with self-similarity prior but is too slow
+            + Khashabi [2014] (joint via learned nonparametric random fields) learning approach
+            + Klatzer [2016] (learning joint demosaicing and denoising baesd on sequential energy minimization) sequential energy minimization
+            + this work expose noise level as a parameter
     + network
         + convert Bayer input to quarter-resolution multi-channel image
             + each 2x2 patch -> 4 channel feature 
@@ -295,6 +313,74 @@
             + so might not be the most feasible ....
         + relating to the project
 
+
++ [2018_deep_image_demosaicking_using_a_cascade_of_convolutional_residual_denoising_networks](2018_deep_image_demosaicking_using_a_cascade_of_convolutional_residual_denoising_networks.pdf)
+    + basically 2016 paper but extended with majority maximization ...
+
++ [2018_deep_residual_network_for_joint_demosaicing_and_superresolution](2018_deep_residual_network_for_joint_demosaicing_and_superresolution.pdf)
+
+
+## Inverse problem
+
++ [2014_flexISP_a_flexible_camera_image_processing_framework](2014_flexISP_a_flexible_camera_image_processing_framework.pdf)
+    + abstract
+        + end-to-end image processing that
+            + enforce image priors as proximal operators
+            + ADMM/primaldual optimization
+        + idea: end-to-end reduces error introduecd in each step of image processing
+            + each stage is ill-posed
+            + individual stage not independent
+        + applied to demosaicking, denoising, deconvolution, etc.
+    + related work
+        + denoising
+            + priors: self-similarity and sparsity
+            + BM3D and TV (total variations)
+        + joint optimization 
+            + addressing subproblems does not yield best-quality reconstructions
+            + demosaiking+denoising
+            + demosaiking+denoising
+            + ...
+            + ADMM applied to image processing literature
+    + optimization 
+        + inverse problem 
+            + `z = Ax + \eta`
+            + `min_x 1/2 ||z-Ax||^2 + R(x)`
+            + converted to standard constrained optimization 
+        + solver (primal dual faster than ADMM)
+        + regularization 
+            + image gradient sparsity (TV)
+            + denoising (NLM,BM3D)
+            + cross channel gradient correlation for edge consistency
+        + combination of regularizers
+            + weighted sum
+    + design choices
+        + optimization 
+            + priors as proximal operators
+        + prior choices
+            + external priors
+                + tested TV, curvelet, EPLL
+                + TV is most cost-effective
+            + internal priors (Denoiser)
+                + tested BM3D, NLM, DCT
+                + BM3D best
+    + applications & results
+        + demosaiking
+            + 2.2 dB over best previous method
+        + deblurring
+        + interlased HDR
+        + color array camera
+        + burst denoising and demosaicking
+        + process JPEG compressed image
+    + discussion 
+        + priors
+            + choice of prior importants
+        + failure cases
+            + inputs with no self-similarity (i.e. random noie)
+            + misconfiguring solver parameter
+    + observation 
+        + regularizer weights influence reconstruction
+        + did not prove convexity / guaranteed convergence
+
 + [2017_joint_demosaicing_and_denoising_of_nioisy_bayer_images_with_ADMM](2017_joint_demosaicing_and_denoising_of_nioisy_bayer_images_with_ADMM.pdf)
     + codebase: https://github.com/TomHeaven/Joint-Demosaic-and-Denoising-with-ADMM
     + abstract
@@ -339,12 +425,10 @@
         + faster algo
         + convergence of ADMM not determined
 
-+ [2018_deep_image_demosaicking_using_a_cascade_of_convolutional_residual_denoising_networks](2018_deep_image_demosaicking_using_a_cascade_of_convolutional_residual_denoising_networks.pdf)
-    + basically 2016 paper but extended with majority maximization ...
 
-+ [2018_deep_residual_network_for_joint_demosaicing_and_superresolution](2018_deep_residual_network_for_joint_demosaicing_and_superresolution.pdf)
 
-### Demosaicing reviews
+
+## Reviews
 
 + [2005_demosaicking_color_filter_array_interpolation](2005_demosaicking_color_filter_array_interpolation.pdf)
     + a survey of heuristic-based, reconstruction-based, image model based interpolation techniques for bayer color filter array (CFA)
