@@ -45,3 +45,49 @@ gs -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -q -o output.pdf file.pdf
 
 
 
+## hyperspectral imaging
+
+
++ https://link.springer.com/article/10.1007/s00138-018-0965-4
+    + hypterspectral imaging mosaic design
+    +  discusses
+        + how much hyperspectral imaging benefit from spectral and spatial correlation 
+
++ https://link.springer.com/article/10.1007/s11042-018-6396-4
+    + http://sesar.di.unimi.it/jdemdb/
+    + a new dataset (16-bit images) for benchmarking demosaicing and denoising algorithms
+
++ Generating Training Data for Denoising Real RGB Images via Camera Pipeline Simulation
+    + https://arxiv.org/pdf/1904.08825.pdf
+    + more realistic dataset generation with realistic noise characteristics
+
+
+## The list of state of art methods
+
++ tabulate the psnrs in a matrix ...
+    + only >= 2015 papers
++ things to keep track of
+    + brief description of methods
+        + pro/con
+        + interest
+    + feasibilty/bottleneck w.r.t. c2b camera
+        + easy to use ?
+
+
++ some observation on datasets
+    - deep learning based ones could be trained with several hundred to 2k images
+    - however, this is a problem for c2b cameras, since the dataset would be fixed to particular tiling, and a particular reconstruction pattern
+    - just need full-res images .... 
+    - different pattern for each frame
+
+    
+
+<!-- 
++ [2017 FlexISP: A Flexible Camera Image Processing Framework](http://www.cs.ubc.ca/labs/imager/tr/2014/FlexISP/FlexISP_Heide2014_lowres.pdf)
+
++ [2019 Handheld Multi-Frame Super-Resolution](https://arxiv.org/pdf/1905.03277.pdf)
+    + the creates a complete RGB without demosaicing from a burst of CFA raw images. the method uses natural hand tremor to acquire images with small offsets, the frames are aligned and merged to form a single image. 
+        + demosaicing + superresolution as an image reconstruction problem
+        + does not rely on cross-channel correlation
+    + feasibility 
+        + hand tremor not feasible -->

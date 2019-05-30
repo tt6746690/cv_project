@@ -6,3 +6,4 @@ dependencies:
     - numpy
     - jupyter
     - nb_conda
+    - pyyaml

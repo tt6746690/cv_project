@@ -134,6 +134,8 @@
 
 + [2010_review_image_denoising_algorithm_with_a_new_one](2010_review_image_denoising_algorithm_with_a_new_one.pdf)
 
-+ [2018_modern_regularization_methods_for_inverse_problems](2018_modern_regularization_methods_for_inverse_problems.pdf)
++ [2018_review_modern_regularization_methods_for_inverse_problems](2018_modern_regularization_methods_for_inverse_problems.pdf)
     + linear/nonlinear regularization for inverse problems
     + pretty involved discussion 
+
++ [2018_review_cnn_for_inverse_problems_in_imaging](2018_review_cnn_for_inverse_problems_in_imaging.pdf)
