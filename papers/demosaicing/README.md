@@ -497,3 +497,5 @@
 + [2011_color_image_demosaicking_an_overview](2011_color_image_demosaicking_an_overview.pdf)
     + picked some good algorithms
 
++ [2018_colour_filter_array_demosaicking_a_brief_survey](https://www.tandfonline.com/doi/full/10.1080/13682199.2018.1534388)
+

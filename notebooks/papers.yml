@@ -1,0 +1,36 @@
+
+-
+    short: 2017_deepprojection_model
+    full: One Network to Solve Them All — Solving Linear Inverse Problems using Deep Projection Models
+    url: http://openaccess.thecvf.com/content_ICCV_2017/papers/Chang_One_Network_to_ICCV_2017_paper.pdf
+    code: https://github.com/image-science-lab/OneNet
+    tag: [inverse problem, deep, proximal operators]
+    contribution:
+        - learn signal prior in the form of projection/proximal operator under ADMM framework to solve inverse problems
+        - showed convergence criteria for projection operator to guide design of projection networks
+    result:
+        - convergence is shown experimentally, theory only introduced condition for convergence to stationary points
+        - is robust to linear operators involved in inverse problem and to noise levels
+        - projection network fails for challenging problems such as blockwise inpainting
+    observation:
+        - quite well written, explains motivation and design decisions in using neural nets
+        - some experiments performed on MNISDT dataset
+        - perhaps could find a neural network that satisfy the convexity constraints, 
+            + i.e. convex neural networks (https://arxiv.org/pdf/1609.07152.pdf)
+        
+
+-
+    short: 2018_multispectral_demosaicing_PPI
+    full: Multispectral demosaicing using pseudo-panchromatic image
+    url: https://hal.archives-ouvertes.fr/hal-01507480/document
+
+-
+    short: 2018_deep_demosaic_multispectral
+    full: Deep demosaicking for multispectral filter arrays
+    url: https://arxiv.org/pdf/1808.08021.pdf
+    tag: [multispectral, demosaic, deep]
+    contribution:
+        - this method bilinearly interpolates the multispectral image, then apply a residual network to refine
+        - 3d convolution where 3rd dimension is spectral
+    observation:
+        - CAVE multispectral imaging dataset (http://www.cs.columbia.edu/CAVE/databases/multispectral/)

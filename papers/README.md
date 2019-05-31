@@ -64,6 +64,9 @@ gs -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -q -o output.pdf file.pdf
 
 ## The list of state of art methods
 
+
+#### 05.30
+
 + tabulate the psnrs in a matrix ...
     + only >= 2015 papers
 + things to keep track of
@@ -73,7 +76,6 @@ gs -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -q -o output.pdf file.pdf
     + feasibilty/bottleneck w.r.t. c2b camera
         + easy to use ?
 
-
 + some observation on datasets
     - deep learning based ones could be trained with several hundred to 2k images
     - however, this is a problem for c2b cameras, since the dataset would be fixed to particular tiling, and a particular reconstruction pattern
@@ -81,13 +83,29 @@ gs -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -q -o output.pdf file.pdf
     - different pattern for each frame
 
     
+#### 05.31
 
-<!-- 
-+ [2017 FlexISP: A Flexible Camera Image Processing Framework](http://www.cs.ubc.ca/labs/imager/tr/2014/FlexISP/FlexISP_Heide2014_lowres.pdf)
++ mosaic design could be really cool as a second step
+    + Deep Joint Design of Color Filter Arrays and Demosaicing
+        + automatic design of filter arrangement with an autoencoder
++ hook up or implement method myself ?
+    + 
 
-+ [2019 Handheld Multi-Frame Super-Resolution](https://arxiv.org/pdf/1905.03277.pdf)
-    + the creates a complete RGB without demosaicing from a burst of CFA raw images. the method uses natural hand tremor to acquire images with small offsets, the frames are aligned and merged to form a single image. 
-        + demosaicing + superresolution as an image reconstruction problem
-        + does not rely on cross-channel correlation
-    + feasibility 
-        + hand tremor not feasible -->
+
+
+
+- 
+    short: 2014_flexISP
+    full: FlexISP: A Flexible Camera Image Processing Framework
+    url: http://www.cs.ubc.ca/labs/imager/tr/2014/FlexISP/FlexISP_Heide2014_lowres.pdf
+    notes:
+        - end-to-end image processing that enforce image priors as proximal operators and use ADMM/primal-dual for optimization
+        - end-to-end reduces error introduced in each steps of image processing, as each stage is not independent
+        - applied to demosaicing, denoising, deconvolution, and a variety of reconstruction tasks
+    evaluate:
+        - recontruction based, no need for large datasets
+        - classical regularizers that have proven to work well
+        - choice of prior is shown to influence performance, so the choice of prior is important but ad hoc
+        - no principled ways to pick solver parameters, i.e. the weight of regularizers
+        - nonconvexity of the regularizers makes the optimization not guaranteed to converge to global optimum
+        

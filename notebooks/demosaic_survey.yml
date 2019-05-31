@@ -1,11 +1,12 @@
 - 
-    name: 2014_flexISP
+    short: 2014_flexISP
+    full: FlexISP:A Flexible Camera Image Processing Framework
     url: http://www.cs.ubc.ca/labs/imager/tr/2014/FlexISP/FlexISP_Heide2014_lowres.pdf
     notes:
         - end-to-end image processing that enforce image priors as proximal operators and use ADMM/primal-dual for optimization
         - end-to-end reduces error introduced in each steps of image processing, as each stage is not independent
         - applied to demosaicing, denoising, deconvolution, and a variety of reconstruction tasks
-    evaluate:
+    remark:
         - recontruction based, no need for large datasets
         - classical regularizers that have proven to work well
         - choice of prior is shown to influence performance, so the choice of prior is important but ad hoc
@@ -14,7 +15,8 @@
         
 
 -
-    name: 2016_sequential_energy_minimization
+    short: 2016_sequential_energy_minimization
+    full: Learning Joint Demosaicing and Denoising Based on Sequential Energy Minimization
     url: https://pure.tugraz.at/ws/portalfiles/portal/3625282/0004.pdf
     notes:
         - demosacing+denoising as image restoration problem
@@ -24,7 +26,7 @@
         - regularization is learnt from data
         - noise level is more realistic, i.e. Poisson + Gaussian
         - data fidelity term and image priors are learnt from data
-    evaluate:
+    remark:
         - 200 training images, which seems reasonable
     compare_to:
         - 2014_flexISP
@@ -39,7 +41,8 @@
         
 
 -
-    name: 2016_deepjoint
+    short: 2016_deepjoint
+    full: Deep Joint Demosaicking and Denoising
     url: https://groups.csail.mit.edu/graphics/demosaicnet/data/demosaicnet_slides.pdf
     slides: https://groups.csail.mit.edu/graphics/demosaicnet/data/demosaicnet_slides.pdf
     notes:
@@ -47,7 +50,7 @@
         - goal is to reduce computation speed and reduce artifacts
         - generated millions of sRGB images, mosaicked, and injected noise.
         - came up with new metrics for identifying hard patches
-    evaluate:
+    remark:
         - requires 2.5M images, not really feasible
     compare_to:
         - 2014_flexISP
@@ -64,13 +67,14 @@
             - 42.7
             
 - 
-    name: 2017_jointadmm
+    short: 2017_jointadmm
+    full: Joint demosaicing and denoising of noisy bayer images with ADMM
     url: https://www.researchgate.net/profile/Hanlin_Tan/publication/317058420_Joint_demosaicing_and_denoising_of_noisy_bayer_images_with_ADMM/links/59479f95a6fdccfa5949fc82/Joint-demosaicing-and-denoising-of-noisy-bayer-images-with-ADMM.pdf?origin=publication_detail
     notes:
         - unified objective function with hidden priors, optimized wth ADMM for demosaicing noisy bayer input
         - included 4 prior terms, i.e. smoothness TV, denoising CBM3D, cross-channel, interpolation-based priors
         - results showed ADMM based more robust to noise
-    evaluate:
+    remark:
         - purely optimization based
         - however regularizers are pretty ad hoc
     compare_to:
@@ -95,8 +99,19 @@
             - 29.89
             - 30.50
             
+-
+    short: 2017_RED
+    full: The Little Engine that Could:Regularization by Denoising (RED)
+    url: https://arxiv.org/pdf/1611.02862.pdf
+    notes:
+        - use denoiser as regularization of inverse problems
+        - image adaptive laplacian-based function that motivates the use of denoisers
+        - assumptions of denoisers and proved convergence of results
+        - achieved state of art image superresolution 
+
 - 
-    name: 2017_learned_proximal_operators
+    short: 2017_learned_proximal_operators
+    full: Learning Proximal Operators:Using Denoising Networks for Regularizing Inverse Imaging Problems
     url: http://openaccess.thecvf.com/content_ICCV_2017/papers/Meinhardt_Learning_Proximal_Operators_ICCV_2017_paper.pdf
     notes:
         - replace regularizer in energy minimization methods (primal-dual hybrid gradient PDHG) with a denoising neural network
@@ -105,7 +120,7 @@
         - related work section detailed some theory, proofs on convergence of custom proximal algorithms
         - RED is motivated by the observation that proximal operator is equivalent to image denoising
         - method implemented in a DSL for proximal methods in processing images (http://people.csail.mit.edu/jrk/proximal.pdf)
-    evaluate:
+    remark:
         - DnCNN trained with 400 images of size 180x180, larger dataset negligible performance increase
         - seem to claim that using neuralnets for regularizers is better
     compare_to:
@@ -122,12 +137,13 @@
 
          
 -
-    name: 2018_jointgan_perceptual
+    short: 2018_jointgan_perceptual
+    full: Joint Demosaicing and Denoising with Perceptual Optimization on a Generative Adversarial Network
     url: https://arxiv.org/pdf/1802.04723.pdf
     notes:
-        - used discriminator instead of PSNR/SSIM to evaluate perceptual quality of the reconstructed image
+        - used discriminator instead of PSNR/SSIM to remark perceptual quality of the reconstructed image
         - jointly optimize for demosaic and denoise
-    evaluate:
+    remark:
         - 1400 high quality color photo, into 100x100 patches, data-augmentation x8 -> 320000 iamges
         - maybe manageable
     compare_to:
@@ -153,11 +169,12 @@
             - 30.77
             
 - 
-    name: 2018_deepdemosaicking
+    short: 2018_deepdemosaicking
+    full: DeepDemosaicking:Adaptive Image Demosaicking via Multiple Deep Fully Convolutional Networks
     url: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8283772
     notes:
         - initial demosaic combined with demosaic refinement reduces color artifacts using deep residual estimation 
-    evaluate:
+    remark:
         - 838 high res image from several sources -> 100000 64x64 patches
     compare_to:
         - 2016_deepjoint
@@ -167,18 +184,42 @@
             - 41.45
             - 42.12
             
+-
+    short: 2018_cascade_residual_denoising
+    full: Deep Image Demosaicking using a Cascade of Convolutional Residual Denoising Networks
+    url: https://arxiv.org/pdf/1803.05215.pdf
+    notes:
+        - majorization maximiztion network
+        - claimed to be more interpretable than deep learning approaches, and generalize well on small dataset
+        - deep residual denoiser
+    remark:
+        - a previous paper of iterative resnet paper
+    compare_to:
+        - 2016_sequential_energy_minimization
+        - 2018_cascade_residual_denoising
+    results:
+        msr_linear:
+            - 40.9
+            - 41.0
+        msr_linear_noisy:
+            - 38.8
+            - 39.2
+    points:
+        - also outperformed 2016 deep joint on MIT dataset
+            
+
 - 
-    name: 2018_iterative_resdnet_joint
-    previous_work: https://arxiv.org/pdf/1803.05215.pdf
-    code: https://github.com/cig-skoltech/deep_demosaick
+    short: 2018_iterative_resnet_joint
+    full: Iterative Residual Network for Deep Joint Image Demosaicking and Denoising
     url: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8668795
+    code: https://github.com/cig-skoltech/deep_demosaick
     notes:
         - iterative neural networks for efficient optimization (majorization minimization)
         - use resdnet to learn the regularizing term
         - the algorithm is equivalent to Inexact Proximal Gradient Descent
         - used more realistic affine noise model instead of gaussian noise model
             - http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.164.1943&rep=rep1&type=pdf
-    evaluate:
+    remark:
         - compared to RED, P3, this method does not require setting of hyperparameters
         - resdnet pretrained on berkeley dataset (500 color images)
         - microsoft dataset, 500 natural images with panasonic dmc-lx3 ccd with bayer cfa
@@ -188,7 +229,7 @@
         - 2016_sequential_energy_minimization
         - 2016_deepjoint
         - 2018_deepdemosaicking
-        - 2018_iterative_resdnet_joint
+        - 2018_iterative_resnet_joint
     results:
         kodak:
             - 40
@@ -219,13 +260,14 @@
         
         
 - 
-    name: 2018_deepjoint_design
+    short: 2018_deepjoint_design
+    full: Deep Joint Design of Color Filter Arrays and Demosaicing
     url: https://inf.ufrgs.br/~bhenz/projects/joint_cfa_demosaicing/deep_joint_design_of_color_filter_arrays_and_demosaicing_pre-print.pdf
     notes:
         - uses autoencoder to encode input to `multispectral mosaic`, which is then decoded to full resolution image
         - finds mosaic pattern and demosaicing algorithm that minimizes color-reconstruction error
         - achieved state of arts result, while allowing for cfa mosaic design
-    evaluation:
+    remark:
         - has some good background references on cfa design, maybe applicable in our case
         - a followup https://evanfletcher42.com/2018/09/23/arbitrary-learned-mosaic/
     compare_to:
@@ -244,16 +286,17 @@
         mcm_sigma20:
             - 30.15
             - 30.87
-
+            
 
 -
-    name: 2019_deepisp
+    short: 2019_deepisp
+    full: DeepISP:Towards Learning an End-to-End Image Processing Pipeline
     url: https://arxiv.org/pdf/1801.06724.pdf
     notes:
         - learns mapping from raw low-light mosaiced image to output image
             - low-level tasks (demosaicing+denoising)
             - high-level (color correction, image adjustment)
-    evaluate:
+    remark:
         - masking patterns are differentiable weights inside encoder
         - training dataset too large to be feasible, 5 days of training time
     compare_to:
@@ -270,7 +313,8 @@
         
 
 - 
-    name: 2019_multiframe_superres
+    short: 2019_multiframe_superres
+    full: Handheld Multi-Frame Super-Resolution
     url: https://arxiv.org/pdf/1905.03277.pdf
     notes:
         - the method creates a complete RGB without demosaicing from a burst of CFA raw images 
@@ -278,7 +322,7 @@
         - the frames are aligned and merged to form a single image
         - solve demosaicing + superresolution as an image reconstruction problem
         - does not rely on cross-channel correlation
-    evaluate:
+    remark:
         - hand tremor not feasible for c2b camera
     compare_to:
         - 2014_flexISP
