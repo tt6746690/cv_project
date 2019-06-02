@@ -89,7 +89,17 @@ gs -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -q -o output.pdf file.pdf
     + Deep Joint Design of Color Filter Arrays and Demosaicing
         + automatic design of filter arrangement with an autoencoder
 + hook up or implement method myself ?
-    + 
+    + if its easiest to do this ...
+
++ adapt the neural net for two bucket camera
+    + i.e. input is two bucket camera
+    + can do demosaic and demultiplexing at same time...
++ decide which one is most amenable ...
++ pick a few that is reasonable, pros and cons, what does it take to get there
+    + write the email 
+    + propose a few
+
+
 
 
 

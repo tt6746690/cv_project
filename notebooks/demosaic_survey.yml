@@ -133,7 +133,7 @@
             - 39.5
             - 37.12
     points:
-        - the mehtod is general for any inverse problem, not just demosaicing, so performed worse than demosaicnet, but is better than flexISP
+        - the method is general for any inverse problem, not just demosaicing, so performed worse than demosaicnet, but is better than flexISP
 
          
 -
@@ -158,14 +158,12 @@
             - 23.00
             - 29.17
             - 29.26
-            - 30.70
             - 30.74
         mcm_sigma20:
             - 25.01
             - 22.99
             - 28.79
             - 29.31
-            - 30.73
             - 30.77
             
 - 
@@ -222,8 +220,7 @@
     remark:
         - compared to RED, P3, this method does not require setting of hyperparameters
         - resdnet pretrained on berkeley dataset (500 color images)
-        - microsoft dataset, 500 natural images with panasonic dmc-lx3 ccd with bayer cfa
-            - 200 training images
+        - this method trained on 200 linear noise free RGB images (`msr`) outperforms 2016_deepjoint
     compare_to:
         - 2014_flexISP
         - 2016_sequential_energy_minimization
@@ -255,8 +252,6 @@
             - 38.6
             - 0
             - 40.1
-    points:
-        - this method trained on 200 linear noise free RGB images outperforms 2016_deepjoint
         
         
 - 
@@ -297,7 +292,7 @@
             - low-level tasks (demosaicing+denoising)
             - high-level (color correction, image adjustment)
     remark:
-        - masking patterns are differentiable weights inside encoder
+        - masking patterns are fixed, the color of each filter is tuned
         - training dataset too large to be feasible, 5 days of training time
     compare_to:
         - 2014_flexISP

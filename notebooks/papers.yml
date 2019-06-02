@@ -20,6 +20,16 @@
         
 
 -
+    short: 2017_RED
+    full: The Little Engine that Could:Regularization by Denoising (RED)
+    url: https://arxiv.org/pdf/1611.02862.pdf
+    notes:
+        - use denoiser as regularization of inverse problems
+        - image adaptive laplacian-based function that motivates the use of denoisers
+        - assumptions of denoisers and proved convergence of results
+        - achieved state of art image superresolution 
+
+-
     short: 2018_multispectral_demosaicing_PPI
     full: Multispectral demosaicing using pseudo-panchromatic image
     url: https://hal.archives-ouvertes.fr/hal-01507480/document
