@@ -7,21 +7,21 @@ From reading some recent papers on demosaicing. It is obvious to see the followi
 - utilizing neural networks in some capacity in solving the problem. This can range from learning image prior from data in some classical convex optimization frameowork such as ADMM (2017_learned_proximal_operators) to end-to-end training on large datasets for demosaicing [2018_deepdemosaicking, 2019_deepisp]. 
 - joint optimization, bundling demosaicing with deblurring, superresolution, denoising [2016_deepjoint, 2017_jointadmm, 2018_jointgan_perceptual, 2018_iterative_resnet_joint], etc. To the extreme, the entire image processing pipeline is under one single framework [2014_flexISP, 2019_deepisp]
 
-I think [2017_learned_proximal_operators, 2017_RED, 2018_iterative_resnet_joint] are most applicable for our project. The idea of these methods is to formulate demosaicing as an inverse problems. The image priors are learnt from data and acts as regularizers in the optimization problem. The benefit of such method is given as follows
+I think [2017_learned_proximal_operators, 2017_RED, 2018_iterative_resnet_joint] are most applicable for our project. The idea of these methods is to formulate demosaicing as an inverse problems. The image priors are learnt from data and act as regularizers in the optimization problem. The benefits of such method are given as follows
 
 - does not require large datasets that deep neural network methods rely on. Usually, small dataset of at most several hundred images is enough to give promising results
 - the image priors, i.e. total variation, cross-channel correlation, are learnt from data. 
     - they are not ad hoc, and heuristic based
-    - the priors can be learnt for different downstream reconstruction tasks, i.e. multispectral imaging and structured light
+    - the priors can be learnt for different downstream reconstruction tasks, i.e. multispectral imaging and structured light have different image priors
 
 There are however problems, for example
 
-- convergence is not guaranteed for nonconvex regularizers.
+- convergence is not guaranteed for nonconvex regularizers (in ADMM framework)
 
-    - there is some work by [2017_RED] that under some assumptions that most denoising method satisfies, the method is guaranteed to converge.
-    - there is some theory used by [this paper](http://openaccess.thecvf.com/content_ICCV_2017/papers/Chang_One_Network_to_ICCV_2017_paper.pdf) which states that under certain assumptions, nonconvex regularizers converges to stationary points
+    - there is some work by [2017_RED] that, under some assumptions most denoising method satisfies, the method is guaranteed to converge.
+    - there is some theory used by [this paper](http://openaccess.thecvf.com/content_ICCV_2017/papers/Chang_One_Network_to_ICCV_2017_paper.pdf) that states under certain assumptions, nonconvex regularizers converges to stationary points
 
-- runtime is slower than interpolation based or purely neural network based methods
+- slower speed compared to interpolation based or purely neural network based methods
  
 
 
