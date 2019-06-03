@@ -18,6 +18,7 @@
     short: 2016_sequential_energy_minimization
     full: Learning Joint Demosaicing and Denoising Based on Sequential Energy Minimization
     url: https://pure.tugraz.at/ws/portalfiles/portal/3625282/0004.pdf
+    code: https://github.com/VLOGroup/joint-demosaicing-denoising-sem
     notes:
         - demosacing+denoising as image restoration problem
         - method learngs efficient regularization by a variational energy minimization 
@@ -44,6 +45,7 @@
     short: 2016_deepjoint
     full: Deep Joint Demosaicking and Denoising
     url: https://groups.csail.mit.edu/graphics/demosaicnet/data/demosaicnet_slides.pdf
+    code: https://github.com/mgharbi/demosaicnet_caffe
     slides: https://groups.csail.mit.edu/graphics/demosaicnet/data/demosaicnet_slides.pdf
     notes:
         - data-driven (instead of hand-crafted priors) approach to demosaicing and denoising using deep neural nets
@@ -70,6 +72,7 @@
     short: 2017_jointadmm
     full: Joint demosaicing and denoising of noisy bayer images with ADMM
     url: https://www.researchgate.net/profile/Hanlin_Tan/publication/317058420_Joint_demosaicing_and_denoising_of_noisy_bayer_images_with_ADMM/links/59479f95a6fdccfa5949fc82/Joint-demosaicing-and-denoising-of-noisy-bayer-images-with-ADMM.pdf?origin=publication_detail
+    code: https://github.com/TomHeaven/Joint-Demosaic-and-Denoising-with-ADMM
     notes:
         - unified objective function with hidden priors, optimized wth ADMM for demosaicing noisy bayer input
         - included 4 prior terms, i.e. smoothness TV, denoising CBM3D, cross-channel, interpolation-based priors
@@ -103,6 +106,7 @@
     short: 2017_RED
     full: The Little Engine that Could:Regularization by Denoising (RED)
     url: https://arxiv.org/pdf/1611.02862.pdf
+    code: https://github.com/google/RED
     notes:
         - use denoiser as regularization of inverse problems
         - image adaptive laplacian-based function that motivates the use of denoisers
@@ -113,6 +117,7 @@
     short: 2017_learned_proximal_operators
     full: Learning Proximal Operators:Using Denoising Networks for Regularizing Inverse Imaging Problems
     url: http://openaccess.thecvf.com/content_ICCV_2017/papers/Meinhardt_Learning_Proximal_Operators_ICCV_2017_paper.pdf
+    code: https://github.com/tum-vision/learn_prox_ops
     notes:
         - replace regularizer in energy minimization methods (primal-dual hybrid gradient PDHG) with a denoising neural network
             - residual denoising network DnCNN (https://arxiv.org/pdf/1608.03981.pdf)

@@ -39,6 +39,8 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
     + https://stanford.edu/class/ee367/
 + discrete differential geometry 
     + https://graphics.stanford.edu/courses/cs468-13-spring/
++ deep learning refresher
+    + http://www.cs.toronto.edu/~rgrosse/courses/csc421_2019/
 
 
 ## Random
