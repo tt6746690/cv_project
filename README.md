@@ -6,7 +6,7 @@
 https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_tutorials.html
 
 # conda env support in jupyter notebook
-conda install nb_conda
+# conda install nb_conda // already in yml
 
 # select conda env for jupyter notebook
 conda env create -f cv_project.yml
