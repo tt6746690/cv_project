@@ -137,6 +137,7 @@ Row `i` and column `j` of each table indicates the psnr of `j`-th method in `i`-
 
 
 - [Learning Joint Demosaicing and Denoising Based on Sequential Energy Minimization (2016_sequential_energy_minimization)](https://pure.tugraz.at/ws/portalfiles/portal/3625282/0004.pdf)
+    - [code](https://github.com/VLOGroup/joint-demosaicing-denoising-sem)
     - notes
         - demosacing+denoising as image restoration problem
         - method learngs efficient regularization by a variational energy minimization
@@ -152,6 +153,7 @@ Row `i` and column `j` of each table indicates the psnr of `j`-th method in `i`-
 
 
 - [Deep Joint Demosaicking and Denoising (2016_deepjoint)](https://groups.csail.mit.edu/graphics/demosaicnet/data/demosaicnet_slides.pdf)
+    - [code](https://github.com/mgharbi/demosaicnet_caffe)
     - notes
         - data-driven (instead of hand-crafted priors) approach to demosaicing and denoising using deep neural nets
         - goal is to reduce computation speed and reduce artifacts
@@ -164,6 +166,7 @@ Row `i` and column `j` of each table indicates the psnr of `j`-th method in `i`-
 
 
 - [Joint demosaicing and denoising of noisy bayer images with ADMM (2017_jointadmm)](https://www.researchgate.net/profile/Hanlin_Tan/publication/317058420_Joint_demosaicing_and_denoising_of_noisy_bayer_images_with_ADMM/links/59479f95a6fdccfa5949fc82/Joint-demosaicing-and-denoising-of-noisy-bayer-images-with-ADMM.pdf?origin=publication_detail)
+    - [code](https://github.com/TomHeaven/Joint-Demosaic-and-Denoising-with-ADMM)
     - notes
         - unified objective function with hidden priors, optimized wth ADMM for demosaicing noisy bayer input
         - included 4 prior terms, i.e. smoothness TV, denoising CBM3D, cross-channel, interpolation-based priors
@@ -176,6 +179,7 @@ Row `i` and column `j` of each table indicates the psnr of `j`-th method in `i`-
 
 
 - [The Little Engine that Could:Regularization by Denoising (RED) (2017_RED)](https://arxiv.org/pdf/1611.02862.pdf)
+    - [code](https://github.com/google/RED)
     - notes
         - use denoiser as regularization of inverse problems
         - image adaptive laplacian-based function that motivates the use of denoisers
@@ -186,6 +190,7 @@ Row `i` and column `j` of each table indicates the psnr of `j`-th method in `i`-
 
 
 - [Learning Proximal Operators:Using Denoising Networks for Regularizing Inverse Imaging Problems (2017_learned_proximal_operators)](http://openaccess.thecvf.com/content_ICCV_2017/papers/Meinhardt_Learning_Proximal_Operators_ICCV_2017_paper.pdf)
+    - [code](https://github.com/tum-vision/learn_prox_ops)
     - notes
         - replace regularizer in energy minimization methods (primal-dual hybrid gradient PDHG) with a denoising neural network - residual denoising network DnCNN (https://arxiv.org/pdf/1608.03981.pdf)
         - reduce problem-specific training (i.e. different images, different noise levels)
@@ -231,6 +236,7 @@ Row `i` and column `j` of each table indicates the psnr of `j`-th method in `i`-
 
 
 - [Iterative Residual Network for Deep Joint Image Demosaicking and Denoising (2018_iterative_resnet_joint)](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8668795)
+    - [code](https://github.com/cig-skoltech/deep_demosaick)
     - notes
         - iterative neural networks for efficient optimization (majorization minimization)
         - use resdnet to learn the regularizing term

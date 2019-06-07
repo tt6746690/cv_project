@@ -168,3 +168,44 @@ I think from last meeting with Kyros and you, it seems that a more general frame
     + http://people.csail.mit.edu/billf/publications/Noise-Optimal_Capture.pdf
         + explanation for noise model
     + 
+
+
+## 2019.06.05
+
++ create a good dataset
+    + take dataset wenjian and parsa created from simulation
+        + shapenet geometry, project structured light, simulation with mitsuba
+        + realistic 
+            + noise model (michael brown) of actual sensor
+            + lens/projector defocus
+        + some problem with mitsuba
+            + if we need to do the rendering ourselves
+        + randomly textured plane
+    + camera dataset
+        + the image should be demultiplexed version in the image formation pipeline
+        + average multiple frames, for each pattern
+            + lots of pattern (ask wenjian)
+                + note patterns are specific to number of patterns provided 
+            + long exposure
+            + good reconstruction ...
+        + setup T2, get optimized mask from wenjian
+        + good to capture videos (not for testing dataset)
++ think about video (>1 frame) superresolution, by changing patterns (masks) in each frame 
++ think more about structured light upsampling thinking about albedo and projector pattern, etc. 
++ think about computing ratio
++ 2 pixel neighborhood,
+    + 2 frame -> full res image (minimal reconstruction), is reconstruction better than 4 pixel neighborhood?
+    + what is optimal # of patterns given a exposure time ?
++ think about integrating demultiplexing into the framework
+    + demultiplexing fits quite well into admm framework
+        + `y = DWx + e`
+        + where `D` is demosaicing matrix, `W` is demultiplexing matrix
+        + but note `e` should be applied to the intermediate images ...
++ end goal
+    + different paramters that migth give better reconstruction 
+    + reconstruction results
+    + low-level and high-level goals are trade-offs
+        + wenjian / parsa
+            + pattern, number of pattern, optimal algos to recover depth 
+        + me
+            + reconstruct full-res less noisy image
