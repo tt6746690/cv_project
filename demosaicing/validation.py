@@ -23,11 +23,11 @@ def validate_imgs(demosaicing_algorithm, imgs):
         'psnr': []
     }
     for i, img in enumerate(imgs):
-        downsampled = dm.bayer_downsample(img)
+        downsampled = bayer_downsample(img)
         downsampled = np.sum(downsampled, axis=2, dtype=np.uint8)
 
         demosaiced = demosaicing_algorithm(downsampled)
-        psnrv = dm.psnr(img, demosaiced)
+        psnrv = psnr(img, demosaiced)
 
         history['demosaiced'].append(demosaiced)
         history['psnr'].append(psnrv)

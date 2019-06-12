@@ -34,6 +34,27 @@ def show_images(images, descriptions=[], layouts='', bgr2rgb=False):
 
     plt.show()
 
+def show_grayscale(img, description=''):
+    if len(np.shape(img)) == 2 or np.shape(img)[2] == 1:
+        img = np.tile(img[:,:,np.newaxis],(1,1,3))
+
+    img = plt.imshow(img, interpolation='none')
+    plt.axis('off')
+    plt.title(description)
+    
+
+def show_grayscales(images, descriptions=[], layouts=''):
+
+    layouts = "{}1".format(len(images)) if layouts == '' else layouts
+    descriptions = ['' for _ in range(len(images))] if descriptions == [] else descriptions
+    
+    plt.figure(figsize=(20,20))
+    for i,img in enumerate(images):
+        plt.subplot("{}{}".format(layouts, i+1))
+        show_grayscale(img, descriptions[i])
+    plt.show()
+    
+
 # Compare two demosaicing functions on `img` 
 def demosaic_compare(img, fs, crop=None):
     assert(len(fs) == 2)

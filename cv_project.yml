@@ -7,3 +7,4 @@ dependencies:
     - jupyter
     - nb_conda
     - pyyaml
+    - scipy

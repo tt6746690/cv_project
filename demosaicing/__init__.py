@@ -1,5 +1,5 @@
 
-from .plotting import color_channel, show_image, show_images, demosaic_compare
+from .plotting import color_channel, show_image, show_images, demosaic_compare, show_grayscale, show_grayscales
 from .validation import kodak_dataset, validate_imgs
 
 from .noise import additive_gaussian_noise
