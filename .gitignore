@@ -1,3 +1,4 @@
+.DS_store
 data/*
 
 *.aux
@@ -9,5 +10,9 @@ data/*
 
 *.pyc
 __pycache__
+
+# external 
+Joint-Demosaic-and-Denoising-with-ADMM/
+RED/
 
 .ipynb_checkpoints

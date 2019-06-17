@@ -1,5 +1,15 @@
 
 -
+    shrot: 2013_ncsr
+    full: Nonlocally Centralized Sparse Representation for Image Restoration
+    url: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6392274
+    contribution:
+        - image restoration (denoising, deblurring, superresolution) as suppression of sparse coding noise
+    observation:
+        - maybe helpful to look into compressive sensing
+        - performance quite good, RED compared its result with it
+
+-
     short: 2017_deepprojection_model
     full: One Network to Solve Them All — Solving Linear Inverse Problems using Deep Projection Models
     url: http://openaccess.thecvf.com/content_ICCV_2017/papers/Chang_One_Network_to_ICCV_2017_paper.pdf
@@ -23,7 +33,7 @@
     short: 2017_RED
     full: The Little Engine that Could:Regularization by Denoising (RED)
     url: https://arxiv.org/pdf/1611.02862.pdf
-    notes:
+    contribution:
         - use denoiser as regularization of inverse problems
         - image adaptive laplacian-based function that motivates the use of denoisers
         - assumptions of denoisers and proved convergence of results
