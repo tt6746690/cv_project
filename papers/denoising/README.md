@@ -125,6 +125,12 @@
     + abstract
         + use CNN to learn proximal operators
         + did not perform better than flexISP for demosaiking
+    + related work 
+        + flexisp and P3 replace proximal operator with deonising method
+            + [40,18]
+        + convergence analysis 
+            + [5] P3 -> fixed point https://arxiv.org/pdf/1605.01710.pdf
+            + [13] admm
 
 
 

@@ -13,6 +13,8 @@ __pycache__
 
 # external 
 Joint-Demosaic-and-Denoising-with-ADMM/
-RED/
+# RED/
+deep_demosaick/
+learn_prox_ops/
 
 .ipynb_checkpoints

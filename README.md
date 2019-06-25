@@ -51,4 +51,33 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
 + regarding goals for different reconstruction tasks
     + spectral imaging: constant-hue, no abrupt hue change over edges
     + structured light, stereo: devoid of artifacts
-+ arbitrary mosaic tiling: adaptive graph laplacian
++ arbitrary mosaic tiling: 
+    + adaptive graph laplacian
+    + combinatorial optimization, branch bound, simulated annealing, etc.
+    + see if can be converted to graph problems
++ use dark frame subtraction for fixed-pattern noise
+    + take several frames of image with lens capped,
+    + subtract the dark frame from subsequent images
+
+
+
+
++ experiments answering _how well RED works_
+    + see arbitrary masks performance (T2 max 7 patterns per frame)
+    + metrics 
+        + convergence time 
+        + psnr
+    + initial guess [groundtruth image, demosaiced, zero, zero for unknown, random]
+        + see convergence
+        + psnr
+        + convergence speed
+    + masks
+        + bayer
+        + 3-4 random 
+        + other masks
+    + noise
+        + 25,30,35,40
++ learnt prior
+    + for different reconstruction ...
++ arange tiling/mosaicing
+    + 
