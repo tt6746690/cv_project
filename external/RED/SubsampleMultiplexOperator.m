@@ -1,4 +1,4 @@
-function H = SubsampleMultiplexOperator(S,mask)
+function [H,B,C] = SubsampleMultiplexOperator(S,mask)
 % vectorized linear operator that maps S full-res images to 2 bucket measurements
 %       for a given subsampling mask
 %
@@ -13,6 +13,7 @@ function H = SubsampleMultiplexOperator(S,mask)
     W = BucketMultiplexingMatrix(S);
     B = SubsamplingOperator(mask);
     B = blkdiag(B,B);
-    
-    H = B * kron(W,speye(P));
+
+    C = kron(W,speye(P));
+    H = B * C;
 end
