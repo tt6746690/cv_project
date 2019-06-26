@@ -41,7 +41,7 @@
 %   im_out - the reconstructed image
 %   psnr_out - PSNR measured between x_est and orig_im
 
-function [im_out, psnr_out] = RunADMM_demosaic(y, ForwardFunc, BackwardFunc,...
+function [im_out, psnr_out, statistics] = RunADMM_demosaic(y, ForwardFunc, BackwardFunc,...
     InitEstFunc, input_sigma, params, orig_im)
 
 % print info every PRINT_MOD steps 
@@ -65,6 +65,11 @@ x_est = InitEstFunc(y);
 v_est = x_est;
 u_est = x_est*0;
 Ht_y = BackwardFunc(y)/(input_sigma^2);
+
+% keept track of convergence
+psnrs = zeros(1,0);
+costfunc = zeros(1,0);
+save_iter = 1;
 
 % compute the fft of the psf (useful for deblurring)
 if isfield(params,'use_fft') && params.use_fft == true
@@ -122,8 +127,10 @@ for k = 1:1:outer_iters
         im_out = x_est(1:size(orig_im,1), 1:size(orig_im,2),:);
         psnr_out = ComputePSNR(orig_im, im_out);
         fprintf('%7i %12.5f %12.5f \n', k, psnr_out, fun_val);
-        
-        % imshow([x_est(:,:,1) x_est(:,:,2) x_est(:,:,3) x_est(:,:,4)]/255);
+
+        psnrs(save_iter) = psnr_out;
+        costfunc(save_iter) = fun_val;
+        save_iter = save_iter+1;
 
         imshow([orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4); ...
             x_est(:,:,1) x_est(:,:,2) x_est(:,:,3) x_est(:,:,4)]/255);
@@ -132,6 +139,9 @@ end
 
 im_out = x_est(1:size(orig_im,1), 1:size(orig_im,2),:);
 psnr_out = ComputePSNR(orig_im, im_out);
+
+statistics.psnrs = psnrs;
+statistics.costfunc = costfunc;
 
 return
 

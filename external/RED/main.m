@@ -7,21 +7,41 @@ addpath(genpath('./test_images/'));
 
 %% parameters 
 
-initialguesses = [
-    "groundtruth"
-    "bayer_demosaic"
-    "max_filter"
-    "zero_at_known"
-    "zero"
-    "random"
-];
-
 mask_types = [
     "bayer"
     "toeplitz"
     "horz3"
     "vert3"
     "random"
+];
+
+initialguesses = [
+    "groundtruth"
+    "maxfilter"
+    "bayerdemosaic"
+    "zeroatunknown"
+    "zero"
+    "random"
+];
+
+snrs = [
+    25
+    30
+    35
+    40
+];
+
+scenes = [
+    "bowl"
+    "buddha"
+    "building"
+    "candle"
+    "cups"
+    "flower"
+    "jfk"
+    "pens"
+    "pillow"
+    "shoe"
 ];
 
 % source image name
@@ -37,58 +57,117 @@ F = 3;
 % Mask 
 mask_type = 'bayer';
 % initial guess
-initialguess = 'bayer_demosaic';
+initialguess = 'maxfilter';
 % verbosity 
 verbose = false;
 % crop of orig_im
-crop = 50:(50+47);
+% crop = 50:(50+23);
+crop = [];
+% save results 
+savedir = 'results/red';
 
 
-%%
+%% Run Experiment over [mask_types, initialguesses, objects, snrs]
 
-rec = {};
-psnr_inputs = zeros(size(mask_types,1),size(initialguesses,1));
-psnr_admm = zeros(size(mask_types,1),size(initialguesses,1));
+mkdir(savedir);
 
-for i = 1:size(mask_types,1)
-    mask_type = mask_types(i);
-    for j = 1:size(initialguesses,1)
-        initialguess = initialguesses(j);
-        out = runRED(file_name,light_mode,snr,S,F,mask_type,initialguess,verbose,crop);
+for k = 1:size(scenes,1)
+    scene = scenes(k);
+    [keyset,valueset] = deal({},{});
+    for l = 1:size(snrs,1)
+        snr = snrs(l);
+        for i = 1:size(mask_types,1)
+            mask_type = mask_types(i);
+            for j = 1:size(initialguesses,1)
+                initialguess = initialguesses(j);
+                
+                tic;
+                out = runRED(scene,light_mode,snr,S,F,mask_type,initialguess,verbose,crop);
+                out.time_elapsed = toc;
 
-        psnr_inputs(i,j) = out.psnr_input;
-        psnr_admm(i,j) = out.psnr_admm;
-        rec{(i-1)*size(initialguesses,1)+j} = out;
+                keyset{end+1} = sprintf('%s-%s-%d',mask_type,initialguess,snr);
+                valueset{end+1} = out;
+            end
+        end
+    end
+    rec = containers.Map(keyset,valueset);
+    save(sprintf('%s/%s.mat',savedir,scene),'rec');
+end
+
+
+% Load from matfile
+[keyset,valueset] = deal({},{});
+for k = 1:size(scenes,1)
+    scene = scenes(k);
+    S = load(sprintf('%s/%s.mat',savedir,scene));
+    keyset{k} = char(scene);
+    valueset{k} = S.rec;
+end
+his = containers.Map(keyset,valueset);
+
+%% PSNR
+fprintf('average psnr at (start->end) for all scenes:\n')
+psnr_inputs = zeros(numel(snrs),numel(mask_types),numel(initialguesses),size(scenes,1));
+psnr_admm = zeros(numel(snrs),numel(mask_types),numel(initialguesses),size(scenes,1));
+
+for k = 1:size(scenes,1)
+    rec = his(scenes(k));
+    for l = 1:size(snrs,1)
+        for i = 1:size(mask_types,1)
+            for j = 1:size(initialguesses,1)
+                out = rec(sprintf('%s-%s-%d',mask_types(i),initialguesses(j),snrs(l)));
+                psnr_inputs(l,i,j,k) = out.psnr_input;
+                psnr_admm(l,i,j,k) = out.psnr_admm;
+            end
+        end
     end
 end
 
-%% 
-
-fprintf('psnr at (start->end):\n')
-
-for i = 1:size(mask_types,1)
-    fprintf('\n%s\t',pad(mask_types(i),10));
-    for j = 1:size(initialguesses,1)
-        fprintf('(%.2f->%.2f)\t',psnr_inputs(i,j),psnr_admm(i,j));
+for l = 1:size(snrs,1)
+    fprintf('\n\nSNR=%d\n',snrs(l));
+    fprintf('%s\t',pad('',10));
+    for i = 1:size(initialguesses,1)
+        fprintf('%s\t',pad(initialguesses(i),10));
+    end
+    for i = 1:size(mask_types,1)
+        fprintf('\n%s\t',pad(mask_types(i),10));
+        for j = 1:size(initialguesses,1)
+            fprintf('(%.2f->%.2f)\t',mean(psnr_inputs(l,i,j,:)),mean(psnr_admm(l,i,j,:)));
+        end
     end
 end
 
-fprintf('\n\n\n')
 
+%% Convergence Plots
+fprintf('convergence\n');
 
+figure;
+for i = 1:size(mask_types,1)
+    % for j = 1:size(initialguesses,1)
+    for j = 1:3
+        name = sprintf('%s-%s',mask_types(i),initialguesses(j));
+        out = rec(name);
+        plot(1:10,out.admm_statistics.psnrs,'DisplayName',name); hold on;
+    end
+    break
+end
+legend();
+hold off;
 
 %%
 
-function out = runRED(file_name,light_mode,snr,S,F,mask_type,initialguess,verbose,crop)
+function out = runRED(scene,light_mode,snr,S,F,mask_type,initialguess,verbose,crop)
     %% read the original image
     if verbose
-        fprintf('Reading %s image...', file_name);
+        fprintf('Reading %s image...', scene);
     end
     for i = 1:S
-        orig_im(:,:,i) = imread(sprintf('../../data/exp60/organized/%s_%d.png',file_name,i-1));
+        orig_im(:,:,i) = imread(sprintf('../../data/exp60/organized/%s_%d.png',scene,i-1));
     end
     orig_im = double(orig_im);
-    orig_im = orig_im(crop,crop,:);
+    if numel(crop) ~= 0
+        orig_im = orig_im(crop,crop,:);
+    end
     assert(mod(size(orig_im,1),2)==0 && mod(size(orig_im,1),2)==0, 'image size multiple of 2');
 
     %% define the degradation model
@@ -146,19 +225,8 @@ function out = runRED(file_name,light_mode,snr,S,F,mask_type,initialguess,verbos
     switch initialguess
     case 'groundtruth'
         InitEstFunc = @(y) orig_im;
-    case 'bayer_demosaic'
+    case 'bayerdemosaic'
         assert(F == 3, 'F == 3');
-        % H_bayer = SubsampleMultiplexOperator(S,BayerMask(h,w));
-        % y_bayer = reshape(H*orig_im(:),h,w,2);
-        % InitEstFunc = @(y) ...
-        %     reshape(...
-        %         reshape( ...
-        %             cat(3, ...
-        %                 rgb2bgr(double(demosaic(uint8(y_bayer(:,:,1)), 'bggr'))), ...
-        %                 rgb2bgr(double(demosaic(uint8(y_bayer(:,:,2)), 'bggr')))), ...
-        %             [], 6) ...
-        %         / W', ...
-        %     h,w,S);
         InitEstFunc = @(y) ...
         reshape(...
             reshape( ...
@@ -168,7 +236,7 @@ function out = runRED(file_name,light_mode,snr,S,F,mask_type,initialguess,verbos
                 [], 6) ...
             / W', ...
         h,w,S);
-    case 'max_filter'
+    case 'maxfilter'
         mask = zeros(h,w,F);
         for k = 1:F
             mask(:,:,k) = double(M==k);
@@ -182,7 +250,7 @@ function out = runRED(file_name,light_mode,snr,S,F,mask_type,initialguess,verbos
                     max_filtering(mask.*y(:,:,1)), ...
                     max_filtering(mask.*y(:,:,2))),[],2*F) / W', ...
             h,w,S);
-    case 'zero_at_known'
+    case 'zeroatunknown'
         mask = zeros(h,w,F);
         for k = 1:F
             mask(:,:,k) = double(M==k);
@@ -227,7 +295,7 @@ function out = runRED(file_name,light_mode,snr,S,F,mask_type,initialguess,verbos
     end
 
     params_admm = GetSuperResADMMParams(light_mode);
-    [out_admm_im, psnr_admm] = RunADMM_demosaic(input_im,...
+    [out_admm_im, psnr_admm, admm_statistics] = RunADMM_demosaic(input_im,...
                                                 ForwardFunc,...
                                                 BackwardFunc,...
                                                 InitEstFunc,...
@@ -235,6 +303,7 @@ function out = runRED(file_name,light_mode,snr,S,F,mask_type,initialguess,verbos
                                                 params_admm,...
                                                 orig_im);
 
+    out.scene = scene;
     out.S = S;
     out.F = F;
     out.snr = snr;
@@ -251,12 +320,14 @@ function out = runRED(file_name,light_mode,snr,S,F,mask_type,initialguess,verbos
     out.x_est = x_est;
     out.out_admm_im = out_admm_im;
     out.psnr_admm = psnr_admm;
+    out.admm_statistics = admm_statistics;
+    out.params_admm = params_admm;
 
 
 
     % %% display final results
 
-    % fprintf('Image name %s \n', file_name);
+    % fprintf('Image name %s \n', scene);
     % fprintf('Input PSNR = %f \n', psnr_input);
     % fprintf('RED: ADMM PSNR = %f \n', psnr_admm);
 
@@ -311,11 +382,11 @@ function out = runRED(file_name,light_mode,snr,S,F,mask_type,initialguess,verbos
 
     % fprintf('Writing the images to ./results...');
 
-    % imwrite(uint8(orig_im),['./results/orig_' file_name]);
-    % imwrite(uint8(InitEstFunc(input_im)),['./results/input_' file_name]);
-    % % imwrite(uint8(out_fp_im),['./results/est_fp_' file_name]);
-    % imwrite(uint8(out_admm_im),['./results/est_admm_' file_name]);
-    % % imwrite(uint8(out_sd_im),['./results/est_sd_' file_name]);
+    % imwrite(uint8(orig_im),['./results/orig_' scene]);
+    % imwrite(uint8(InitEstFunc(input_im)),['./results/input_' scene]);
+    % % imwrite(uint8(out_fp_im),['./results/est_fp_' scene]);
+    % imwrite(uint8(out_admm_im),['./results/est_admm_' scene]);
+    % % imwrite(uint8(out_sd_im),['./results/est_sd_' scene]);
 
     % fprintf(' Done.\n');
 
@@ -384,7 +455,7 @@ function out = runRED(file_name,light_mode,snr,S,F,mask_type,initialguess,verbos
 
     % %% display final results
 
-    % fprintf('Image name %s \n', file_name);
+    % fprintf('Image name %s \n', scene);
     % fprintf('Input PSNR = %f \n', psnr_input);
     % fprintf('RED: Fixed-Point PSNR = %f \n', psnr_fp);
     % fprintf('RED: ADMM PSNR = %f \n', psnr_admm);
@@ -399,10 +470,10 @@ function out = runRED(file_name,light_mode,snr,S,F,mask_type,initialguess,verbos
 
     % fprintf('Writing the images to ./results...');
 
-    % imwrite(uint8(input_im),['./results/input_' file_name]);
-    % imwrite(uint8(out_fp_im),['./results/est_fp_' file_name]);
-    % imwrite(uint8(out_admm_im),['./results/est_admm_' file_name]);
-    % imwrite(uint8(out_sd_im),['./results/est_sd_' file_name]);
+    % imwrite(uint8(input_im),['./results/input_' scene]);
+    % imwrite(uint8(out_fp_im),['./results/est_fp_' scene]);
+    % imwrite(uint8(out_admm_im),['./results/est_admm_' scene]);
+    % imwrite(uint8(out_sd_im),['./results/est_sd_' scene]);
 
     % fprintf(' Done.\n');
 
