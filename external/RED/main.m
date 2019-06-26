@@ -94,10 +94,12 @@ for k = 1:size(scenes,1)
     save(sprintf('%s/%s.mat',savedir,scene),'rec');
 end
 
+%% 
 
 % Load from matfile
 [keyset,valueset] = deal({},{});
-for k = 1:size(scenes,1)
+% for k = 1:size(scenes,1)
+for k = 1:2
     scene = scenes(k);
     S = load(sprintf('%s/%s.mat',savedir,scene));
     keyset{k} = char(scene);
@@ -110,7 +112,8 @@ fprintf('average psnr at (start->end) for all scenes:\n')
 psnr_inputs = zeros(numel(snrs),numel(mask_types),numel(initialguesses),size(scenes,1));
 psnr_admm = zeros(numel(snrs),numel(mask_types),numel(initialguesses),size(scenes,1));
 
-for k = 1:size(scenes,1)
+% for k = 1:size(scenes,1)
+for k = 1:2
     rec = his(scenes(k));
     for l = 1:size(snrs,1)
         for i = 1:size(mask_types,1)
@@ -123,6 +126,7 @@ for k = 1:size(scenes,1)
     end
 end
 
+
 for l = 1:size(snrs,1)
     fprintf('\n\nSNR=%d\n',snrs(l));
     fprintf('%s\t',pad('',10));
@@ -132,14 +136,96 @@ for l = 1:size(snrs,1)
     for i = 1:size(mask_types,1)
         fprintf('\n%s\t',pad(mask_types(i),10));
         for j = 1:size(initialguesses,1)
-            fprintf('(%.2f->%.2f)\t',mean(psnr_inputs(l,i,j,:)),mean(psnr_admm(l,i,j,:)));
+%             fprintf('(%.2f->%.2f)\t',mean(psnr_inputs(l,i,j,1:2)),mean(psnr_admm(l,i,j,1:2)));
+            fprintf('(%.2f->%.2f)\t',mean(psnr_inputs(l,i,j,1:1)),mean(psnr_admm(l,i,j,1:1)));
         end
     end
 end
 
 
-%% Convergence Plots
+%% Convergence Plots (PSNR/CostFunc vs. #iteration) with fixed SNR,scene,initialguess
 fprintf('convergence\n');
+
+snr = 35;
+scene = 'buddha';
+rec = his(scene);
+figure;
+set(gcf, 'Position',  [0,0,1400,900])
+statistics = 'costfunc';
+
+for j = 1:size(initialguesses,1)
+    subplot(2,3,j);
+    for i = 1:size(mask_types,1)
+        out = rec(sprintf('%s-%s-%d',mask_types(i),initialguesses(j),snr));
+        if statistics == "psnrs"
+            plot(full(0:10)*10,[out.psnr_input out.admm_statistics.(statistics)],'DisplayName',sprintf('%s',mask_types(i))); hold on;
+        else
+            plot((1:10)*10,out.admm_statistics.(statistics),'DisplayName',sprintf('%s',mask_types(i))); hold on;
+        end
+    end
+    title(sprintf('%s vs. #Iteration (initialguess=%s)',statistics,initialguesses(j)));
+    xlabel('#Iterations (ADMM)');
+    if statistics == "psnrs"
+        ylabel('PSNR');
+        ylim([35 40]);
+    else
+        ylabel('CostFunc');
+    end
+    legend('Location','East');
+    hold off;
+end
+sgtitle(sprintf('%s vs. #iter (SNR: %d; scene: %s)',statistics,snr,scene));
+
+
+%% Convergence Plots (PSNR/CostFunc vs. #iteration) with fixed SNR,scene,mask_type
+fprintf('convergence\n');
+
+snr = 35;
+scene = 'buddha';
+rec = his(scene);
+initialguess = 'bayerdemosaic';
+
+figure;
+set(gcf, 'Position',  [0,400,500,500])
+for i = 1:size(mask_types,1)
+    out = rec(sprintf('%s-%s-%d',mask_types(i),initialguess,snr));
+    plot(full(0:10)*10,[out.psnr_input out.admm_statistics.psnrs],'DisplayName',mask_types(i)); hold on;
+end
+legend('Location','East');
+title(sprintf('%s vs. #iter (SNR: %d; scene: %s initialguess: %s)',statistics,snr,scene,initialguess));
+hold off;
+
+% figure;
+% set(gcf, 'Position',  [0,0,1800,350])
+% statistics = 'psnrs';
+
+% for i = 1:size(mask_types,1)
+%     subplot(1,5,i);
+%     for j = 1:size(initialguesses,1)
+%         out = rec(sprintf('%s-%s-%d',mask_types(i),initialguesses(j),snr));
+%         if statistics == "psnrs"
+%             plot(full(0:10)*10,[out.psnr_input out.admm_statistics.(statistics)],'DisplayName',sprintf('%s',initialguesses(j))); hold on;
+%         else
+%             plot((1:10)*10,out.admm_statistics.(statistics),'DisplayName',sprintf('%s',initialguesses(j))); hold on;
+%         end
+%     end
+%     title(sprintf('%s vs. #Iteration (mask=%s)',statistics,mask_types(i)));
+%     xlabel('#Iterations (ADMM)');
+%     if statistics == "psnrs"
+%         ylabel('PSNR');
+%         ylim([35 40]);
+%     else
+%         ylabel('CostFunc');
+%     end
+%     legend('Location','East');
+%     hold off;
+% end
+% sgtitle(sprintf('%s vs. #iter (SNR: %d; scene: %s)',statistics,snr,scene));
+
+
+%% 
+
+
 
 figure;
 for i = 1:size(mask_types,1)
