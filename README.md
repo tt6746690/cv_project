@@ -60,7 +60,7 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
     + subtract the dark frame from subsequent images
 
 
-
+#### 06.26
 
 + experiments answering _how well RED works_
     + see arbitrary masks performance (T2 max 7 patterns per frame)
@@ -80,4 +80,41 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
 + learnt prior
     + for different reconstruction ...
 + arange tiling/mosaicing
-    + 
+
+
++ another question: jointly optimize for projector pattern and sensor mask
++ rotate the camera setup, to verify that `horz3` is better than `vert3` for structured light where projector pattern are horizontal lines
++ talk to john with hardware+software
+
+
+#### 06.28
+
++ how to choose masks
+    + given a set of groundtruth images, idea is to choose mask `M` which minimizes the MSE of reconstructed image to the groundtruth image
+        + motivated by the fact that the choice of mask should be dependent on applications (i.e. structured light patterns)
+        + not sure if this is a good idea, since this requires, for every different pattern, acquire test dataset, and then optimize for `M`
+    + formulated as a bilevel optimization mixed-integer problem
+        + `M` is a large vector indicating 1s' or 0s', or takes values from set {1,2,...,F}
+        + relaxed problem `M` is floating, but rounded to integers 
+        + bilevel optimization methods
+            + replace lower level problem with the corresponding KKT condition, not feasible because
+                + lower level problem is not convex
+                + even if lower level problem is convex, constraint quantification is not satisfied, need some nontrivial derivation of a good constraint quantification
+            + use gradient based methods
+                + seems promising, since even if the lower level problem is nonconvex, the gradient is shown in the RED paper (assuming mild assumptions to the denoiser)
+                + might need to do some math, and more readings on the topic
+    + formulated as a combinatorial optimization problem
+        + assumptions
+            + (tesselation) periodic tiling of repeated patterns (generalizable to different `F`)
+            + tiling algorithms might tile local patterns in different ways to fill the rectangle
+        + idea is to try different combinations (#combinations small, so time-wise feasible)
+    + formulated as a problem with some prior assumptions
+        + say minimize distance (at each pixel) to pixels of different color (or frame#) for all pixels
+        + may be a good enough heuristic to a good mask `M`
+
++ feedback from mian
+    + should nail down the reconstruction method first
+    + focus on learnt priors first
+    + might just be one model that jointly optimize for 
+        + reconstruction of image
+        + masks

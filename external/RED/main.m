@@ -66,6 +66,11 @@ crop = [];
 % save results 
 savedir = 'results/red';
 
+%% 
+tic;
+out = runRED('bowl',light_mode,35,S,F,'horz3','maxfilter',verbose,[]);
+toc;
+
 
 %% Run Experiment over [mask_types, initialguesses, objects, snrs]
 
