@@ -114,6 +114,21 @@
                 + single-image superresolution 
                 + blurring
 
++ [2017_deep_mean_shift_priors_for_image_restoration](2017_deep_mean_shift_priors_for_image_restoration.pdf)
+    + said to be analogous to RED
+
++ [2018_regularization_by_denoising_clarifications_and_new_interpretations](2018_regularization_by_denoising_clarifications_and_new_interpretations.pdf)
+    + new interpretations on why RED is performant
+    + accelerated proximal gradient method converges in 10 iterations, quite faster than RED
+
++ [2019_block_coordinate_regularization_by_denoising](2019_block_coordinate_regularization_by_denoising.pdf)
+    + extension of RED with coordinate descent
+
++ [2019_deepRED_deep_image_prior_powered_by_RED](2019_deepRED_deep_image_prior_powered_by_RED.pdf)
+    + combines deep image prior and RED ...
+
+
+
 ## Learning denoising prior for inverse problems 
 
 
@@ -131,7 +146,6 @@
         + convergence analysis 
             + [5] P3 -> fixed point https://arxiv.org/pdf/1605.01710.pdf
             + [13] admm
-
 
 
 

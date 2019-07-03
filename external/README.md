@@ -75,3 +75,11 @@
         ```
         conda install -c conda-forge scikit-image tqdm
         ```
+
++ [argmin-TR-2016-code]
+    + http://users.cecs.anu.edu.au/~sgould/
+    + examples that solve bilevel problems with gradient descent
+
++ [On_RED]
+    + https://github.com/edward-reehorst/On_RED/
+    + new interpretation on red, proposed a faster algo

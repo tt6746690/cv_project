@@ -15,7 +15,10 @@ __pycache__
 Joint-Demosaic-and-Denoising-with-ADMM/
 deep_demosaick/
 learn_prox_ops/
+argmin-TR-2016-code/
+On_RED/
 external/RED/results/red/
+
 
 .ipynb_checkpoints
  
