@@ -132,8 +132,8 @@ for k = 1:1:outer_iters
         costfunc(save_iter) = fun_val;
         save_iter = save_iter+1;
 
-        imshow([orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4); ...
-            x_est(:,:,1) x_est(:,:,2) x_est(:,:,3) x_est(:,:,4)]/255);
+        % imshow([orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4); ...
+        %     x_est(:,:,1) x_est(:,:,2) x_est(:,:,3) x_est(:,:,4)]/255);
         % pause();
     end
 end

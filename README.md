@@ -118,3 +118,15 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
     + might just be one model that jointly optimize for 
         + reconstruction of image
         + masks
+
+
+
+#### 
+
++ pick mask
+    + set of images, do foourier transform
+    + product -> conv in fourier (minimize blurring?)
+
+
++ a list of things to talk to kyros
++ get learnt prior working

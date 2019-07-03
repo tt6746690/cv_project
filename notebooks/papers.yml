@@ -38,6 +38,16 @@
         - image adaptive laplacian-based function that motivates the use of denoisers
         - assumptions of denoisers and proved convergence of results
         - achieved state of art image superresolution 
+        
+-
+    short: 2018_deep_image_prior
+    full: Deep Image Prior
+    url: https://arxiv.org/pdf/1711.10925.pdf
+    contribution:
+        - structure of convnets imposes a strong prior for image restoration
+            - just the network structure (without data) is good for image restoration tasks
+        - MAP optimization over image space -> parameter space of a neural network
+        - structure of a generator network is sufficient to capture a great deal of low-level image statistics prior to any learning
 
 -
     short: 2018_multispectral_demosaicing_PPI

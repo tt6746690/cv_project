@@ -22,7 +22,7 @@ params = GetSuperResFPParams(light_mode);
 
 %% added by me 
 if light_mode
-    params.outer_iters = 20;
+    params.outer_iters = 40;
 end
 
 % admm parameter
