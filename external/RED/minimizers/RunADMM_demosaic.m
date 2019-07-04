@@ -132,9 +132,14 @@ for k = 1:1:outer_iters
         costfunc(save_iter) = fun_val;
         save_iter = save_iter+1;
 
-        % imshow([orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4); ...
-        %     x_est(:,:,1) x_est(:,:,2) x_est(:,:,3) x_est(:,:,4)]/255);
-        % pause();
+        % display image
+        [h,w,S] = size(orig_im);
+        ims = zeros(2*h,w*S);
+        for i = 1:S
+            ims(1:h,((i-1)*w+1):(i*w)) = orig_im(:,:,i);
+            ims((h+1):(2*h),((i-1)*w+1):(i*w)) = x_est(:,:,i);
+        end
+        imshow(ims/255);
     end
 end
 

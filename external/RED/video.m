@@ -106,11 +106,11 @@ for i = 1:(size(listingnames,2)/2)
             / W', ...
         h,w,S);
     time_demosaic = toc;
-
-    % ims = [input_im(:,:,1) input_im(:,:,2) zeros(h,w) zeros(h,w)
-    %        admm_im(:,:,1) admm_im(:,:,2) admm_im(:,:,3) admm_im(:,:,4)
-    %        demosaic_im(:,:,1) demosaic_im(:,:,2) demosaic_im(:,:,3) demosaic_im(:,:,4)];
-    % imshow(ims/255);
+% 
+%     ims = [input_im(:,:,1) input_im(:,:,2) zeros(h,w) zeros(h,w)
+%            admm_im(:,:,1) admm_im(:,:,2) admm_im(:,:,3) admm_im(:,:,4)
+%            demosaic_im(:,:,1) demosaic_im(:,:,2) demosaic_im(:,:,3) demosaic_im(:,:,4)];
+%     imshow(ims/255);
 
     save_im(admm_im,sprintf('%s/red_%s',outputdir,k));
     save_im(demosaic_im,sprintf('%s/demosaic_%s',outputdir,k));

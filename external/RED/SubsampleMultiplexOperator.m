@@ -3,7 +3,7 @@ function [H,B,C] = SubsampleMultiplexOperator(S,mask)
 %       for a given subsampling mask
 %
 %   S = 4;
-%   x = reshape(1:16,2,2,S);
+%   x = reshape(1:(2*2*S),2,2,S);
 %   mask = BayerMask(2,2);
 %   H = SubsampleMultiplexOperator(S,mask);
 %   y = reshape(H*(x(:)),2,2,2);

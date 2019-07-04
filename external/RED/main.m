@@ -8,20 +8,22 @@ addpath(genpath('./test_images/'));
 %% parameters 
 
 mask_types = [
-    "bayer"
     "toeplitz"
-    "horz3"
-    "vert3"
+    "horz"
+    "vert"
     "random"
 ];
 
+% initialguesses = [
+%     "groundtruth"
+%     "maxfilter"
+%     "zeroatunknown"
+%     "zero"
+%     "random"
+% ];
+
 initialguesses = [
-    "groundtruth"
     "maxfilter"
-    "bayerdemosaic"
-    "zeroatunknown"
-    "zero"
-    "random"
 ];
 
 snrs = [
@@ -31,17 +33,30 @@ snrs = [
     40
 ];
 
+% scenes = [
+%     "bowl"
+%     "buddha"
+%     "building"
+%     "candle"
+%     "cups"
+%     "flower"
+%     "jfk"
+%     "pens"
+%     "pillow"
+%     "shoe"
+% ];
+% 
+%     "sponge"
+%     "lamp"
+%     "cup"
+%     "chameleon"
+%     "giraffe"
+%     "head"
+%     "minion"
 scenes = [
-    "bowl"
-    "buddha"
-    "building"
-    "candle"
-    "cups"
-    "flower"
-    "jfk"
-    "pens"
-    "pillow"
-    "shoe"
+    "train"
+    "totem"
+    "cover"
 ];
 
 % source image name
@@ -51,9 +66,9 @@ light_mode = true;
 % Signal to Noise ratio in [25,30,35,40]
 snr = 35;
 % Number of subframes
-S = 4;
+S = 7;
 % Number of frames (F>=S-1)
-F = 3;
+F = 6;
 % Mask 
 mask_type = 'bayer';
 % initial guess
@@ -64,17 +79,16 @@ verbose = false;
 % crop = 50:(50+23);
 crop = [];
 % save results 
-savedir = 'results/red';
-
-%% 
-tic;
-out = runRED('bowl',light_mode,35,S,F,'horz3','maxfilter',verbose,[]);
-toc;
+savedir = 'results/red/7patterns';
+mkdir(savedir);
+% groundtruth folder
+groundtruth_folder = '../../data/7patterns/organized';
 
 
 %% Run Experiment over [mask_types, initialguesses, objects, snrs]
 
-mkdir(savedir);
+% debug
+% [scenes,snrs] = deal(["giraffe"],[35]);
 
 for k = 1:size(scenes,1)
     scene = scenes(k);
@@ -87,13 +101,14 @@ for k = 1:size(scenes,1)
                 initialguess = initialguesses(j);
                 
                 tic;
-                out = runRED(scene,light_mode,snr,S,F,mask_type,initialguess,verbose,crop);
+                out = runRED(groundtruth_folder,scene,light_mode,snr,S,F,mask_type,initialguess,verbose,crop);
                 out.time_elapsed = toc;
 
                 keyset{end+1} = sprintf('%s-%s-%d',mask_type,initialguess,snr);
                 valueset{end+1} = out;
             end
         end
+        break;
     end
     rec = containers.Map(keyset,valueset);
     save(sprintf('%s/%s.mat',savedir,scene),'rec');
@@ -103,8 +118,7 @@ end
 
 % Load from matfile
 [keyset,valueset] = deal({},{});
-% for k = 1:size(scenes,1)
-for k = 1:2
+for k = 1:size(scenes,1)
     scene = scenes(k);
     S = load(sprintf('%s/%s.mat',savedir,scene));
     keyset{k} = char(scene);
@@ -117,8 +131,7 @@ fprintf('average psnr at (start->end) for all scenes:\n')
 psnr_inputs = zeros(numel(snrs),numel(mask_types),numel(initialguesses),size(scenes,1));
 psnr_admm = zeros(numel(snrs),numel(mask_types),numel(initialguesses),size(scenes,1));
 
-% for k = 1:size(scenes,1)
-for k = 1:2
+for k = 1:size(scenes,1)
     rec = his(scenes(k));
     for l = 1:size(snrs,1)
         for i = 1:size(mask_types,1)
@@ -152,7 +165,7 @@ end
 fprintf('convergence\n');
 
 snr = 35;
-scene = 'buddha';
+scene = 'giraffe';
 rec = his(scene);
 figure;
 set(gcf, 'Position',  [0,0,1400,900])
@@ -186,9 +199,9 @@ sgtitle(sprintf('%s vs. #iter (SNR: %d; scene: %s)',statistics,snr,scene));
 fprintf('convergence\n');
 
 snr = 35;
-scene = 'buddha';
+scene = 'giraffe';
 rec = his(scene);
-initialguess = 'bayerdemosaic';
+initialguess = 'maxfilter';
 
 figure;
 set(gcf, 'Position',  [0,400,500,500])
@@ -247,13 +260,13 @@ hold off;
 
 %%
 
-function out = runRED(scene,light_mode,snr,S,F,mask_type,initialguess,verbose,crop)
+function out = runRED(groundtruth_folder,scene,light_mode,snr,S,F,mask_type,initialguess,verbose,crop)
     %% read the original image
     if verbose
         fprintf('Reading %s image...', scene);
     end
     for i = 1:S
-        orig_im(:,:,i) = imread(sprintf('../../data/exp60/organized/%s_%d.png',scene,i-1));
+        orig_im(:,:,i) = imread(sprintf('%s/%s_%d.png',groundtruth_folder,scene,i-1));
     end
     orig_im = double(orig_im);
     if numel(crop) ~= 0
@@ -272,34 +285,35 @@ function out = runRED(scene,light_mode,snr,S,F,mask_type,initialguess,verbose,cr
 
     switch mask_type
     case 'bayer'
+        assert(F == 3);
         % 1 2
         % 2 3
         M = BayerMask(h,w);
     case 'random'
         M = floor(rand(h,w)/(1/F))+1;
-    case 'horz3'
-        % 1 2 3
-        % 1 2 3
+    case 'horz'
+        % 1 2 3 ... F
+        % 1 2 3 ... F
         M = zeros(h,w);
-        M(:,1:3:end) = 1;
-        M(:,2:3:end) = 2;
-        M(:,3:3:end) = 3;
-    case 'toeplitz'
-        % 1 2 3 1 2
-        % 2 1 2 3 1
-        % 3 2 1 2 3
-        p = repmat([1 2 3],1,ceil(max(w,h)/3));
-        c = p(1,1:h);
-        r = p(1,1:w);
-        M = toeplitz(c,r);
-    case 'vert3'
+        for f = 1:F
+            M(:,f:F:end) = f;
+        end
+    case 'vert'
         % 1 1
         % 2 2
         % 3 3
         M = zeros(h,w);
-        M(1:3:end,:) = 1;
-        M(2:3:end,:) = 2;
-        M(3:3:end,:) = 3;
+        for f = 1:F
+            M(f:F:end,:) = f;
+        end
+    case 'toeplitz'
+        % 1 2 3 ... F 1 2
+        % 2 1 2 3 ... F 1
+        % 3 2 1 2 3 ... F
+        p = repmat(full(1:F),1,ceil(max(w,h)/F));
+        c = p(1,1:h);
+        r = p(1,1:w);
+        M = toeplitz(c,r);
     otherwise
         warning('mask not set properly');
     end
@@ -334,7 +348,7 @@ function out = runRED(scene,light_mode,snr,S,F,mask_type,initialguess,verbose,cr
         end
         % max filter (3x3) over each channel of `im`
         max_filtering = @(im) reshape(cell2mat(arrayfun(@(i) ...
-            ordfilt2(im(:,:,i),9,ones(3,3)),1:3,'UniformOutput',false)),h,w,[]);
+            ordfilt2(im(:,:,i),9,ones(3,3)),1:F,'UniformOutput',false)),h,w,[]);
         InitEstFunc = @(y) ...
             reshape(...
                 reshape(cat(F, ...

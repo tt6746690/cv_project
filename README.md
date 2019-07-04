@@ -121,7 +121,7 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
 
 
 
-#### 
+####  prepare for friday meeting
 
 + pick mask
     + set of images, do foourier transform
@@ -130,3 +130,31 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
 
 + a list of things to talk to kyros
 + get learnt prior working
+
+
+## How to use the camera system
+
++ bitfile 
+
++ lightcrafter gui
+    + display mode: stored pattern sequence
+    + connection
+        + first connect usb to projector
+        + check ip address in network settings
+        + fill in ip to connection tab
+    + stored pattern sequence
+        + bit depth: 1
+        + pattern count: # images
+        + pattern type: normal 
+        + input trigger: external (positive)
+        + LED select: Green
+        + exposure: 2000
+
++ imagegui
+    + bit file: fixedFPN
+    + pattern file: 
+        + the code tensor
+        + for groundtruth stuff: the 5black
+    + exposure: 60
+    + masks: 1
+    + trigger num: 12
