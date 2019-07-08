@@ -130,7 +130,7 @@ m = S.m
 
 %% write to video
 
-vid = VideoWriter(sprintf('%s/video.avi',outputdir));
+vid = VideoWriter(sprintf('%s/video.avi',outputdir),'Uncompressed AVI');
 open(vid);
 sortedks = sort(keys(m));
 for i = 1:size(sortedks,2)

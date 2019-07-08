@@ -209,3 +209,139 @@ I think from last meeting with Kyros and you, it seems that a more general frame
             + pattern, number of pattern, optimal algos to recover depth 
         + me
             + reconstruct full-res less noisy image
+
+
+
+#### 06.26
+
++ experiments answering _how well RED works_
+    + see arbitrary masks performance (T2 max 7 patterns per frame)
+    + metrics 
+        + convergence time 
+        + psnr
+    + initial guess [groundtruth image, demosaiced, zero, zero for unknown, random]
+        + see convergence
+        + psnr
+        + convergence speed
+    + masks
+        + bayer
+        + 3-4 random 
+        + other masks
+    + noise
+        + 25,30,35,40
++ learnt prior
+    + for different reconstruction ...
++ arange tiling/mosaicing
+
+
++ another question: jointly optimize for projector pattern and sensor mask
+    + not that much of a priority now, as long as arbitrary mask works for the method
++ rotate the camera setup, to verify that `horz3` is better than `vert3` for structured light where projector pattern are horizontal lines
++ talk to john with hardware+software
+
+
+#### 06.28
+
++ how to choose masks
+    + given a set of groundtruth images, idea is to choose mask `M` which minimizes the MSE of reconstructed image to the groundtruth image
+        + motivated by the fact that the choice of mask should be dependent on applications (i.e. structured light patterns)
+        + not sure if this is a good idea, since this requires, for every different pattern, acquire test dataset, and then optimize for `M`
+    + formulated as a bilevel optimization mixed-integer problem
+        + `M` is a large vector indicating 1s' or 0s', or takes values from set {1,2,...,F}
+        + relaxed problem `M` is floating, but rounded to integers 
+        + bilevel optimization methods
+            + replace lower level problem with the corresponding KKT condition, not feasible because
+                + lower level problem is not convex
+                + even if lower level problem is convex, constraint quantification is not satisfied, need some nontrivial derivation of a good constraint quantification
+            + use gradient based methods
+                + seems promising, since even if the lower level problem is nonconvex, the gradient is shown in the RED paper (assuming mild assumptions to the denoiser)
+                + might need to do some math, and more readings on the topic
+    + formulated as a combinatorial optimization problem
+        + assumptions
+            + (tesselation) periodic tiling of repeated patterns (generalizable to different `F`)
+            + tiling algorithms might tile local patterns in different ways to fill the rectangle
+        + idea is to try different combinations (#combinations small, so time-wise feasible)
+    + formulated as a problem with some prior assumptions
+        + say minimize distance (at each pixel) to pixels of different color (or frame#) for all pixels
+        + may be a good enough heuristic to a good mask `M`
+
++ feedback from mian
+    + should nail down the reconstruction method first
+    + focus on learnt priors first
+    + might just be one model that jointly optimize for 
+        + reconstruction of image
+        + masks
+
+
+
+
+#### 2019.07.05
+
++ prepare
+    + show briefly
+        + S=4, show
+            + reconstructed video sequence (compare to whats been done previously)
+        + S=7, show
+            + reconstructed image
+            + convergence plot
+    + questions
+        + should we use RED as reconstruction ?
+            + if it is good enough
+        + how to do mask optimization ?
+            + necessity ? 
+                + convergence to fixed point
+                + random seems to be good enough
+            + if so, 
+                + jointly determines reconstruction algo and mask pattern
+                + or settle on fixed algo (RED) and do 
+                    + data driven bilevel optimization
+                    + heuristic (e.g. minimize distance per pix)
+    + todos
+        + learnt prior (hear back from GPU)
+
++ what is tradeoff between spatial resolution / # patterns ?
+    + experiment with T4 ?
+    + 5-8 optimized patterns
+        + good result from 4 patterns from wenzheng
+        + zncc ?
+    + ...
+        + 4 patterns in 1 shot (fixed total exposure time)
+        + 8 patterns in same time/subframe (then use 1-128)
++ evaluate performance 
+    + demosaic/red on noisy image ...
+        + challenging scene, lots of edges, 
+            + texture discontinuity
+            + depth discontinuity
+            + neighborhood size is important for this cases
+            + the ball that grow small&large
+            + resolution charts ... planar
+                + print resolution charts and drew holes with laser cutter?
++ ratio images ?
+    + albedo invariant ?
+    + red with ratio images?
++ do denoising in another domain
+    + over albedo/correspondance map ?
+    + disparity/albedo -> infer pixel
++ denoising
+    + in image domain, ignore correlation
+    + in albedo/disparity where all correspondence are captured
+    + do them in both ...
+        + if there is correspondence ...
+        + proximal methods 
+        + auxillary variable that is also optimized
+    + optimization variables are 
+        + denoised image
+        + albedo
+        + disparity
+    + already have an estimate of depth/albedo from currently method, where denoiser is applied independently to eash channel ...
++ sensor mask
+    + tiling arrangement ...
++ what could be complished in the amount of time here
+    + talk to mian about it ...
+    + 2 things
+        + more exploration of optimization method
+        + gpu version of method
+
++ next meeting
+    + 4,5PM eastern time. 
+    + email ...

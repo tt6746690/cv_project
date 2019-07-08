@@ -26,6 +26,12 @@ initialguesses = [
     "maxfilter"
 ];
 
+% snrs = [
+%     25
+%     30
+%     35
+%     40
+% ];
 snrs = [
     25
     30
@@ -46,19 +52,21 @@ snrs = [
 %     "shoe"
 % ];
 % 
-%     "sponge"
-%     "lamp"
-%     "cup"
-%     "chameleon"
-%     "giraffe"
-%     "head"
-%     "minion"
+
 scenes = [
+    "sponge"
+    "lamp"
+    "cup"
+    "chameleon"
+    "giraffe"
+    "head"
+    "minion"
     "train"
     "totem"
     "cover"
 ];
 
+[h,w] = deal(176,288);
 % source image name
 file_name = 'shoe';
 % Light mode runs faster
@@ -108,7 +116,6 @@ for k = 1:size(scenes,1)
                 valueset{end+1} = out;
             end
         end
-        break;
     end
     rec = containers.Map(keyset,valueset);
     save(sprintf('%s/%s.mat',savedir,scene),'rec');
@@ -120,11 +127,54 @@ end
 [keyset,valueset] = deal({},{});
 for k = 1:size(scenes,1)
     scene = scenes(k);
-    S = load(sprintf('%s/%s.mat',savedir,scene));
+    loaded = load(sprintf('%s/%s.mat',savedir,scene));
     keyset{k} = char(scene);
-    valueset{k} = S.rec;
+    valueset{k} = loaded.rec;
 end
 his = containers.Map(keyset,valueset);
+
+%% reconstructed images
+
+savedir_cur = sprintf("%s/ims",savedir);
+mkdir(savedir_cur);
+initialguess = "maxfilter";
+
+for k = 1:size(scenes,1)
+    scene = scenes(k);
+    rec = his(scene);
+    for l = 1:size(snrs,1)
+        snr = snrs(l);
+        ims = zeros((size(mask_types,1)+1)*h,(w+1)*S);
+        for i = 1:size(mask_types,1)
+            out = rec(sprintf('%s-%s-%d',mask_types(i),initialguess,snr));
+            for s = 1:S
+                ims(1:h,((s-1)*w+1):(w*s)) = out.orig_im(:,:,s);
+                ims((i*h+1):(i+1)*h,((s-1)*w+1):(w*s)) = out.out_admm_im(:,:,s);
+            end
+            ims((i*h+1):(i+1)*h,(w*S+1):((S+1)*w)) = (out.M == 1)*255;
+        end
+        imwrite(uint8(ims),sprintf("%s/%s-%s-%d.png",savedir_cur,scene,initialguess,snr));
+    end
+end
+
+%% inspect the mask on whole image
+
+snr = 25;
+scene = "giraffe";
+initialguess = "maxfilter";
+s = 1;
+mask_type = "toeplitz";
+
+out = rec(sprintf('%s-%s-%d',mask_type,initialguess,snr));
+ims = [255*(out.M==s) out.orig_im(:,:,s) out.out_admm_im(:,:,s)];
+imshow(ims/255);
+
+%%
+
+[cx,cy] = deal(80:110,90:110);
+ims = [255*(out.M(cx,cy)==s) out.orig_im(cx,cy,s) out.out_admm_im(cx,cy,s)];
+imshow(ims/255);
+
 
 %% PSNR
 fprintf('average psnr at (start->end) for all scenes:\n')
@@ -164,15 +214,15 @@ end
 %% Convergence Plots (PSNR/CostFunc vs. #iteration) with fixed SNR,scene,initialguess
 fprintf('convergence\n');
 
-snr = 35;
-scene = 'giraffe';
+snr = 25;
+scene = 'cover';
 rec = his(scene);
 figure;
 set(gcf, 'Position',  [0,0,1400,900])
-statistics = 'costfunc';
+statistics = 'psnrs';
 
 for j = 1:size(initialguesses,1)
-    subplot(2,3,j);
+    subplot(1,1,j);
     for i = 1:size(mask_types,1)
         out = rec(sprintf('%s-%s-%d',mask_types(i),initialguesses(j),snr));
         if statistics == "psnrs"
@@ -185,7 +235,7 @@ for j = 1:size(initialguesses,1)
     xlabel('#Iterations (ADMM)');
     if statistics == "psnrs"
         ylabel('PSNR');
-        ylim([35 40]);
+%         ylim([35 40]);
     else
         ylabel('CostFunc');
     end
@@ -198,20 +248,44 @@ sgtitle(sprintf('%s vs. #iter (SNR: %d; scene: %s)',statistics,snr,scene));
 %% Convergence Plots (PSNR/CostFunc vs. #iteration) with fixed SNR,scene,mask_type
 fprintf('convergence\n');
 
-snr = 35;
-scene = 'giraffe';
-rec = his(scene);
-initialguess = 'maxfilter';
+savedir_cur = sprintf("%s/convergence_plot",savedir);
+mkdir(savedir_cur);
 
-figure;
-set(gcf, 'Position',  [0,400,500,500])
-for i = 1:size(mask_types,1)
-    out = rec(sprintf('%s-%s-%d',mask_types(i),initialguess,snr));
-    plot(full(0:10)*10,[out.psnr_input out.admm_statistics.psnrs],'DisplayName',mask_types(i)); hold on;
+initialguess = 'maxfilter';
+set(0,'DefaultFigureVisible','off')
+statistics = "costfunc"; % costfunc/psnrs
+
+for l = 1:size(snrs,1)
+    snr = snrs(l);
+
+    %
+    figure;
+    set(gcf, 'DefaultLegendAutoUpdate','Off');
+    set(gcf, 'Position',  [0,400,500,500])
+    n_mts = size(mask_types,1);
+    for i = 1:size(mask_types,1)
+
+        xs = full(0:10)*5;
+        ys = zeros(size(scenes,1),size(xs,2));
+
+        for s = 1:size(scenes,1)
+            scene = scenes(s);
+            rec = his(scene);
+            out = rec(sprintf('%s-%s-%d',mask_types(i),initialguess,snr));
+            ys(s,:) = [out.psnr_input out.admm_statistics.(statistics)];
+    %         plot(xs,ys(s,:)); hold on;
+        end
+
+        plot(xs,mean(ys,1),'DisplayName',mask_types(i),'LineWidth',3); hold on;
+    end
+    legend('Location','East');
+    title(sprintf('%s vs. #iter (SNR: %d; initialguess: %s)',statistics,snr,initialguess));
+    hold off;
+    saveas(gcf, sprintf("%s/%s_vs_iterations-%s-%d.png",savedir_cur,statistics,initialguess,snr))
+
+    %
 end
-legend('Location','East');
-title(sprintf('%s vs. #iter (SNR: %d; scene: %s initialguess: %s)',statistics,snr,scene,initialguess));
-hold off;
+
 
 % figure;
 % set(gcf, 'Position',  [0,0,1800,350])
@@ -239,24 +313,6 @@ hold off;
 %     hold off;
 % end
 % sgtitle(sprintf('%s vs. #iter (SNR: %d; scene: %s)',statistics,snr,scene));
-
-
-%% 
-
-
-
-figure;
-for i = 1:size(mask_types,1)
-    % for j = 1:size(initialguesses,1)
-    for j = 1:3
-        name = sprintf('%s-%s',mask_types(i),initialguesses(j));
-        out = rec(name);
-        plot(1:10,out.admm_statistics.psnrs,'DisplayName',name); hold on;
-    end
-    break
-end
-legend();
-hold off;
 
 %%
 
