@@ -345,3 +345,17 @@ I think from last meeting with Kyros and you, it seems that a more general frame
 + next meeting
     + 4,5PM eastern time. 
     + email ...
+
+
+
++ TODO
+    + check performance of ratio images
+        + define bucket 1 ratio as 
+            + `r_1 = I_1 / (I_1+I_2)`
+        + do reconstruction on ratio images, get `S` ratio images back 
+        + multiply by `sum_{i=1}^S I_i`, i.e. sum of `S` groundtruth patterned images
+        + compare with reconstruction where input to the method are simply two bucket images
+    + check performance of RED on images with realistic noise characteristics and compare what was done previously
+        + groundtruth noiseless images, stacked with noisy images (light goto bucket 1)
+        + run RED/demosaic on input that is multiplexed and spatially subsampled (according to a chosen mask) from `S` noisy input
+        + compare PSNR/SSIM

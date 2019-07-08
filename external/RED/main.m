@@ -339,41 +339,7 @@ function out = runRED(groundtruth_folder,scene,light_mode,snr,S,F,mask_type,init
         fprintf('Input sigma = %.5f\n',input_sigma);
     end
 
-    switch mask_type
-    case 'bayer'
-        assert(F == 3);
-        % 1 2
-        % 2 3
-        M = BayerMask(h,w);
-    case 'random'
-        M = floor(rand(h,w)/(1/F))+1;
-    case 'horz'
-        % 1 2 3 ... F
-        % 1 2 3 ... F
-        M = zeros(h,w);
-        for f = 1:F
-            M(:,f:F:end) = f;
-        end
-    case 'vert'
-        % 1 1
-        % 2 2
-        % 3 3
-        M = zeros(h,w);
-        for f = 1:F
-            M(f:F:end,:) = f;
-        end
-    case 'toeplitz'
-        % 1 2 3 ... F 1 2
-        % 2 1 2 3 ... F 1
-        % 3 2 1 2 3 ... F
-        p = repmat(full(1:F),1,ceil(max(w,h)/F));
-        c = p(1,1:h);
-        r = p(1,1:w);
-        M = toeplitz(c,r);
-    otherwise
-        warning('mask not set properly');
-    end
-
+    M = SubsamplingMask(mask_type,h,w,F);
     W = BucketMultiplexingMatrix(S);
     [H,B,C] = SubsampleMultiplexOperator(S,M);
 
@@ -386,48 +352,9 @@ function out = runRED(groundtruth_folder,scene,light_mode,snr,S,F,mask_type,init
     switch initialguess
     case 'groundtruth'
         InitEstFunc = @(y) orig_im;
-    case 'bayerdemosaic'
-        assert(F == 3, 'F == 3');
-        InitEstFunc = @(y) ...
-        reshape(...
-            reshape( ...
-                cat(3, ...
-                    rgb2bgr(double(demosaic(uint8(y(:,:,1)), 'bggr'))), ...
-                    rgb2bgr(double(demosaic(uint8(y(:,:,2)), 'bggr')))), ...
-                [], 6) ...
-            / W', ...
-        h,w,S);
-    case 'maxfilter'
-        mask = zeros(h,w,F);
-        for k = 1:F
-            mask(:,:,k) = double(M==k);
-        end
-        % max filter (3x3) over each channel of `im`
-        max_filtering = @(im) reshape(cell2mat(arrayfun(@(i) ...
-            ordfilt2(im(:,:,i),9,ones(3,3)),1:F,'UniformOutput',false)),h,w,[]);
-        InitEstFunc = @(y) ...
-            reshape(...
-                reshape(cat(F, ...
-                    max_filtering(mask.*y(:,:,1)), ...
-                    max_filtering(mask.*y(:,:,2))),[],2*F) / W', ...
-            h,w,S);
-    case 'zeroatunknown'
-        mask = zeros(h,w,F);
-        for k = 1:F
-            mask(:,:,k) = double(M==k);
-        end
-        InitEstFunc = @(y) ...
-            reshape(...
-                reshape(cat(F, mask.*y(:,:,1), mask.*y(:,:,2)),[],2*F) / W', ...
-            h,w,S);
-    case 'zero'
-        InitEstFunc = @(y) zeros(h,w,S);
-    case 'random'
-        InitEstFunc = @(y) 255*rand(h,w,S);
     otherwise
-        warning('initial guess not set properly');
+        InitEstFunc = InitialEstimateFunc(initialguess,h,w,F,S,W);
     end
-
 
     %% degrade the original image
 
