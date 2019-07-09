@@ -47,8 +47,4 @@ end
 %     else
 %         f_est = medfilt2(x_est,fsize);
 %     end
-    
-%     % f_est = ReactionDiffusion(5/effective_sigma*x_est);
-%     % f_est = f_est*effective_sigma/5;
 % end
-

@@ -126,11 +126,18 @@ for scene = dataset_exp60
     fprintf("psnr (bayerdemosaic)   %.3f\n",psnr_prev);
     fprintf("psnr (admm)            %.3f\n",psnr_admm);
 
-    for s = 1:S
-        imwrite(uint8(scaling*prev_im(:,:,s)),sprintf("%s/%s_%d_prev.png",savedir,scene,s));
-        imwrite(uint8(scaling*admm_im(:,:,s)),sprintf("%s/%s_%d_admm.png",savedir,scene,s));
-        imwrite(uint8(scaling*orig_im(:,:,s)),sprintf("%s/%s_%d_orig.png",savedir,scene,s));
-    end
+    % for s = 1:S
+    %     imwrite(uint8(scaling*prev_im(:,:,s)),sprintf("%s/%s_%d_prev.png",savedir,scene,s));
+    %     imwrite(uint8(scaling*admm_im(:,:,s)),sprintf("%s/%s_%d_admm.png",savedir,scene,s));
+    %     imwrite(uint8(scaling*orig_im(:,:,s)),sprintf("%s/%s_%d_orig.png",savedir,scene,s));
+    % end
+
+    ims = [
+        orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4)
+        prev_im(:,:,1) prev_im(:,:,2) prev_im(:,:,3) prev_im(:,:,4)
+        admm_im(:,:,1) admm_im(:,:,2) admm_im(:,:,3) admm_im(:,:,4)
+    ]*scaling;
+    imwrite(uint8(ims),sprintf("%s/%s.png",savedir,scene));
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% save psnrs 
@@ -143,11 +150,28 @@ end
 
 
 save(sprintf('%s/psnrs.mat',savedir),'m');
-% read in map just to check its 
-% m = load(sprintf('%s/psnrs.mat',savedir));
-% m = m.m;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Some plotting
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+m = load(sprintf('%s/psnrs.mat',savedir));
+m = m.m;
+ks = keys(m);
+
+psnrs = zeros(2,numel(keys(m)));
+for i = 1:size(ks,2)
+    k = ks{i};
+    psnrs(1,i) = m(k).psnr_prev;
+    psnrs(2,i) = m(k).psnr_admm;
+end
+
+title("Performance (w.r.t. PSNR) for different objects using previous/admm method");
+plot(1:size(ks,2),psnrs(1,:),'DisplayName',"prev"); hold on;
+plot(1:size(ks,2),psnrs(2,:),'DisplayName','admm'); hold on;
+set(gca,'xtick',1:size(ks,2),'xticklabel',ks);
+legend();
+hold off;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Experiment on hyperparameters
@@ -206,7 +230,7 @@ save(sprintf('%s/psnrs.mat',savedir),'m');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Parameters
+%% Additional Parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 savedir = "results/realistic_noise_initialguess_mask"; mkdir(savedir);
@@ -244,7 +268,7 @@ for scene = dataset_exp60
             %% RED-specific parameters
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-            M = SubsamplingMask("bayer",h,w,F);
+            M = SubsamplingMask(mask_type,h,w,F);
             [H,B,C] = SubsampleMultiplexOperator(S,M);
             ForwardFunc = @(in_im) reshape(H*in_im(:),h,w,2);
             BackwardFunc = @(in_im) reshape(H'*in_im(:),h,w,S);
@@ -291,10 +315,16 @@ for scene = dataset_exp60
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
             mkdir(sprintf("%s/%s",savedir,scene));
-            for s = 1:S
-                imwrite(uint8(scaling*admm_im(:,:,s)),sprintf("%s/%s/%s_%s_%d_admm.png",savedir,scene,mask_type,initialguess,s));
-                imwrite(uint8(scaling*orig_im(:,:,s)),sprintf("%s/%s/%s_%s_%d_orig.png",savedir,scene,mask_type,initialguess,s));
-            end
+            % for s = 1:S
+            %     imwrite(uint8(scaling*admm_im(:,:,s)),sprintf("%s/%s/%s_%s_%d_admm.png",savedir,scene,mask_type,initialguess,s));
+            %     imwrite(uint8(scaling*orig_im(:,:,s)),sprintf("%s/%s/%s_%s_%d_orig.png",savedir,scene,mask_type,initialguess,s));
+            % end
+
+            ims = [
+                orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4)
+                admm_im(:,:,1) admm_im(:,:,2) admm_im(:,:,3) admm_im(:,:,4)
+            ]*scaling;
+            imwrite(uint8(ims),sprintf("%s/%s/%s_%s.png",savedir,scene,mask_type,initialguess));
 
             data.mask_type = mask_type;
             data.initialguess = initialguesses;

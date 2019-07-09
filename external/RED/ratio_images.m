@@ -18,7 +18,7 @@ addpath(genpath("./mian/helperFunctions/Algorithms"));
 % set to 1 if debug, 0 otherwise
 short = 0;
 % crop the image to remove the borders
-[cx,cy] = deal(1:160,10:249);
+[cx,cy] = deal(1:160,10:247);
 % #patterns/frames
 [S,F] = deal(4,3);
 % dimension of input image
@@ -27,7 +27,7 @@ short = 0;
 % scale the intensity of image for better visualization 
 scaling = 2;
 % scene
-scene = "shoe";
+scene = "flower";
 % dataset
 dataset_exp60 = SceneNames("exp60");
 % directory containing the raw noisy images
@@ -68,8 +68,12 @@ params_admm = GetSuperResADMMParams(light_mode);
 params_admm.beta = 1.5;
 params_admm.lambda = 0.3;
 
+params_admm_ratio = GetSuperResADMMParams(light_mode);
+
 if short == 1
     params_admm.outer_iters = 1;
+else
+    params_admm.outer_iters = 70;
 end
 
 
@@ -78,7 +82,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 dataset_exp60 = ["shoe"];
-
+m = {}; iter = 1;
 
 for scene = dataset_exp60
 
@@ -108,14 +112,14 @@ for scene = dataset_exp60
     end
 
     input_im = ForwardFunc(orig_im_noisy);
-    ratio_input_im = intensity_to_ratio(input_im)*255;
+    ratio_input_im = IntensityToRatio(input_im)*255;
 
     for s = 1:S
         im = double(imread(sprintf("%s/%s_%d.png",stackeddir,scene,s-1)));
         orig_im(:,:,s) = im(cx,cy);
     end
 
-    ratio_orig_im = intensity_to_ratio(orig_im)*255;
+    ratio_orig_im = IntensityToRatio(orig_im)*255*(S/2); % *(S/2) to scale the intensity ...
 
     imshow([
         orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4)
@@ -124,40 +128,82 @@ for scene = dataset_exp60
         ratio_orig_im(:,:,1) ratio_orig_im(:,:,2) ratio_orig_im(:,:,3) ratio_orig_im(:,:,4)
     ]/255);
 
+    assert(all(sum(ratio_input_im,3) -   255*ones(h,w) <= 1e-10,'all'));
+    assert(all(sum(ratio_orig_im,3)  - 2*255*ones(h,w) <= 1e-10,'all'));
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% run RED on ratio/intensity images
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     [admm_intensity_im,psnr_intensity,~] = RunADMM_demosaic(input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
-    [admm_ratio_im,psnr_ratio,~] = RunADMM_demosaic(ratio_input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,ratio_orig_im);
 
-    im = ratio_to_intensity(ratio_input_im/255);
-    im = im.*input_im;
-    im = im*2;
+    for beta = [1e-2 1e-1 1]
+        for lambda = [1e-2 1e-1 1]
+            params_admm_ratio.beta = beta;
+            params_admm_ratio.lambda = lambda;
 
+            [admm_ratio_im,psnr_ratio,~] = RunADMM_demosaic(ratio_input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm_ratio,ratio_orig_im);
+
+
+            im = admm_ratio_im/255;
+            im = RatioToIntensity(im,sum(input_im,3));
+            psnr_ratio_cvt_intensity = ComputePSNR(orig_im,im);
+
+            % scale by 2/S to use PSNR formula where max_I=255
+            psnr_ratio = ComputePSNR(ratio_orig_im*(2/S),admm_ratio_im*((2/S)));
+
+            fprintf("lambda=%.5f beta=%.5f",lambda,beta);
+            fprintf("psnr (intensity-intensity)             %.3f\n",psnr_intensity);
+            fprintf("psnr (ratio->intensity - intensity)    %.3f\n",psnr_ratio_cvt_intensity);
+            fprintf("psnr (ratio - ratio)                   %.3f\n",psnr_ratio);
+
+        end
+    end
+
+    % [admm_ratio_im,psnr_ratio,~] = RunADMM_demosaic(ratio_input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm_ratio,ratio_orig_im);
+
+
+    % im = admm_ratio_im/255;
+    % im = RatioToIntensity(im,sum(input_im,3));
+    % psnr_ratio_cvt_intensity = ComputePSNR(orig_im,im);
+
+    % % scale by 2/S to use PSNR formula where max_I=255
+    % psnr_ratio = ComputePSNR(ratio_orig_im*(2/S),admm_ratio_im*((2/S)));
+
+    % fprintf("psnr (intensity-intensity)             %.3f\n",psnr_intensity);
+    % fprintf("psnr (ratio->intensity - intensity)    %.3f\n",psnr_ratio_cvt_intensity);
+    % fprintf("psnr (ratio - ratio)                   %.3f\n",psnr_ratio);
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% save images
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    ims = [
+        scaling*orig_im(:,:,1)           scaling*orig_im(:,:,2)           scaling*orig_im(:,:,3)           scaling*orig_im(:,:,4)
+        scaling*admm_intensity_im(:,:,1) scaling*admm_intensity_im(:,:,2) scaling*admm_intensity_im(:,:,3) scaling*admm_intensity_im(:,:,4)
+        scaling*im(:,:,1) scaling*im(:,:,2) scaling*im(:,:,3) scaling*im(:,:,4)
+        admm_ratio_im(:,:,1) admm_ratio_im(:,:,2) admm_ratio_im(:,:,3) admm_ratio_im(:,:,4)
+        ratio_orig_im(:,:,1) ratio_orig_im(:,:,2) ratio_orig_im(:,:,3) ratio_orig_im(:,:,4)
+    ];
     
-    imshow([
-        orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4)
-        im(:,:,1) im(:,:,2) im(:,:,1) im(:,:,2)
-    ]/255);
+    % imshow(ims/255);
+    imwrite(uint8(ims),sprintf("%s/%s.png",savedir,scene));
+
+    data.psnr_intensity = psnr_intensity;
+    data.psnr_ratio_cvt_intensity = psnr_ratio_cvt_intensity;
+    data.psnr_ratio = psnr_ratio;
+
+    m{iter} = data;
+    iter = iter + 1;
+    break;
 end
 
 
-function ratio_im = intensity_to_ratio(im)
-% Converts image in intensity space to ratio space
-%
-%   `im`        h x w x 2
-%   `ratio_im`  h x w x S
-%
-    ratio_im = im ./ repmat(sum(im,3),1,1,size(im,3));
-    ratio_im(isnan(ratio_im)) = 0.5;
-end
+save(sprintf('%s/ratio_images.mat',savedir),'m');
 
-function im = ratio_to_intensity(ratio_im)
-% Converts image in intensity space to ratio space
-%
-%   `ratio_im`  h x w x S
-%   `im`        h x w x 2
-%
-    im = ratio_im.*repmat(sum(ratio_im,3),1,1,size(ratio_im,3));
-end
+
+% flower (medfilt)
+% psnr (intensity-intensity)             44.006
+% psnr (ratio->intensity - intensity)    44.446
+% psnr (ratio - ratio)                   35.727
