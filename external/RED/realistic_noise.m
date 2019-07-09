@@ -12,8 +12,12 @@ addpath(genpath("./mian/helperFunctions/Camera"));
 addpath(genpath("./mian/helperFunctions/ASNCC"));
 addpath(genpath("./mian/helperFunctions/Algorithms"));
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% set to 1 if debug, 0 otherwise
+short = 0;
 % crop the image to remove the borders
 [cx,cy] = deal(1:160,10:249);
 % #patterns/frames
@@ -23,8 +27,6 @@ addpath(genpath("./mian/helperFunctions/Algorithms"));
 [h,w] = deal(numel(cx),numel(cy));
 % scale the intensity of image for better visualization 
 scaling = 2;
-% scene
-scene = "flower";
 % dataset
 dataset_exp60 = SceneNames("exp60");
 % directory containing the raw noisy images
@@ -32,7 +34,7 @@ rawimagedir =  "data/exp60";
 % directory containing groundtruth images
 stackeddir = "data/exp60/organized";
 % save images to 
-savedir = "results/realisticnoise"; mkdir(savedir);
+savedir = "results/realistic_noise"; mkdir(savedir);
 % black level 
 blacklevelpath = "data/blacklevel_all1/blacklevel.mat";
 if ~isfile(blacklevelpath)
@@ -42,6 +44,9 @@ end
 blacklvl = load(blacklevelpath);
 blacklvl = blacklvl.blacklvl;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% RED-specific parameter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % RED less #iterations
 light_mode = true;
@@ -62,7 +67,13 @@ params_admm = GetSuperResADMMParams(light_mode);
 params_admm.beta = 1.5;
 params_admm.lambda = 0.3;
 
+if short == 1
+    params_admm.outer_iters = 1;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% loop over scenes, several noisy inputs 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 m = containers.Map;
 
@@ -132,11 +143,9 @@ end
 
 
 save(sprintf('%s/psnrs.mat',savedir),'m');
-
-%% read in map just to check its 
-
-m = load(sprintf('%s/psnrs.mat',savedir));
-m = m.m;
+% read in map just to check its 
+% m = load(sprintf('%s/psnrs.mat',savedir));
+% m = m.m;
 
 
 
@@ -192,3 +201,112 @@ m = m.m;
 % psnr (bayerdemosaic)   44.107
 % psnr (admm+medfilter)  44.532
 % psnr (admm+tnrd)       45.135
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+savedir = "results/realistic_noise_initialguess_mask"; mkdir(savedir);
+
+mask_types = [
+    "toeplitz"
+    "horz"
+    "vert"
+    "random"
+]';
+
+initialguesses = [
+    "maxfilter"
+    "zeroatunknown"
+    "zero"
+    "random"
+]';
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Experiment on initialguess and mask
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+iter = 1;
+m = {};
+
+% dataset_exp60 = dataset_exp60(1:2);
+% params_admm.outer_iters = 1;
+
+for scene = dataset_exp60
+    for mask_type = mask_types
+        for initialguess = initialguesses
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% RED-specific parameters
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+            M = SubsamplingMask("bayer",h,w,F);
+            [H,B,C] = SubsampleMultiplexOperator(S,M);
+            ForwardFunc = @(in_im) reshape(H*in_im(:),h,w,2);
+            BackwardFunc = @(in_im) reshape(H'*in_im(:),h,w,S);
+            InitEstFunc = InitialEstimateFunc(initialguess,h,w,F,S, ...
+                    'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% read in image
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+            orig_im_noisy = zeros(h,w,S);
+            orig_im = zeros(h,w,S);
+            input_im = zeros(h,w,2);
+
+            files = dir(sprintf("%s/%s/*.png",rawimagedir,scene));
+            [fnames,ffolders] = deal({files.name},{files.folder});
+            folder = ffolders{1};
+            for i = 1:S
+                fname = fnames{i};
+                splits = split(fname,' ');
+                [bktno,id] = deal(splits{1},splits{2}); assert(bktno == "bucket1");
+                impath = sprintf("%s/%s",folder,fname);
+                im = double(BlackLevelRead(impath,blacklvl,1));
+                orig_im_noisy(:,:,i) = im(cx,cy);
+            end
+
+            input_im = ForwardFunc(orig_im_noisy);
+
+            for s = 1:S
+                im = double(imread(sprintf("%s/%s_%d.png",stackeddir,scene,s-1)));
+                orig_im(:,:,s) = im(cx,cy);
+            end
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% run RED
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+            [admm_im,psnr_admm,admm_statistics] = RunADMM_demosaic(...
+                input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
+            fprintf("psnr (admm)            %.3f\n",psnr_admm);
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% save 
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            
+            mkdir(sprintf("%s/%s",savedir,scene));
+            for s = 1:S
+                imwrite(uint8(scaling*admm_im(:,:,s)),sprintf("%s/%s/%s_%s_%d_admm.png",savedir,scene,mask_type,initialguess,s));
+                imwrite(uint8(scaling*orig_im(:,:,s)),sprintf("%s/%s/%s_%s_%d_orig.png",savedir,scene,mask_type,initialguess,s));
+            end
+
+            data.mask_type = mask_type;
+            data.initialguess = initialguesses;
+            data.M = M;
+            data.psnr_admm = psnr_admm;
+            data.admm_statistics = admm_statistics;
+
+            m{iter} = data;
+            iter = iter + 1;
+        end
+    end
+end
+
+
+save(sprintf('%s/initialguess_mask.mat',savedir),'m');
