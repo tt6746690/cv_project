@@ -161,7 +161,7 @@ function out_admm_im = red_demosaic_demultiplex(input_im)
     
     ForwardFunc = @(in_im) reshape(H*in_im(:),h,w,2);
     BackwardFunc = @(in_im) reshape(H'*in_im(:),h,w,S);
-    InitEstFunc = InitialEstimateFunc("maxfilter",h,w,S,F,W);
+    InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S,W);
 
     orig_im = zeros(h,w,S); % not available ...
     params_admm = GetSuperResADMMParams(light_mode);

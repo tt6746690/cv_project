@@ -17,7 +17,10 @@ deep_demosaick/
 learn_prox_ops/
 argmin-TR-2016-code/
 On_RED/
-external/RED/results/red/
+
+# RED specific
+external/RED/data
+external/RED/results/
 
 
 .ipynb_checkpoints

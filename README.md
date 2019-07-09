@@ -88,3 +88,11 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
     + exposure: 60
     + masks: 1
     + trigger num: 12
+
+
+
++ camera setup 
+    + physical size of the field
+    + object to image distance
++ textured objects
+    + 

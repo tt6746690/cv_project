@@ -37,7 +37,7 @@
 
 
 function f_est = Denoiser(x_est,effective_sigma)
-    fsize = [5 5];
+    fsize = [3 3];
 
     if size(x_est,3) ~= 1  % do denoising to each channel independently
         f_est = zeros(size(x_est));
@@ -48,10 +48,7 @@ function f_est = Denoiser(x_est,effective_sigma)
         f_est = medfilt2(x_est,fsize);
     end
     
-    f_est = f_est;
-    
     % f_est = ReactionDiffusion(5/effective_sigma*x_est);
     % f_est = f_est*effective_sigma/5;
-    
 end
 

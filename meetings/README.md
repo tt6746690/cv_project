@@ -349,13 +349,14 @@ I think from last meeting with Kyros and you, it seems that a more general frame
 
 
 + TODO
-    + check performance of ratio images
+    + check performance of red in ratio space and intensity space
+        + motivation ratio space does not have textures
         + define bucket 1 ratio as 
             + `r_1 = I_1 / (I_1+I_2)`
         + do reconstruction on ratio images, get `S` ratio images back 
-        + multiply by `sum_{i=1}^S I_i`, i.e. sum of `S` groundtruth patterned images
-        + compare with reconstruction where input to the method are simply two bucket images
-    + check performance of RED on images with realistic noise characteristics and compare what was done previously
+        + compare with reconstruction with red in intensity space where the output image is converted to ratio images in the end
+    + (intensity space) check performance of RED on images with realistic noise characteristics and compare to RED on images with artificially added noise
         + groundtruth noiseless images, stacked with noisy images (light goto bucket 1)
         + run RED/demosaic on input that is multiplexed and spatially subsampled (according to a chosen mask) from `S` noisy input
         + compare PSNR/SSIM
+    

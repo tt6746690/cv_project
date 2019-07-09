@@ -1,4 +1,4 @@
-function InitEstFunc = InitialEstimateFunc(est_type,h,w,F,S,W)
+function InitEstFunc = InitialEstimateFunc(est_type,h,w,F,S,varargin)
 %   Define `InitEstFunc` which does demosaic+demultiplex
 %       which act as initial guess image to optimization methods
 %
@@ -12,12 +12,35 @@ function InitEstFunc = InitialEstimateFunc(est_type,h,w,F,S,W)
 %        maxfilter: function does a 3x3 max filter over the image output by `zeroatunknown`
 %        bayerdemosaic: do bayer demosaicing then demultiplexing
 %
-%   W is needed only for est_type \in {bayerdemosaic, maxfilter}
+%   varargin
+%       'BucketMultiplexingMatrix',W       needed for est_type \in {bayerdemosaic, maxfilter,zeroatunknown}
+%       'SubsamplingMask',M                needed for est_type \in {maxfilter,zeroatunknown}
 %
 %   [h,w] = deal(4,4);
 %   f = InitialEstimateFunc("zero",h,w,3,4,[]);
 %   f(ones(h,w,2);
 %
+    assert(S >= (F+1));
+
+    
+    % Map of parameter names to variable names
+    params_to_variables = containers.Map( ...
+        {'BucketMultiplexingMatrix','SubsamplingMask'}, ...
+        {'W','M'});
+    v = 1;
+    while v <= numel(varargin)
+        param_name = varargin{v};
+        if isKey(params_to_variables,param_name)
+            assert(v+1<=numel(varargin));
+            v = v+1;
+            % Trick: use feval on anonymous function to use assignin to this workspace
+            feval(@()assignin('caller',params_to_variables(param_name),varargin{v}));
+        else
+            error('Unsupported parameter: %s',varargin{v});
+        end
+        v=v+1;
+    end
+
 
     switch est_type
     case 'zero'
