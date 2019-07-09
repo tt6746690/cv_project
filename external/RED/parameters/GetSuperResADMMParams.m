@@ -34,6 +34,8 @@ params.inner_denoiser_iters = 1;
 % relaxation parameter of ADMM
 params.alpha = 1;
 
+% denoiser type: {medfilter, tnrd}
+params.denoiser_type = "medfilter";
 
 return
 

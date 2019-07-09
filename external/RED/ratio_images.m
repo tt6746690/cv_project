@@ -65,15 +65,17 @@ BackwardFunc = @(in_im) reshape(H'*in_im(:),h,w,S);
 InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S, ...
         'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
 params_admm = GetSuperResADMMParams(light_mode);
-params_admm.beta = 1.5;
-params_admm.lambda = 0.3;
 
 params_admm_ratio = GetSuperResADMMParams(light_mode);
+params_admm_ratio.beta = 0.01;
+params_admm_ratio.lambda = 0.25;
 
 if short == 1
     params_admm.outer_iters = 1;
+    params_admm_ratio.outer_iters = 1;
 else
     params_admm.outer_iters = 70;
+    params_admm_ratio.outer_iters = 70;
 end
 
 
@@ -135,44 +137,23 @@ for scene = dataset_exp60
     %% run RED on ratio/intensity images
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    params_admm.denoiser_type
+    
     [admm_intensity_im,psnr_intensity,~] = RunADMM_demosaic(input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
+    [admm_ratio_im,psnr_ratio,~] = RunADMM_demosaic(ratio_input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm_ratio,ratio_orig_im);
 
-    for beta = [1e-2 1e-1 1]
-        for lambda = [1e-2 1e-1 1]
-            params_admm_ratio.beta = beta;
-            params_admm_ratio.lambda = lambda;
+    denoised_input_im = Denoiser(sum(input_im,3),params_admm.effective_sigma,params_admm.denoiser_type);
 
-            [admm_ratio_im,psnr_ratio,~] = RunADMM_demosaic(ratio_input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm_ratio,ratio_orig_im);
+    im = admm_ratio_im/255;
+    im = RatioToIntensity(im,denoised_input_im);
+    psnr_ratio_cvt_intensity = ComputePSNR(orig_im,im);
 
+    % scale by 2/S to use PSNR formula where max_I=255
+    psnr_ratio = ComputePSNR(ratio_orig_im*(2/S),admm_ratio_im*((2/S)));
 
-            im = admm_ratio_im/255;
-            im = RatioToIntensity(im,sum(input_im,3));
-            psnr_ratio_cvt_intensity = ComputePSNR(orig_im,im);
-
-            % scale by 2/S to use PSNR formula where max_I=255
-            psnr_ratio = ComputePSNR(ratio_orig_im*(2/S),admm_ratio_im*((2/S)));
-
-            fprintf("lambda=%.5f beta=%.5f",lambda,beta);
-            fprintf("psnr (intensity-intensity)             %.3f\n",psnr_intensity);
-            fprintf("psnr (ratio->intensity - intensity)    %.3f\n",psnr_ratio_cvt_intensity);
-            fprintf("psnr (ratio - ratio)                   %.3f\n",psnr_ratio);
-
-        end
-    end
-
-    % [admm_ratio_im,psnr_ratio,~] = RunADMM_demosaic(ratio_input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm_ratio,ratio_orig_im);
-
-
-    % im = admm_ratio_im/255;
-    % im = RatioToIntensity(im,sum(input_im,3));
-    % psnr_ratio_cvt_intensity = ComputePSNR(orig_im,im);
-
-    % % scale by 2/S to use PSNR formula where max_I=255
-    % psnr_ratio = ComputePSNR(ratio_orig_im*(2/S),admm_ratio_im*((2/S)));
-
-    % fprintf("psnr (intensity-intensity)             %.3f\n",psnr_intensity);
-    % fprintf("psnr (ratio->intensity - intensity)    %.3f\n",psnr_ratio_cvt_intensity);
-    % fprintf("psnr (ratio - ratio)                   %.3f\n",psnr_ratio);
+    fprintf("psnr (intensity-intensity)             %.3f\n",psnr_intensity);
+    fprintf("psnr (ratio->intensity - intensity)    %.3f\n",psnr_ratio_cvt_intensity);
+    fprintf("psnr (ratio - ratio)                   %.3f\n",psnr_ratio);
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -196,14 +177,76 @@ for scene = dataset_exp60
 
     m{iter} = data;
     iter = iter + 1;
-    break;
 end
 
 
 save(sprintf('%s/ratio_images.mat',savedir),'m');
+
+%%
 
 
 % flower (medfilt)
 % psnr (intensity-intensity)             44.006
 % psnr (ratio->intensity - intensity)    44.446
 % psnr (ratio - ratio)                   35.727
+
+
+% tune lambda beta for ratio image
+% defaults: lambda=0.008 beta=1e-3
+% lambda=0.08000 beta=0.00100
+% psnr (intensity-intensity)             44.481
+% psnr (ratio->intensity - intensity)    40.739
+% psnr (ratio - ratio)                   34.443
+
+
+% lambda=0.30000 beta=0.00010
+% psnr (intensity-intensity)             44.481
+% psnr (ratio->intensity - intensity)    35.588
+% psnr (ratio - ratio)                   28.404
+% lambda=0.30000 beta=0.00100
+% psnr (intensity-intensity)             44.481
+% psnr (ratio->intensity - intensity)    43.233
+% psnr (ratio - ratio)                   35.461
+% lambda=0.30000 beta=0.00500
+% psnr (intensity-intensity)             44.481
+% psnr (ratio->intensity - intensity)    43.180
+% psnr (ratio - ratio)                   36.362
+% lambda=0.30000 beta=0.01000
+% psnr (intensity-intensity)             44.481
+% psnr (ratio->intensity - intensity)    44.476
+% psnr (ratio - ratio)                   36.438
+% lambda=0.30000 beta=0.05000
+% psnr (intensity-intensity)             44.481
+% psnr (ratio->intensity - intensity)    43.524
+% psnr (ratio - ratio)                   36.269
+% lambda=0.30000 beta=0.01000
+% psnr (intensity-intensity)             44.481
+% psnr (ratio->intensity - intensity)    42.802
+% psnr (ratio - ratio)                   35.935
+% lambda=0.30000 beta=0.50000
+% psnr (intensity-intensity)             44.481
+% psnr (ratio->intensity - intensity)    39.995
+% psnr (ratio - ratio)                   33.434
+% lambda=0.30000 beta=1.00000
+% psnr (intensity-intensity)             44.481
+% psnr (ratio->intensity - intensity)    38.581
+% psnr (ratio - ratio)                   31.864
+
+
+% outer_iters=70 denoiser=tnrd
+% lambda=0.10000 beta=0.01000
+% psnr (intensity-intensity)             44.481
+% psnr (ratio->intensity - intensity)    44.683
+% psnr (ratio - ratio)                   36.972
+% lambda=0.25000 beta=0.01000
+% psnr (intensity-intensity)             44.481
+% psnr (ratio->intensity - intensity)    45.656
+% psnr (ratio - ratio)                   37.706
+% lambda=0.50000 beta=0.01000
+% psnr (intensity-intensity)             44.481
+% psnr (ratio->intensity - intensity)    44.277
+% psnr (ratio - ratio)                   36.931
+% lambda=0.75000 beta=0.01000
+% psnr (intensity-intensity)             44.481
+% psnr (ratio->intensity - intensity)    45.908
+% psnr (ratio - ratio)                   36.369
