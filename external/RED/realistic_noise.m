@@ -281,19 +281,12 @@ initialguesses = [
     "random"
 ]';
 
+params_admm.denoiser = "tnrd";
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Experiment on initialguess and mask
 %%      note: use default hyperparameter, since otherwise initialguess impact convergence very much, e.g. zero stays at zero
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-dataset_exp60 = ["shoe"];
-% params_admm.outer_iters = 1;
-params_admm_untuned = GetSuperResADMMParams(light_mode);
-
 
 for scene = dataset_exp60
     m = {}; iter = 1;
@@ -348,22 +341,10 @@ for scene = dataset_exp60
             %% run RED
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-            [admm_im,psnr_admm,admm_statistics] = RunADMM_demosaic(...
-                input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
-            [untuned_admm_im,psnr_untuned_admm,untuned_admm_statistics] = RunADMM_demosaic(...
-                input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
+            [admm_im,psnr_admm,admm_statistics] = RunADMM_demosaic(input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
 
-
-            if mask_type == "bayer"
-                BayerDemosaicDemultiplex = InitialEstimateFunc("bayerdemosaic",h,w,F,S, ...
-                    'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
-                prev_im = BayerDemosaicDemultiplex(input_im);
-                psnr_prev = ComputePSNR(orig_im, prev_im);
-                fprintf("psnr (prev)            %.3f\n",psnr_prev);
-            end
-    
+            fprintf("scene=%s mask_type=%s initialguess=%s\n",scene,mask_type,initialguess);
             fprintf("psnr (admm)            %.3f\n",psnr_admm);
-            fprintf("scene=%s mask_type=%s initialguess=%s",scene,mask_type,initialguess);
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %% save 
@@ -387,7 +368,7 @@ for scene = dataset_exp60
             iter = iter + 1;
         end
     end
-    save(sprintf('%s/%s.mat',savedir),'m');
+    save(sprintf('%s/%s.mat',savedir,scene),'m');
 end
 
 
