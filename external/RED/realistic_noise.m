@@ -202,8 +202,6 @@ title("Performance (w.r.t. PSNR) for different objects using previous/admm+media
 saveas(gcf,sprintf("%s/compare_to_prev.png",savedir));
 hold off;
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Experiment on hyperparameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -192,7 +192,35 @@ end
 
 save(sprintf('%s/ratio_images.mat',savedir),'m');
 
-% m = load(sprintf('%s/ratio_images.mat',savedir));
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Plots
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+m = load(sprintf('%s/ratio_images.mat',savedir));
+m = m.m;
+nx = numel(dataset_exp60);
+
+psnrs = zeros(4,nx);
+for i = 1:nx
+    data = m{i};
+    psnrs(1,i) = data.psnr_intensity;
+    psnrs(2,i) = data.psnr_ratio;
+    psnrs(3,i) = data.psnr_ratio_mult_inputsum;
+    psnrs(4,i) = data.psnr_ratio_mult_inputsum_denoised;
+end
+
+plot(1:nx,psnrs(1,:),'DisplayName',"intensity"); hold on;
+plot(1:nx,psnrs(2,:),'DisplayName','ratio'); hold on;
+plot(1:nx,psnrs(3,:),'DisplayName','ratio multiplied with inputsum'); hold on;
+plot(1:nx,psnrs(4,:),'DisplayName','ratio multiplied with denoised inputsum'); hold on;
+set(gca,'xtick',1:nx,'xticklabel',dataset_exp60);
+legend();
+xlabel("Scenes")
+ylabel("PSNR")
+title("Performance comparison between intensity images and ratio images");
+saveas(gcf,sprintf("%s/intensity_ratio_comparison.png",savedir));
+hold off;
+
 
 
 %%
