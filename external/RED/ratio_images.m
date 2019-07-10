@@ -83,7 +83,7 @@ end
 %% Compare RED on both ratio/intensity space
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-dataset_exp60 = ["shoe"];
+% dataset_exp60 = ["shoe"];
 m = {}; iter = 1;
 
 for scene = dataset_exp60
@@ -137,43 +137,53 @@ for scene = dataset_exp60
     %% run RED on ratio/intensity images
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    params_admm.denoiser_type
-    
+    params_admm.denoiser_type       = "tnrd";
+    params_admm_ratio.denoiser_type = "tnrd";
+
+    % 1: admm+tnrd in intensity space
     [admm_intensity_im,psnr_intensity,~] = RunADMM_demosaic(input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
+
+    % 2. admm+tnrd in ratio space
     [admm_ratio_im,psnr_ratio,~] = RunADMM_demosaic(ratio_input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm_ratio,ratio_orig_im);
+    psnr_ratio = ComputePSNR(ratio_orig_im*(2/S),admm_ratio_im*((2/S))); % scale by 2/S to use PSNR formula where max_I=255
+    
+    % 3: admm+tnrd ratio images multiplied by total `input_im` intensity
+    ratio_mult_inputsum_im = admm_ratio_im/255;
+    ratio_mult_inputsum_im = RatioToIntensity(ratio_mult_inputsum_im,sum(input_im,3));
+    psnr_ratio_mult_inputsum = ComputePSNR(orig_im,ratio_mult_inputsum_im);
 
-    denoised_input_im = Denoiser(sum(input_im,3),params_admm.effective_sigma,params_admm.denoiser_type);
+    % 4: admm+tnrd ratio images multiplied by denoiseed (by tnrd) total `input_im` intensity
+    denoised_input_im = Denoiser(sum(input_im,3),params_admm.effective_sigma,"tnrd");
+    ratio_mult_inputsum_denoised_im = admm_ratio_im/255;
+    ratio_mult_inputsum_denoised_im = RatioToIntensity(ratio_mult_inputsum_denoised_im,denoised_input_im);
+    psnr_ratio_mult_inputsum_denoised = ComputePSNR(orig_im,ratio_mult_inputsum_denoised_im);
 
-    im = admm_ratio_im/255;
-    im = RatioToIntensity(im,denoised_input_im);
-    psnr_ratio_cvt_intensity = ComputePSNR(orig_im,im);
 
-    % scale by 2/S to use PSNR formula where max_I=255
-    psnr_ratio = ComputePSNR(ratio_orig_im*(2/S),admm_ratio_im*((2/S)));
-
-    fprintf("psnr (intensity-intensity)             %.3f\n",psnr_intensity);
-    fprintf("psnr (ratio->intensity - intensity)    %.3f\n",psnr_ratio_cvt_intensity);
-    fprintf("psnr (ratio - ratio)                   %.3f\n",psnr_ratio);
-
+    fprintf("psnr_intensity                     %.4f\n",psnr_intensity);
+    fprintf("psnr_ratio                         %.4f\n",psnr_ratio);
+    fprintf("psnr_ratio_mult_inputsum           %.4f\n",psnr_ratio_mult_inputsum);
+    fprintf("psnr_ratio_mult_inputsum_denoised  %.4f\n",psnr_ratio_mult_inputsum_denoised);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% save images
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     ims = [
-        scaling*orig_im(:,:,1)           scaling*orig_im(:,:,2)           scaling*orig_im(:,:,3)           scaling*orig_im(:,:,4)
-        scaling*admm_intensity_im(:,:,1) scaling*admm_intensity_im(:,:,2) scaling*admm_intensity_im(:,:,3) scaling*admm_intensity_im(:,:,4)
-        scaling*im(:,:,1) scaling*im(:,:,2) scaling*im(:,:,3) scaling*im(:,:,4)
-        admm_ratio_im(:,:,1) admm_ratio_im(:,:,2) admm_ratio_im(:,:,3) admm_ratio_im(:,:,4)
-        ratio_orig_im(:,:,1) ratio_orig_im(:,:,2) ratio_orig_im(:,:,3) ratio_orig_im(:,:,4)
+        scaling*orig_im(:,:,1)                  scaling*orig_im(:,:,2)                  scaling*orig_im(:,:,3)                  scaling*orig_im(:,:,4)
+        ratio_orig_im(:,:,1)                    ratio_orig_im(:,:,2)                    ratio_orig_im(:,:,3)                    ratio_orig_im(:,:,4)
+        scaling*admm_intensity_im(:,:,1)        scaling*admm_intensity_im(:,:,2)        scaling*admm_intensity_im(:,:,3)        scaling*admm_intensity_im(:,:,4)
+        admm_ratio_im(:,:,1)                    admm_ratio_im(:,:,2)                    admm_ratio_im(:,:,3)                    admm_ratio_im(:,:,4)
+        scaling*ratio_mult_inputsum_im(:,:,1)   scaling*ratio_mult_inputsum_im(:,:,2)   scaling*ratio_mult_inputsum_im(:,:,3)   scaling*ratio_mult_inputsum_im(:,:,4)
+        scaling*ratio_mult_inputsum_denoised_im(:,:,1)      scaling*ratio_mult_inputsum_denoised_im(:,:,2)      scaling*ratio_mult_inputsum_denoised_im(:,:,3)      scaling*ratio_mult_inputsum_denoised_im(:,:,4)
     ];
     
-    % imshow(ims/255);
+    imshow(ims/255);
     imwrite(uint8(ims),sprintf("%s/%s.png",savedir,scene));
 
     data.psnr_intensity = psnr_intensity;
-    data.psnr_ratio_cvt_intensity = psnr_ratio_cvt_intensity;
     data.psnr_ratio = psnr_ratio;
+    data.psnr_ratio_mult_inputsum   = psnr_ratio_mult_inputsum;
+    data.psnr_ratio_mult_inputsum_denoised  = psnr_ratio_mult_inputsum_denoised;
 
     m{iter} = data;
     iter = iter + 1;
@@ -181,6 +191,9 @@ end
 
 
 save(sprintf('%s/ratio_images.mat',savedir),'m');
+
+% m = load(sprintf('%s/ratio_images.mat',savedir));
+
 
 %%
 

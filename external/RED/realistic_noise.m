@@ -123,8 +123,7 @@ for scene = dataset_exp60
     params_admm.denoiser_type = "medfilter";
     [medf_admm_im,psnr_medf_admm,~] = RunADMM_demosaic(input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
 
-    BayerDemosaicDemultiplex = InitialEstimateFunc("bayerdemosaic",h,w,F,S, ...
-            'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
+    BayerDemosaicDemultiplex = InitialEstimateFunc("bayerdemosaic",h,w,F,S,'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
     prev_im = BayerDemosaicDemultiplex(input_im);
     psnr_prev = ComputePSNR(orig_im, prev_im);
 
@@ -174,6 +173,36 @@ plot(1:size(ks,2),psnrs(2,:),'DisplayName','admm'); hold on;
 set(gca,'xtick',1:size(ks,2),'xticklabel',ks);
 legend();
 hold off;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% compare medfilter,tnrd,bayerdemosaic
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+m = load(sprintf('results/realistic_noise/psnrs.mat',savedir));
+m = m.m;
+ks = keys(m);
+
+psnrs = zeros(3,numel(keys(m)));
+for i = 1:size(ks,2)
+    k = ks{i};
+    psnrs(1,i) = m(k).psnr_prev;
+    psnrs(2,i) = m(k).psnr_medf_admm;
+    psnrs(3,i) = m(k).psnr_tnrd_admm;
+end
+
+plot(1:size(ks,2),psnrs(1,:),'DisplayName',"prev"); hold on;
+plot(1:size(ks,2),psnrs(2,:),'DisplayName','admm+medianfilter'); hold on;
+plot(1:size(ks,2),psnrs(3,:),'DisplayName','admm+tnrd'); hold on;
+set(gca,'xtick',1:size(ks,2),'xticklabel',ks);
+legend();
+xlabel("Scenes")
+ylabel("PSNR")
+title("Performance (w.r.t. PSNR) for different objects using previous/admm+medianfilter/admm+tnrd method");
+saveas(gcf,sprintf("%s/compare_to_prev.png",savedir));
+hold off;
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Experiment on hyperparameters
