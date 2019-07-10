@@ -44,6 +44,11 @@
 + [2008_nonlocal_image_and_movie_denoising](2008_nonlocal_image_and_movie_denoising.pdf)
     + nonlocal mean filtering
 
++ [2010_restoration_of_poissonian_images_using_alternating_direction_optimization](2010_restoration_of_poissonian_images_using_alternating_direction_optimization.pdf)
+    + one of the first paper to use ADMM + augmented lagrangian for solving image restoration problems
+    + 
+
+
 + [2010_fast_image_recovery_using_variable_splitting_and_constraint_optimization](2010_fast_image_recovery_using_variable_splitting_and_constraint_optimization.pdf)
     + abstract
         + using ADMM for solving unconstrained problem where objective includes
@@ -148,6 +153,22 @@
             + [13] admm
 
 
+## modification of admm method with neural nets
+
++ [2017_one_network_to_solve_them_all_solving_linear_inverse_probmes_using_deep_projection_models](2017_one_network_to_solve_them_all_solving_linear_inverse_probmes_using_deep_projection_models.pdf)
+    + update of variable (corresponding to prior) consists of a projection onto a (nonconvex) natural image set
+        + projection learnt from data !
+
++ Proximal Dehaze-Net
+    + http://openaccess.thecvf.com/content_ECCV_2018/papers/Dong_Yang_Proximal_Dehaze-Net_A_ECCV_2018_paper.pdf
+    + learn proximal operator for dehazing
+
++ Proximal Splitting Networks for Image Restoration 
+    + https://arxiv.org/pdf/1903.07154.pdf
+    + new paper 
+
++ Douglas-Rachford Networks: Learning Both the Image Prior and Data Fidelity Terms for Blind Image Deconvolution
+    + http://openaccess.thecvf.com/content_CVPR_2019/papers/Aljadaany_Douglas-Rachford_Networks_Learning_Both_the_Image_Prior_and_Data_Fidelity_CVPR_2019_paper.pdf
 
 ## Review 
 
