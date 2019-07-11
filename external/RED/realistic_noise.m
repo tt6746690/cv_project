@@ -73,13 +73,15 @@ if short == 1
     params_admm.outer_iters = 1;
 end
 
+params_admm.denoiser_type = "medfilter";
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% loop over scenes, several noisy inputs 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 m = containers.Map;
 
-for scene = dataset_exp60
+for scene = ["chart" "ball"]
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% read in image
@@ -90,6 +92,7 @@ for scene = dataset_exp60
     input_im = zeros(h,w,2);
 
     files = dir(sprintf("%s/%s/*.png",rawimagedir,scene));
+    
     [fnames,ffolders] = deal({files.name},{files.folder});
     folder = ffolders{1};
     for i = 1:S
@@ -357,7 +360,7 @@ for scene = dataset_exp60
             imwrite(uint8(ims),sprintf("%s/%s/%s_%s.png",savedir,scene,mask_type,initialguess));
 
             data.mask_type = mask_type;
-            data.initialguess = initialguesses;
+            data.initialguess = initialguess;
             data.M = M;
             data.psnr_admm = psnr_admm;
             data.admm_statistics = admm_statistics;
@@ -369,4 +372,67 @@ for scene = dataset_exp60
     save(sprintf('%s/%s.mat',savedir,scene),'m');
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PSNR comparison
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+psnrs = zeros(numel(dataset_exp60),numel(mask_types),numel(initialguesses),10);
+
+for i = 1:size(dataset_exp60,2)
+    scene = dataset_exp60(i);
+    m = load(sprintf("%s/%s.mat",savedir,scene));
+    m = m.m;
+
+    for j = 1:numel(m)
+        data = m{j};
+        Ai = find(strcmp(mask_types,data.mask_type));
+        Aj = find(strcmp(initialguesses,data.initialguess));
+        psnrs(i,Ai,Aj,:) = data.admm_statistics.psnrs;
+    end
+end
+
+avg_psnrs = squeeze(mean(psnrs,1));
+
+col_rownames        = mask_types';
+col_maxfilter       = avg_psnrs(:,1,10);
+col_zeroatunknown   = avg_psnrs(:,2,10);
+col_zero            = avg_psnrs(:,3,10);
+col_random          = avg_psnrs(:,4,10);
+t = table(col_rownames,col_maxfilter,col_zeroatunknown,col_zero,col_random, ...
+    'VariableNames',cellstr(["rownames" cellstr(initialguesses)]));
+
+writetable(t,sprintf("%s/psnrs_masktypes_initialguesses.txt",savedir));
+% readtable(sprintf("%s/psnrs_masktypes_initialguesses.txt",savedir));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Convergence plot
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+xs = (1:10)*5;
+
+for i = 1:size(mask_types,2)
+    mask_type = mask_types(i);
+    for j = 1:size(initialguesses,2)
+        plot(xs,reshape(avg_psnrs(i,j,:),1,[]),'DisplayName',initialguesses(j)); hold on;
+    end
+    xlabel("iterations");
+    ylabel("PSNR");
+    legend('Location','East');
+    title(sprintf("Average PSNR (mask type: %s)",mask_type));
+    saveas(gcf,sprintf("%s/convergence-masktype_%s.png",savedir,mask_type));
+    hold off;
+end
+
+
+for j = 1:size(initialguesses,2)
+    initialguess = initialguesses(j);
+    for i = 1:size(mask_types,2)
+        plot(xs,reshape(avg_psnrs(i,j,:),1,[]),'DisplayName',mask_types(i)); hold on;
+    end
+    xlabel("iterations");
+    ylabel("PSNR");
+    legend('Location','East');
+    title(sprintf("Average PSNR (initial guess: %s)",initialguess));
+    saveas(gcf,sprintf("%s/convergence-initialguess_%s.png",savedir,initialguess));
+    hold off;
+end
