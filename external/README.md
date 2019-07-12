@@ -26,6 +26,7 @@
         + need to download the dropbox file ...
         + mex compile `lut_eval.c`
             + https://stackoverflow.com/questions/37362414/openmp-with-mex-in-matlab-on-mac
+                + `mex -setup:~/.matlab/clang++_openmp_maci64.xml C`
             + rename to `lut_eval.cpp`
             + `mex lut_eval.cpp`
             + `export KMP_DUPLICATE_LIB_OK=True`  https://github.com/dmlc/xgboost/issues/1715
