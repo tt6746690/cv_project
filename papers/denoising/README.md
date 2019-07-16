@@ -140,6 +140,18 @@
 + [2017_learning_deep_cnn_denoiser_prior_for_image_restoration](2017_learning_deep_cnn_denoiser_prior_for_image_restoration.pdf)
     + abstract
         + use CNN to learn powerful denoiser priors, then plug into ADMM, HQS (half quadratic splittings)
+    + a good survey of SOTA method
+    + explained how to use half quadratic splitting (HQS) to do nonlinear minimizeation    
+        + x-minimization is a quadratic regularized least squared problem
+        + explained how denoiser can replace the proximal operator in z-minimization. the arbitrary prior is replaced by the denoiser makes sense
+        + formulation similar to ADMM ...
+    + CNN denoiser
+        + diverse image dataset
+        + efficient, good representational poewr, can be used in conjunction with other denoisers
+        + has pointers on implementing a good net,
+        + MATLAB's matconvnet
+        + TNRD is actually a very good denoiser ...
+
 
 + [2017_learning_proximal_operators_using_denoising_networks_for_regularizing_inverse_image_problems](2017_learning_proximal_operators_using_denoising_networks_for_regularizing_inverse_image_problems.pdf)
     + abstract
@@ -153,15 +165,37 @@
             + [13] admm
 
 
-## modification of admm method with neural nets
+## ADMM and proximal methods for image reconstruction
+
++ [2016_proxImaL_efficient_image_optimization_using_proximal_algorithms](2016_proxImaL_efficient_image_optimization_using_proximal_algorithms.pdf)
+    + software framework for experimenting with proximal operators in image reconstruction
 
 + [2017_one_network_to_solve_them_all_solving_linear_inverse_probmes_using_deep_projection_models](2017_one_network_to_solve_them_all_solving_linear_inverse_probmes_using_deep_projection_models.pdf)
     + update of variable (corresponding to prior) consists of a projection onto a (nonconvex) natural image set
         + projection learnt from data !
 
-+ Proximal Dehaze-Net
++ [2018_proximal_dehaze_net](2018_proximal_dehaze_net_a_prior_learning_based_deep_network_for_single_image_dehazing.pdf)
     + http://openaccess.thecvf.com/content_ECCV_2018/papers/Dong_Yang_Proximal_Dehaze-Net_A_ECCV_2018_paper.pdf
-    + learn proximal operator for dehazing
+    + dehazing
+        + `I(x) = J(x)T(x) + A(1-T(x))`
+            + `I` degraded image
+            + `J` scene radiance
+            + `A` global atmospheric light
+            + `T(x) = exp(-\nu d(x))` median transmission, dependeing on scatter coefficient `\nu` and scene depth `d(x)`
+    + abstract
+        + haze imaging priors in color and dark channel spaces, regularized by dark channel and transmission priors
+        + half quadratic splitting algorithm, that jointly esitmates transmission map and haze-free image
+        + iterative method that implicitly learn the transmission and dark channel prior by learning the corresponding proximal operators using CNN
+        + combines haze imaging constraints and haze-related priors into the network
+    + related work 
+        + dark channel prior http://mmlab.ie.cuhk.edu.hk/archive/2011/Haze.pdf
+            + idea: local patches (non sky) in outdoor haze-free images conatin pixels whose intensity is very low in at least one color channel. So intensity of these dark pixels in the channel is contributed by airlight, i.e. can use dark pixel to estimate transmission. Do reconstruction with soft matting!
+    + half quadratic splitting
+        + optimization variables: haze-free image `Q`, transmission map `T`
+        + auxiliary variable for dark channel `U`, note under DCP `T=1-U`
+        + then derived iterative method updates
+        + special case to ignore transmission regularization as ablation study.
+        + use 2 neural network to represent proximal operator for updating `U` and `T`
 
 + Proximal Splitting Networks for Image Restoration 
     + https://arxiv.org/pdf/1903.07154.pdf
