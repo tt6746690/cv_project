@@ -30,6 +30,7 @@
             + rename to `lut_eval.cpp`
             + `mex lut_eval.cpp`
             + `export KMP_DUPLICATE_LIB_OK=True`  https://github.com/dmlc/xgboost/issues/1715
+                + might have to do this before starting matlab
 
 + [learn_prox_ops]
     + instal

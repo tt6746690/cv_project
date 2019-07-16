@@ -21,7 +21,7 @@ function f_est = Denoiser(x_est,effective_sigma,denoiser_type)
 
     switch denoiser_type
     case "medfilter"
-        fsize = [3 3];
+        fsize = [7 7];
         if size(x_est,3) ~= 1  % do denoising to each channel independently
             f_est = zeros(size(x_est));
             for i = 1:size(x_est,3)

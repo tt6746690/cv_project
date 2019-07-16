@@ -1,5 +1,5 @@
 function scenes = SceneNames(dataset)
-% get a list of scene names for dataset {exp60,7pattern}
+% get a list of scene names for dataset {exp60,7patterns}
 %
 %
 switch dataset

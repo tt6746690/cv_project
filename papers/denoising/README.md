@@ -97,6 +97,9 @@
 ## Plug and Play P3 Prior
 
 + [2013_plug_and_play_priors_for_model_based_reconstruction](2013_plug_and_play_priors_for_model_based_reconstruction.pdf)
+    + 
+
+
 + [2016_algorithm_induced_prior_for_image_restoration](2016_algorithm_induced_prior_for_image_restoration.pdf)
 + [2016_plug_and_play_admm_for_image_restoration_fixed_point_convergence_and_applications](2016_plug_and_play_admm_for_image_restoration_fixed_point_convergence_and_applications.pdf)
 
@@ -169,6 +172,12 @@
 
 + Douglas-Rachford Networks: Learning Both the Image Prior and Data Fidelity Terms for Blind Image Deconvolution
     + http://openaccess.thecvf.com/content_CVPR_2019/papers/Aljadaany_Douglas-Rachford_Networks_Learning_Both_the_Image_Prior_and_Data_Fidelity_CVPR_2019_paper.pdf
+
+## parameter tuning for admm 
+
++ [2016_deep_admm_net_for_compressive_sensing_mri](2016_deep_admm_net_for_compressive_sensing_mri.pdf)
+    + used lbfgs to find optimial parameter for admm method for inverse problems
+    + generalies transformation, soft thresholding function to be layers in neural network. Parameters and transformations are learnt from data
 
 ## Review 
 

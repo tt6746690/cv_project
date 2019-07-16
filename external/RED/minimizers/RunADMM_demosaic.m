@@ -63,6 +63,7 @@ denoiser_type = params.denoiser_type;
 
 % initialization
 x_est = InitEstFunc(y);
+x_init = InitEstFunc(y);
 v_est = x_est;
 u_est = x_est*0;
 Ht_y = BackwardFunc(y)/(input_sigma^2);
@@ -135,10 +136,11 @@ for k = 1:1:outer_iters
 
         % display image
         [h,w,S] = size(orig_im);
-        ims = zeros(2*h,w*S);
+        ims = zeros(3*h,w*S);
         for i = 1:S
             ims(1:h,((i-1)*w+1):(i*w)) = orig_im(:,:,i);
             ims((h+1):(2*h),((i-1)*w+1):(i*w)) = x_est(:,:,i);
+            ims((2*h+1):(3*h),((i-1)*w+1):(i*w)) = x_init(:,:,i);
         end
         imshow(ims/255);
     end

@@ -64,10 +64,25 @@ bkt1_lighting = Lighting * W(1:3,:)';
 bkt2_lighting = Lighting * W(4:6,:)';
 L = [bkt1_lighting, bkt2_lighting];
 
-im = reshape(gt_im,[],S)*W'
+im = reshape(gt_im,[],S)*W';
 g =  im/ L;
 
-[phase, albedo] = extractPhase(g');
+%% 
+
+% extract phase 
+inputVector = g';
+albedo = sqrt(sum(inputVector(2:3,:) .^2));
+cosPhase = acos(inputVector(2,:) ./ (albedo + (albedo == 0)));
+phase1 = sign(inputVector(3,:)) .* cosPhase;  % -pi:pi
+phase = mod(real(phase1),2*pi);               % 0:2pi
+phase(sum(inputVector.^2) == 0) = nan;
+
+% imshow(reshape(cosPhase',[h,w]))
+% imshow(reshape(sign(inputVector(3,:))',[h,w]))
+% imshow(reshape(phase1',[h,w]))
+% imshow(reshape(phase',[h,w]))
+
+
 phase = reshape(phase', [h w]);
 albedo = reshape(albedo', [h w]);
 disparity = phase*hproj / (2*pi);
