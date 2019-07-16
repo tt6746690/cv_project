@@ -1,6 +1,9 @@
 %% evaluate performance of RED/demosic on images with realistic noise
 %
 %       - red has better performance than demosaic, if use tndr denoiser!
+%       - no need to tune hyperparameters, tuning them might
+%           - different initial guess makes method not convergent
+%           - worse psnr values
 %
 clc; clear; close all;
 addpath(genpath('./tnrd_denoising/'));
@@ -20,6 +23,7 @@ addpath(genpath("./mian/helperFunctions/Algorithms"));
 short = 0;
 % crop the image to remove the borders
 [cx,cy] = deal(1:160,10:249);
+% [cx,cy]=deal(11:30,11:30);
 % #patterns/frames
 [S,F] = deal(4,3);
 % dimension of input image
@@ -64,12 +68,12 @@ BackwardFunc = @(in_im) reshape(H'*in_im(:),h,w,S);
 InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S, ...
         'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
 params_admm = GetSuperResADMMParams(light_mode);
-params_admm.beta = 1.5;
-params_admm.lambda = 0.3;
 
 if short == 1
     params_admm.outer_iters = 1;
 end
+
+params_admm.denoiser_type = "medfilter";
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% loop over scenes, several noisy inputs 
@@ -77,7 +81,7 @@ end
 
 m = containers.Map;
 
-for scene = dataset_exp60
+for scene = ["chart" "ball"]
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% read in image
@@ -88,6 +92,7 @@ for scene = dataset_exp60
     input_im = zeros(h,w,2);
 
     files = dir(sprintf("%s/%s/*.png",rawimagedir,scene));
+    
     [fnames,ffolders] = deal({files.name},{files.folder});
     folder = ffolders{1};
     for i = 1:S
@@ -116,26 +121,24 @@ for scene = dataset_exp60
     %% run red and demosaic on cropped image 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    [admm_im,psnr_admm,~] = RunADMM_demosaic(input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
+    params_admm.denoiser_type = "tnrd";
+    [tnrd_admm_im,psnr_tnrd_admm,~] = RunADMM_demosaic(input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
+    params_admm.denoiser_type = "medfilter";
+    [medf_admm_im,psnr_medf_admm,~] = RunADMM_demosaic(input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
 
-    BayerDemosaicDemultiplex = InitialEstimateFunc("bayerdemosaic",h,w,F,S, ...
-            'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
+    BayerDemosaicDemultiplex = InitialEstimateFunc("bayerdemosaic",h,w,F,S,'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
     prev_im = BayerDemosaicDemultiplex(input_im);
     psnr_prev = ComputePSNR(orig_im, prev_im);
 
     fprintf("psnr (bayerdemosaic)   %.3f\n",psnr_prev);
-    fprintf("psnr (admm)            %.3f\n",psnr_admm);
-
-    % for s = 1:S
-    %     imwrite(uint8(scaling*prev_im(:,:,s)),sprintf("%s/%s_%d_prev.png",savedir,scene,s));
-    %     imwrite(uint8(scaling*admm_im(:,:,s)),sprintf("%s/%s_%d_admm.png",savedir,scene,s));
-    %     imwrite(uint8(scaling*orig_im(:,:,s)),sprintf("%s/%s_%d_orig.png",savedir,scene,s));
-    % end
+    fprintf("psnr (admm+tnrd)       %.3f\n",psnr_tnrd_admm);
+    fprintf("psnr (admm+medfilter)  %.3f\n",psnr_medf_admm);
 
     ims = [
         orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4)
         prev_im(:,:,1) prev_im(:,:,2) prev_im(:,:,3) prev_im(:,:,4)
-        admm_im(:,:,1) admm_im(:,:,2) admm_im(:,:,3) admm_im(:,:,4)
+        tnrd_admm_im(:,:,1) tnrd_admm_im(:,:,2) tnrd_admm_im(:,:,3) tnrd_admm_im(:,:,4)
+        medf_admm_im(:,:,1) medf_admm_im(:,:,2) medf_admm_im(:,:,3) medf_admm_im(:,:,4)
     ]*scaling;
     imwrite(uint8(ims),sprintf("%s/%s.png",savedir,scene));
 
@@ -144,7 +147,8 @@ for scene = dataset_exp60
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     data.psnr_prev = psnr_prev;
-    data.psnr_admm = psnr_admm;
+    data.tnrd_admm_im = tnrd_admm_im;
+    data.medf_admm_im = medf_admm_im;
     m(scene) = data;
 end
 
@@ -155,7 +159,7 @@ save(sprintf('%s/psnrs.mat',savedir),'m');
 %% Some plotting
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-m = load(sprintf('%s/psnrs.mat',savedir));
+m = load(sprintf('results/realistic_noise_prev/psnrs.mat',savedir));
 m = m.m;
 ks = keys(m);
 
@@ -171,6 +175,34 @@ plot(1:size(ks,2),psnrs(1,:),'DisplayName',"prev"); hold on;
 plot(1:size(ks,2),psnrs(2,:),'DisplayName','admm'); hold on;
 set(gca,'xtick',1:size(ks,2),'xticklabel',ks);
 legend();
+hold off;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% compare medfilter,tnrd,bayerdemosaic
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+m = load(sprintf('results/realistic_noise/psnrs.mat',savedir));
+m = m.m;
+ks = keys(m);
+
+psnrs = zeros(3,numel(keys(m)));
+for i = 1:size(ks,2)
+    k = ks{i};
+    psnrs(1,i) = m(k).psnr_prev;
+    psnrs(2,i) = m(k).psnr_medf_admm;
+    psnrs(3,i) = m(k).psnr_tnrd_admm;
+end
+
+plot(1:size(ks,2),psnrs(1,:),'DisplayName',"prev"); hold on;
+plot(1:size(ks,2),psnrs(2,:),'DisplayName','admm+medianfilter'); hold on;
+plot(1:size(ks,2),psnrs(3,:),'DisplayName','admm+tnrd'); hold on;
+set(gca,'xtick',1:size(ks,2),'xticklabel',ks);
+legend();
+xlabel("Scenes")
+ylabel("PSNR")
+title("Performance (w.r.t. PSNR) for different objects using previous/admm+medianfilter/admm+tnrd method");
+saveas(gcf,sprintf("%s/compare_to_prev.png",savedir));
 hold off;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -236,6 +268,7 @@ hold off;
 savedir = "results/realistic_noise_initialguess_mask"; mkdir(savedir);
 
 mask_types = [
+    "bayer"
     "toeplitz"
     "horz"
     "vert"
@@ -249,20 +282,18 @@ initialguesses = [
     "random"
 ]';
 
+params_admm.denoiser = "tnrd";
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Experiment on initialguess and mask
+%%      note: use default hyperparameter, since otherwise initialguess impact convergence very much, e.g. zero stays at zero
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-iter = 1;
-m = {};
-
-% dataset_exp60 = dataset_exp60(1:2);
-% params_admm.outer_iters = 1;
-
 for scene = dataset_exp60
+    m = {}; iter = 1;
     for mask_type = mask_types
         for initialguess = initialguesses
+
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %% RED-specific parameters
@@ -301,13 +332,19 @@ for scene = dataset_exp60
                 im = double(imread(sprintf("%s/%s_%d.png",stackeddir,scene,s-1)));
                 orig_im(:,:,s) = im(cx,cy);
             end
+            
+            imshow([
+                orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4)
+                input_im(:,:,1) input_im(:,:,2) zeros(h,w) zeros(h,w)
+            ]*2/255);
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %% run RED
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-            [admm_im,psnr_admm,admm_statistics] = RunADMM_demosaic(...
-                input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
+            [admm_im,psnr_admm,admm_statistics] = RunADMM_demosaic(input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
+
+            fprintf("scene=%s mask_type=%s initialguess=%s\n",scene,mask_type,initialguess);
             fprintf("psnr (admm)            %.3f\n",psnr_admm);
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -315,10 +352,6 @@ for scene = dataset_exp60
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
             mkdir(sprintf("%s/%s",savedir,scene));
-            % for s = 1:S
-            %     imwrite(uint8(scaling*admm_im(:,:,s)),sprintf("%s/%s/%s_%s_%d_admm.png",savedir,scene,mask_type,initialguess,s));
-            %     imwrite(uint8(scaling*orig_im(:,:,s)),sprintf("%s/%s/%s_%s_%d_orig.png",savedir,scene,mask_type,initialguess,s));
-            % end
 
             ims = [
                 orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4)
@@ -327,7 +360,7 @@ for scene = dataset_exp60
             imwrite(uint8(ims),sprintf("%s/%s/%s_%s.png",savedir,scene,mask_type,initialguess));
 
             data.mask_type = mask_type;
-            data.initialguess = initialguesses;
+            data.initialguess = initialguess;
             data.M = M;
             data.psnr_admm = psnr_admm;
             data.admm_statistics = admm_statistics;
@@ -336,7 +369,70 @@ for scene = dataset_exp60
             iter = iter + 1;
         end
     end
+    save(sprintf('%s/%s.mat',savedir,scene),'m');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PSNR comparison
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+psnrs = zeros(numel(dataset_exp60),numel(mask_types),numel(initialguesses),10);
+
+for i = 1:size(dataset_exp60,2)
+    scene = dataset_exp60(i);
+    m = load(sprintf("%s/%s.mat",savedir,scene));
+    m = m.m;
+
+    for j = 1:numel(m)
+        data = m{j};
+        Ai = find(strcmp(mask_types,data.mask_type));
+        Aj = find(strcmp(initialguesses,data.initialguess));
+        psnrs(i,Ai,Aj,:) = data.admm_statistics.psnrs;
+    end
+end
+
+avg_psnrs = squeeze(mean(psnrs,1));
+
+col_rownames        = mask_types';
+col_maxfilter       = avg_psnrs(:,1,10);
+col_zeroatunknown   = avg_psnrs(:,2,10);
+col_zero            = avg_psnrs(:,3,10);
+col_random          = avg_psnrs(:,4,10);
+t = table(col_rownames,col_maxfilter,col_zeroatunknown,col_zero,col_random, ...
+    'VariableNames',cellstr(["rownames" cellstr(initialguesses)]));
+
+writetable(t,sprintf("%s/psnrs_masktypes_initialguesses.txt",savedir));
+% readtable(sprintf("%s/psnrs_masktypes_initialguesses.txt",savedir));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Convergence plot
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+xs = (1:10)*5;
+
+for i = 1:size(mask_types,2)
+    mask_type = mask_types(i);
+    for j = 1:size(initialguesses,2)
+        plot(xs,reshape(avg_psnrs(i,j,:),1,[]),'DisplayName',initialguesses(j)); hold on;
+    end
+    xlabel("iterations");
+    ylabel("PSNR");
+    legend('Location','East');
+    title(sprintf("Average PSNR (mask type: %s)",mask_type));
+    saveas(gcf,sprintf("%s/convergence-masktype_%s.png",savedir,mask_type));
+    hold off;
 end
 
 
-save(sprintf('%s/initialguess_mask.mat',savedir),'m');
+for j = 1:size(initialguesses,2)
+    initialguess = initialguesses(j);
+    for i = 1:size(mask_types,2)
+        plot(xs,reshape(avg_psnrs(i,j,:),1,[]),'DisplayName',mask_types(i)); hold on;
+    end
+    xlabel("iterations");
+    ylabel("PSNR");
+    legend('Location','East');
+    title(sprintf("Average PSNR (initial guess: %s)",initialguess));
+    saveas(gcf,sprintf("%s/convergence-initialguess_%s.png",savedir,initialguess));
+    hold off;
+end

@@ -28,9 +28,9 @@
 %   fun_val - the value of E(x_est)
 
 function fun_val = CostFunc(y, x_est, ForwardFunc, input_sigma,...
-    lambda, effective_sigma)
+    lambda, effective_sigma,denoiser_type)
 
-f_est = Denoiser(x_est, effective_sigma);
+f_est = Denoiser(x_est, effective_sigma,denoiser_type);
 
 if size(x_est,3)~=1
     fun_val1 = sum(sum(sum((ForwardFunc(x_est)-y).^2)))/(2*input_sigma^2);

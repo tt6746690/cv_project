@@ -59,9 +59,11 @@ outer_iters = params.outer_iters;
 inner_iters = params.inner_iters;
 inner_denoiser_iters = params.inner_denoiser_iters;
 effective_sigma = params.effective_sigma;
+denoiser_type = params.denoiser_type;
 
 % initialization
 x_est = InitEstFunc(y);
+x_init = InitEstFunc(y);
 v_est = x_est;
 u_est = x_est*0;
 Ht_y = BackwardFunc(y)/(input_sigma^2);
@@ -113,7 +115,7 @@ for k = 1:1:outer_iters
     % v = argmin_z lambda*z'*(z-denoiser(z)) +  0.5*beta||z - x - u||_2^2
     % using gradient descent
     for j = 1:1:inner_denoiser_iters
-        f_v_est = Denoiser(v_est, effective_sigma);
+        f_v_est = Denoiser(v_est, effective_sigma,denoiser_type);
         v_est = (beta*(x_hat + u_est) + lambda*f_v_est)/(lambda + beta);
     end
     
@@ -123,7 +125,7 @@ for k = 1:1:outer_iters
     if ~QUIET && (mod(k,PRINT_MOD) == 0 || k == outer_iters)
         % evaluate the cost function
         fun_val = CostFunc(y, x_est, ForwardFunc, input_sigma,...
-            lambda, effective_sigma);
+            lambda, effective_sigma,denoiser_type);
         im_out = x_est(1:size(orig_im,1), 1:size(orig_im,2),:);
         psnr_out = ComputePSNR(orig_im, im_out);
         fprintf('%7i %12.5f %12.5f \n', k, psnr_out, fun_val);
@@ -134,10 +136,11 @@ for k = 1:1:outer_iters
 
         % display image
         [h,w,S] = size(orig_im);
-        ims = zeros(2*h,w*S);
+        ims = zeros(3*h,w*S);
         for i = 1:S
             ims(1:h,((i-1)*w+1):(i*w)) = orig_im(:,:,i);
             ims((h+1):(2*h),((i-1)*w+1):(i*w)) = x_est(:,:,i);
+            ims((2*h+1):(3*h),((i-1)*w+1):(i*w)) = x_init(:,:,i);
         end
         imshow(ims/255);
     end

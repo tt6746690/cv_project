@@ -17,34 +17,33 @@
 % Note: The devision and multiplication by the constant 5 is done to handle
 % a different noise-level than a fixed one (which is equal to 5)
 
-function f_est = Denoiser(x_est,effective_sigma)
+function f_est = Denoiser(x_est,effective_sigma,denoiser_type)
 
-if size(x_est,3) ~= 1  % do denoising to each channel independently
-    f_est = zeros(size(x_est));
-    for i = 1:size(x_est,3)
-        f_est(:,:,i) = ReactionDiffusion(5/effective_sigma*x_est(:,:,i));
+    switch denoiser_type
+    case "medfilter"
+        fsize = [7 7];
+        if size(x_est,3) ~= 1  % do denoising to each channel independently
+            f_est = zeros(size(x_est));
+            for i = 1:size(x_est,3)
+                f_est(:,:,i) = medfilt2(x_est(:,:,i),fsize);
+            end
+        else
+            f_est = medfilt2(x_est,fsize);
+        end
+    case "tnrd"
+        if size(x_est,3) ~= 1  % do denoising to each channel independently
+            f_est = zeros(size(x_est));
+            for i = 1:size(x_est,3)
+                f_est(:,:,i) = ReactionDiffusion(5/effective_sigma*x_est(:,:,i));
+            end
+        else
+            f_est = ReactionDiffusion(5/effective_sigma*x_est);
+        end
+
+        f_est = f_est*effective_sigma/5;
+        % f_est = ReactionDiffusion(5/effective_sigma*x_est);
+        % f_est = f_est*effective_sigma/5;
+    otherwise
+        warning("no such denoiser")
     end
-else
-    f_est = ReactionDiffusion(5/effective_sigma*x_est);
 end
-
-f_est = f_est*effective_sigma/5;
-
-% f_est = ReactionDiffusion(5/effective_sigma*x_est);
-% f_est = f_est*effective_sigma/5;
-
-end
-
-
-% function f_est = Denoiser(x_est,effective_sigma)
-%     fsize = [3 3];
-
-%     if size(x_est,3) ~= 1  % do denoising to each channel independently
-%         f_est = zeros(size(x_est));
-%         for i = 1:size(x_est,3)
-%             f_est(:,:,i) = medfilt2(x_est(:,:,i),fsize);
-%         end
-%     else
-%         f_est = medfilt2(x_est,fsize);
-%     end
-% end
