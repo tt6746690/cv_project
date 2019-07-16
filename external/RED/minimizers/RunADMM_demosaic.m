@@ -28,11 +28,6 @@
 %   params.beta - ADMM parameter
 %   params.outer_iters - number of total iterations
 %   params.inner_iters - number of steps to minimize Part1 of ADMM
-%   params.use_fft - solve the linear system Az = b using FFT rather than
-%                    running gradient descent for params.inner_iters. This
-%                    feature is suppoterd only for deblurring
-%   params.psf - the Point Spread Function (used only when 
-%                use_fft == true).
 %   params.inner_denoiser_iters - number of steps to minimize Part2 of ADMM
 %   params.effective_sigma - the input noise level to the denoiser
 %   orig_im - the original image, used for PSNR evaluation ONLY (only the Luminance Y component)
@@ -73,39 +68,40 @@ psnrs = zeros(1,0);
 costfunc = zeros(1,0);
 save_iter = 1;
 
-% compute the fft of the psf (useful for deblurring)
-if isfield(params,'use_fft') && params.use_fft == true
-    [h, w, ~] = size(y);
-    fft_psf = zeros(h, w);
-    t = floor(size(params.psf, 1)/2);
-    fft_psf(h/2+1-t:h/2+1+t, w/2+1-t:w/2+1+t) = params.psf;
-    fft_psf = fft2( fftshift(fft_psf) );
-    
-    fft_y = fft2(y);
-    fft_Ht_y = conj(fft_psf).*fft_y / (input_sigma^2);
-    fft_HtH = abs(fft_psf).^2 / (input_sigma^2);
-end
-
 for k = 1:1:outer_iters
+
+%     imshow(FlattenChannels(x_est)/255);
+%     pause;
     
     % Part1 of the ADMM, approximates the solution of:
     % x = argmin_z 1/(2sigma^2)||Hz-y||_2^2 + 0.5*beta||z - v + u||_2^2
-    if isfield(params,'use_fft') && params.use_fft == true        
-        b = fft_Ht_y + beta*fft2(v_est-u_est);
-        A = fft_HtH + beta;
-        x_est = real(ifft2( b./A ));
+    % use gradient descent        
+    for j = 1:1:inner_iters
+        % (v_est - u_est) is z^*
+        b = Ht_y + beta*(v_est - u_est);
+        A_x_est = BackwardFunc(ForwardFunc(x_est))/(input_sigma^2) + beta*x_est;
+
+        % res = -e_j = (1/\sigma^2) ( H^T*y - H^T*H*z_{j-1} ) + beta*(z^* - z_{j-1})
+        res = b - A_x_est;
+
+        % r_j = (1/\sigma^2) H^T*H*e_j + \beta*e_j
+        a_res = BackwardFunc(ForwardFunc(res))/(input_sigma^2) + beta*res;
+
+        % `res` is gradient `e_j`
+        % `a_res` is `r_j`
+        % mu_opt = mean(\mu)
+        mu_opt = mean(res(:).*res(:))/mean(res(:).*a_res(:));
+
+        % z_j = z_{j-1} + \mu e_j
+        x_est = x_est + mu_opt*res;
         x_est = max( min(x_est, 255), 0);
-    else % use gradient descent        
-        for j = 1:1:inner_iters
-            b = Ht_y + beta*(v_est - u_est);
-            A_x_est = BackwardFunc(ForwardFunc(x_est))/(input_sigma^2) + beta*x_est;
-            res = b - A_x_est;
-            a_res = BackwardFunc(ForwardFunc(res))/(input_sigma^2) + beta*res;
-            mu_opt = mean(res(:).*res(:))/mean(res(:).*a_res(:));
-            x_est = x_est + mu_opt*res;
-            x_est = max( min(x_est, 255), 0);
-        end
+
+        % fprintf("gradient mean: %.5f\n",mean(res,'all'));
+        % fprintf("step size:     %.5f\n",mu_opt);
+        % imshow(FlattenChannels(orig_im,res,Ht_y,x_est)/255);
+        % pause;
     end
+
     
     % relaxation
     x_hat = params.alpha*x_est + (1-params.alpha)*v_est;
@@ -135,14 +131,7 @@ for k = 1:1:outer_iters
         save_iter = save_iter+1;
 
         % display image
-        [h,w,S] = size(orig_im);
-        ims = zeros(3*h,w*S);
-        for i = 1:S
-            ims(1:h,((i-1)*w+1):(i*w)) = orig_im(:,:,i);
-            ims((h+1):(2*h),((i-1)*w+1):(i*w)) = x_est(:,:,i);
-            ims((2*h+1):(3*h),((i-1)*w+1):(i*w)) = x_init(:,:,i);
-        end
-        imshow(ims/255);
+        imshow(FlattenChannels(orig_im,x_est)/255);
     end
 end
 
@@ -154,3 +143,4 @@ statistics.costfunc = costfunc;
 
 return
 
+end
