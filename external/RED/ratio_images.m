@@ -58,7 +58,7 @@ input_sigma = 1;
 % mask 
 M = BayerMask(h,w);
 % two-bucket multiplexing matrix
-W = BucketMultiplexingMatrix(S)*2;
+W = BucketMultiplexingMatrix(S);
 % linear map from S patterened image -> two bucket image
 [H,B,C] = SubsampleMultiplexOperator(S,M);
 % args to RunADMM
@@ -69,25 +69,18 @@ InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S, ...
 params_admm = GetSuperResADMMParams(light_mode);
 
 params_admm_ratio = GetSuperResADMMParams(light_mode);
+params_admm.denoiser_type = "tnrd";
+params_admm_ratio.denoiser_type = "tnrd";
+params_admm.outer_iters = 100;
+params_admm_ratio.outer_iters = 100;
 % params_admm_ratio.beta = 0.01;
 % params_admm_ratio.lambda = 0.25;
-
-if short == 1
-    params_admm.outer_iters = 1;
-    params_admm_ratio.outer_iters = 1;
-else
-    params_admm.outer_iters = 100;
-    params_admm_ratio.outer_iters = 100;
-end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% mimik how red converts rgb -> YCrBr 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 scene = "shoe";
-params_admm.denoiser_type = "tnrd";
-params_admm_ratio.denoiser_type = "tnrd";
 
 orig_im_noisy = zeros(h,w,S);
 orig_im = zeros(h,w,S);
@@ -107,24 +100,23 @@ for i = 1:S
     orig_im_noisy(:,:,i) = im(cx,cy);
 end
 
-input_im = ForwardFunc(orig_im_noisy);
-ratio_input_im = IntensityToRatio(input_im)*255;
-
 for s = 1:S
     im = double(imread(sprintf("%s/%s_%d.png",stackeddir,scene,s-1)));
     orig_im(:,:,s) = im(cx,cy);
 end
 
-ratio_orig_im = IntensityToRatio(orig_im)*255*(S/2); % *(S/2) to scale the intensity ...
+input_im = ForwardFunc(orig_im_noisy);
+ratio_input_im = ForwardFunc(IntensityToRatio(orig_im_noisy))*255;
+ratio_orig_im = IntensityToRatio(orig_im)*255;
 
-imshow([
-    orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4)
-    orig_im_noisy(:,:,1) orig_im_noisy(:,:,2) orig_im_noisy(:,:,3) orig_im_noisy(:,:,4)
-    input_im(:,:,1) input_im(:,:,2) ratio_input_im(:,:,1) ratio_input_im(:,:,2)
-    ratio_orig_im(:,:,1) ratio_orig_im(:,:,2) ratio_orig_im(:,:,3) ratio_orig_im(:,:,4)
-]/255);
+assert(all(abs(sum(ratio_orig_im,3) -255*ones(h,w)) <= 0.5,'all'));
 
+inputs_holder = zeros(size(orig_im));
+inputs_holder(:,:,1:2) = input_im; 
+inputs_holder(:,:,3:4) = ratio_input_im;
+figure; imshow(FlattenChannels(orig_im,ratio_orig_im,orig_im_noisy,inputs_holder)/255);
 
+%% 
 % S ratio images in the end
 %       1. bayer demosaic+demultiplex, then compute ratio 
 %       2. red demosaic+demultiplex, then compute ratio
@@ -147,18 +139,9 @@ ratio_ims{3} = Clip(ratio_im3/255,0,1);
 [ratio_im4,~,~] = RunADMM_demosaic(ratio_input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm_ratio,ratio_orig_im);
 ratio_ims{4} = Clip(ratio_im4/255,0,1);
 
-% adjust brightness ... 
-for i = 1:3
-    ratio_ims{i} = ratio_ims{i}*2;
-end
+imshow(FlattenChannels(ratio_ims{:}));
 
-% imshow([
-%     ratio_ims{1}(:,:,1) ratio_ims{1}(:,:,2) ratio_ims{1}(:,:,3) ratio_ims{1}(:,:,4)
-%     ratio_ims{2}(:,:,1) ratio_ims{2}(:,:,2) ratio_ims{2}(:,:,3) ratio_ims{2}(:,:,4)
-%     ratio_ims{3}(:,:,1) ratio_ims{3}(:,:,2) ratio_ims{3}(:,:,3) ratio_ims{3}(:,:,4)
-%     ratio_ims{4}(:,:,1) ratio_ims{4}(:,:,2) ratio_ims{4}(:,:,3) ratio_ims{4}(:,:,4)
-% ]);
-
+%%
 % demoninator for S ratio images 
 %       1. simply the sum of input images
 %       2. sum two bucket image, do bayer demosaic, then sum
@@ -174,11 +157,13 @@ sum_im2 = rgb2bgr(double(demosaic(uint8(sum_im2),'bggr')));
 sum_ims{2} = sum(sum_im2,3)*(1/3);
 
 [sum_im3,~,~] = RunADMM_demosaic(input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
-sum_ims{3} = sum(sum_im3,3)/2;
+sum_ims{3} = sum(sum_im3,3);
 
-% imshow([sum_ims{1} sum_ims{2} sum_ims{3}]/255);
+imshow(FlattenChannels(sum_ims{:})/255);
 
+%%
 % compare all combinations of `ratio_im` and `sum_im` 
+%
 
 psnrs = zeros(numel(ratio_ims),numel(sum_ims));
 ims = zeros(numel(ratio_ims),numel(sum_ims),h,w,S);
@@ -197,11 +182,7 @@ psnr_baseline = ComputePSNR(orig_im,sum_im3);
 fprintf("psnr_baseline (RED in intensity space): %.3f\n",psnr_baseline);
 % 45.1312
 
-out = [
-    orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4)
-    sum_im3(:,:,1) sum_im3(:,:,2) sum_im3(:,:,3) sum_im3(:,:,4)
-];
-imshow(3*out/255)
+imshow(scaling*FlattenChannels(orig_im,sum_im3)/255);
 
 
 for s = 1:S
@@ -232,13 +213,11 @@ t
 writetable(t,sprintf("%s/psnrs_ratio_combinations.txt",savedir));
 % readtable(sprintf("%s/psnrs_masktypes_initialguesses.txt",savedir));
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Compare RED on both ratio/intensity space for exp60
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% dataset_exp60 = ["shoe"];
+savedir = "results/ratio/exp60"; mkdir(savedir);
 m = {}; iter = 1;
 
 for scene = dataset_exp60
@@ -268,39 +247,31 @@ for scene = dataset_exp60
         orig_im_noisy(:,:,i) = im(cx,cy);
     end
 
-    input_im = ForwardFunc(orig_im_noisy);
-    ratio_input_im = IntensityToRatio(input_im)*255;
-
     for s = 1:S
         im = double(imread(sprintf("%s/%s_%d.png",stackeddir,scene,s-1)));
         orig_im(:,:,s) = im(cx,cy);
     end
-
-    ratio_orig_im = IntensityToRatio(orig_im)*255*(S/2); % *(S/2) to scale the intensity ...
-
-    imshow([
-        orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4)
-        orig_im_noisy(:,:,1) orig_im_noisy(:,:,2) orig_im_noisy(:,:,3) orig_im_noisy(:,:,4)
-        input_im(:,:,1) input_im(:,:,2) ratio_input_im(:,:,1) ratio_input_im(:,:,2)
-        ratio_orig_im(:,:,1) ratio_orig_im(:,:,2) ratio_orig_im(:,:,3) ratio_orig_im(:,:,4)
-    ]/255);
-
-    assert(all(sum(ratio_input_im,3) -   255*ones(h,w) <= 1e-10,'all'));
-    assert(all(sum(ratio_orig_im,3)  - 2*255*ones(h,w) <= 1e-10,'all'));
+    
+    input_im = ForwardFunc(orig_im_noisy);
+    ratio_input_im = ForwardFunc(IntensityToRatio(orig_im_noisy))*255;
+    ratio_orig_im = IntensityToRatio(orig_im)*255;
+    
+    assert(all(abs(sum(ratio_orig_im,3) -255*ones(h,w)) <= 0.5,'all'));
+    
+    inputs_holder = zeros(size(orig_im));
+    inputs_holder(:,:,1:2) = input_im; 
+    inputs_holder(:,:,3:4) = ratio_input_im;
+    figure; imshow(FlattenChannels(orig_im,ratio_orig_im,orig_im_noisy,inputs_holder)/255);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% run RED on ratio/intensity images
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    params_admm.denoiser_type       = "tnrd";
-    params_admm_ratio.denoiser_type = "tnrd";
 
     % 1: admm+tnrd in intensity space
     [admm_intensity_im,psnr_intensity,~] = RunADMM_demosaic(input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
 
     % 2. admm+tnrd in ratio space
     [admm_ratio_im,psnr_ratio,~] = RunADMM_demosaic(ratio_input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm_ratio,ratio_orig_im);
-    psnr_ratio = ComputePSNR(ratio_orig_im*(2/S),admm_ratio_im*((2/S))); % scale by 2/S to use PSNR formula where max_I=255
     
     % 3: admm+tnrd ratio images multiplied by total `input_im` intensity
     ratio_mult_inputsum_im = admm_ratio_im/255;
@@ -323,15 +294,7 @@ for scene = dataset_exp60
     %% save images
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ims = [
-        scaling*orig_im(:,:,1)                  scaling*orig_im(:,:,2)                  scaling*orig_im(:,:,3)                  scaling*orig_im(:,:,4)
-        ratio_orig_im(:,:,1)                    ratio_orig_im(:,:,2)                    ratio_orig_im(:,:,3)                    ratio_orig_im(:,:,4)
-        scaling*admm_intensity_im(:,:,1)        scaling*admm_intensity_im(:,:,2)        scaling*admm_intensity_im(:,:,3)        scaling*admm_intensity_im(:,:,4)
-        admm_ratio_im(:,:,1)                    admm_ratio_im(:,:,2)                    admm_ratio_im(:,:,3)                    admm_ratio_im(:,:,4)
-        scaling*ratio_mult_inputsum_im(:,:,1)   scaling*ratio_mult_inputsum_im(:,:,2)   scaling*ratio_mult_inputsum_im(:,:,3)   scaling*ratio_mult_inputsum_im(:,:,4)
-        scaling*ratio_mult_inputsum_denoised_im(:,:,1)      scaling*ratio_mult_inputsum_denoised_im(:,:,2)      scaling*ratio_mult_inputsum_denoised_im(:,:,3)      scaling*ratio_mult_inputsum_denoised_im(:,:,4)
-    ];
-    
+    ims = scaling*FlattenChannels(orig_im,ratio_orig_im,admm_intensity_im,admm_ratio_im,ratio_mult_inputsum_im,ratio_mult_inputsum_denoised_im);
     imshow(ims/255);
     imwrite(uint8(ims),sprintf("%s/%s.png",savedir,scene));
 
@@ -342,6 +305,7 @@ for scene = dataset_exp60
 
     m{iter} = data;
     iter = iter + 1;
+    break;
 end
 
 
@@ -388,7 +352,7 @@ stackeddir = "data/7patterns/organized";
 [S,F] = deal(7,6);
 % [S,F] = deal(4,3);
 M = SubsamplingMask("toeplitz",h,w,F);
-W = BucketMultiplexingMatrix(S)*4;
+W = BucketMultiplexingMatrix(S);
 [H,B,C] = SubsampleMultiplexOperator(S,M);
 ForwardFunc = @(in_im) reshape(H*in_im(:),h,w,2);
 BackwardFunc = @(in_im) reshape(H'*in_im(:),h,w,S);
@@ -398,23 +362,24 @@ dataset_7pattern = SceneNames("7patterns");
 
 params_admm.outer_iters = 100;
 params_admm_ratio.outer_iters = 100;
-params_admm.denoiser_type       = "tnrd";
-params_admm_ratio.denoiser_type = "tnrd";
+params_admm.denoiser_type       = "medfilter";
+params_admm_ratio.denoiser_type = "medfilter";
 
-
-% im1 = rand(h,w,S);
+% 
+% im1 = rand(h,w,S)*255;
+% % im1 = zeros(h,w,S)+S;
 % im2 = ForwardFunc(im1);
 % 
 % % hist(im1(:));
 % % hist(im2(:));
 %                % S = 7       4 (unchanged)
-% mean(im1,'all')    % 1       0.5/3.5 
-% mean(im2,'all')    % ~0.875  0.5/3.5
+% mean(im1,'all')    % 1       0.5
+% mean(im2,'all')    % 3.5     1
 % 
 % mean(sum(H~=0,1))  % 1       1
 % mean(sum(H~=0,2))  % 3.5     2
-% 
-% % hist(sum(H~=0,2))
+
+% hist(sum(H~=0,2))
 
 %% 
 
@@ -453,19 +418,15 @@ for scene = dataset_7pattern
     end
     
     input_im = ForwardFunc(orig_im_noisy);
-
-    ratio_input_im = ForwardFunc(IntensityToRatio(orig_im_noisy)*255);
+    ratio_input_im = ForwardFunc(IntensityToRatio(orig_im_noisy))*255;
     ratio_orig_im = IntensityToRatio(orig_im)*255;
     
     assert(all(abs(sum(ratio_orig_im,3) -255*ones(h,w)) <= 0.5,'all'));
-
-%     imshow([
-%         orig_im(:,:,1) orig_im(:,:,2) orig_im(:,:,3) orig_im(:,:,4)
-%         ratio_orig_im(:,:,1) ratio_orig_im(:,:,2) ratio_orig_im(:,:,3) ratio_orig_im(:,:,4)
-%         orig_im_noisy(:,:,1) orig_im_noisy(:,:,2) orig_im_noisy(:,:,3) orig_im_noisy(:,:,4)
-%         input_im(:,:,1) input_im(:,:,2) ratio_input_im(:,:,1) ratio_input_im(:,:,2)
-%     ]/255);
     
+    inputs_holder = zeros(size(orig_im));
+    inputs_holder(:,:,1:2) = input_im; 
+    inputs_holder(:,:,3:4) = ratio_input_im;
+    figure; imshow(FlattenChannels(orig_im,ratio_orig_im,orig_im_noisy,inputs_holder)/255);
     
     % if noisy image is scaled by a constant factor,
     %       expect stripes pattern in the twobucket image
@@ -474,27 +435,29 @@ for scene = dataset_7pattern
     % im1 = orig_im;
     % im2 = im1+3*randn(h,w,S);
     
+    % im1 = ratio_orig_im;
+    % im2 = ratio_orig_im+3*randn(h,w,S);
+    
     % im1 = orig_im;
     % im2 = orig_im_noisy-1.34;
-    
-    % im1 = IntensityToRatio(orig_im)*255;
-    % im2 = IntensityToRatio(orig_im_noisy)*255;
-    
-    % mean(im1,'all')
-    % mean(im2,'all')
-    % imshow(FlattenChannels(...
-    %     ForwardFunc(im1), ...
-    %     ForwardFunc(im2), ...
-    %     10*abs(im1-im2), ...
-    %     10*abs(ForwardFunc(im1)-ForwardFunc(im2)), ...
-    %     10*abs(BackwardFunc(ForwardFunc(im1))-BackwardFunc(ForwardFunc(im2))) ...
-    %     )/255);
-    
-    % imshow(FlattenChannels(...
-    %     ForwardFunc(ratio_orig_im),...
-    %     ratio_input_im,...
-    %     20*abs(ForwardFunc(ratio_orig_im)- ratio_input_im))/255);
-    
+%     
+%     im1 = IntensityToRatio(orig_im)*255;
+%     im2 = IntensityToRatio(orig_im_noisy)*255;
+%     
+%     mean(im1,'all')
+%     mean(im2,'all')
+%     imshow(FlattenChannels(...
+%         ForwardFunc(im1), ...
+%         ForwardFunc(im2), ...
+%         20*abs(im1-im2), ...
+%         20*abs(ForwardFunc(im1)-ForwardFunc(im2)), ...
+%         20*abs(BackwardFunc(ForwardFunc(im1))-BackwardFunc(ForwardFunc(im2))) ...
+%         )/255);
+%     
+%     imshow(FlattenChannels(...
+%         ForwardFunc(ratio_orig_im),...
+%         ratio_input_im,...
+%         20*abs(ForwardFunc(ratio_orig_im)- ratio_input_im))/255);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% run RED on ratio/intensity images
@@ -508,18 +471,13 @@ for scene = dataset_7pattern
     
     % 3: admm+tnrd ratio images multiplied by total `input_im` intensity
     ratio_mult_inputsum_im = admm_ratio_im/255;
-    ratio_mult_inputsum_im = RatioToIntensity(ratio_mult_inputsum_im,sum(input_im,3)*(S/1.75));
-    psnr_ratio_mult_inputsum = ComputePSNR(orig_im,ratio_mult_inputsum_im)
-    
-%     mean(orig_im,'all')
-%     mean(ratio_mult_inputsum_im,'all')
-%     mean(admm_intensity_im,'all')
-%    
+    ratio_mult_inputsum_im = RatioToIntensity(ratio_mult_inputsum_im,sum(input_im,3));
+    psnr_ratio_mult_inputsum = ComputePSNR(orig_im,ratio_mult_inputsum_im);
 
     % 4: admm+tnrd ratio images multiplied by denoiseed (by tnrd) total `input_im` intensity
     denoised_input_im = Denoiser(sum(input_im,3),params_admm.effective_sigma,"tnrd");
     ratio_mult_inputsum_denoised_im = admm_ratio_im/255;
-    ratio_mult_inputsum_denoised_im = RatioToIntensity(ratio_mult_inputsum_denoised_im,denoised_input_im*(S/1.75));
+    ratio_mult_inputsum_denoised_im = RatioToIntensity(ratio_mult_inputsum_denoised_im,denoised_input_im);
     psnr_ratio_mult_inputsum_denoised = ComputePSNR(orig_im,ratio_mult_inputsum_denoised_im);
 
 
@@ -528,28 +486,18 @@ for scene = dataset_7pattern
     fprintf("psnr_ratio_mult_inputsum           %.4f\n",psnr_ratio_mult_inputsum);
     fprintf("psnr_ratio_mult_inputsum_denoised  %.4f\n",psnr_ratio_mult_inputsum_denoised);
 
-
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% save images
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    ims = scaling*[
-        orig_im(:,:,1)                  orig_im(:,:,2)                  orig_im(:,:,3)                  orig_im(:,:,4)
-        ratio_orig_im(:,:,1)                    ratio_orig_im(:,:,2)                    ratio_orig_im(:,:,3)                    ratio_orig_im(:,:,4)
-        admm_intensity_im(:,:,1)        admm_intensity_im(:,:,2)        admm_intensity_im(:,:,3)        admm_intensity_im(:,:,4)
-        admm_ratio_im(:,:,1)                    admm_ratio_im(:,:,2)                    admm_ratio_im(:,:,3)                    admm_ratio_im(:,:,4)
-        ratio_mult_inputsum_im(:,:,1)   ratio_mult_inputsum_im(:,:,2)   ratio_mult_inputsum_im(:,:,3)   ratio_mult_inputsum_im(:,:,4)
-        ratio_mult_inputsum_denoised_im(:,:,1)      ratio_mult_inputsum_denoised_im(:,:,2)      ratio_mult_inputsum_denoised_im(:,:,3)      ratio_mult_inputsum_denoised_im(:,:,4)
-    ];
+    
+    ims = scaling*FlattenChannels(orig_im,ratio_orig_im,admm_intensity_im,admm_ratio_im,ratio_mult_inputsum_im,ratio_mult_inputsum_denoised_im);
     imshow(ims/255);
-    break;
+    imwrite(uint8(ims),sprintf("%s/%s.png",savedir,scene));
 
-    % imwrite(uint8(ims),sprintf("%s/%s.png",savedir,scene));
-
-    % data.psnr_intensity = psnr_intensity;
-    % data.psnr_ratio = psnr_ratio;
-    % data.psnr_ratio_mult_inputsum   = psnr_ratio_mult_inputsum;
-    % data.psnr_ratio_mult_inputsum_denoised  = psnr_ratio_mult_inputsum_denoised;
+    data.psnr_intensity = psnr_intensity;
+    data.psnr_ratio = psnr_ratio;
+    data.psnr_ratio_mult_inputsum   = psnr_ratio_mult_inputsum;
+    data.psnr_ratio_mult_inputsum_denoised  = psnr_ratio_mult_inputsum_denoised;
 
     m{iter} = data;
     iter = iter + 1;

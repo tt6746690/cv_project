@@ -70,8 +70,8 @@ save_iter = 1;
 
 for k = 1:1:outer_iters
 
-%     imshow(FlattenChannels(x_est)/255);
-%     pause;
+    % imshow(FlattenChannels(x_est)/255);
+    % pause;
     
     % Part1 of the ADMM, approximates the solution of:
     % x = argmin_z 1/(2sigma^2)||Hz-y||_2^2 + 0.5*beta||z - v + u||_2^2

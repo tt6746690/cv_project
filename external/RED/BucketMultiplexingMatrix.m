@@ -19,9 +19,9 @@ function W = BucketMultiplexingMatrix(S)
     W = [C; 1-C];
 
     % take account that the optimal C matrix has 2 1s' on each row
-    if S == 7
-        W = W/4;
-    else
-        W = W/2;
-    end
+    % if S == 7
+    %     W = W/4;
+    % else
+    %     W = W/2;
+    % end
 end

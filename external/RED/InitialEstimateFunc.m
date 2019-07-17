@@ -4,7 +4,6 @@ function InitEstFunc = InitialEstimateFunc(est_type,h,w,F,S,varargin)
 %
 %   InitEstFunc: hxwx2 -> hxwxS
 %       takes two bucket image, and outputs S reconstructed images
-%       the S images has intensity scaled by S/2
 %   
 %    est_type
 %        zero: function zero initializes the image
@@ -56,7 +55,7 @@ function InitEstFunc = InitialEstimateFunc(est_type,h,w,F,S,varargin)
         InitEstFunc = @(y) ...
             reshape(...
                 reshape(cat(F, mask.*y(:,:,1), mask.*y(:,:,2)),[],2*F) / W', ...
-            h,w,S)*(S/2);
+            h,w,S);
     case 'bayerdemosaic'
         assert(F == 3, 'F == 3');
         InitEstFunc = @(y) ...
@@ -67,7 +66,7 @@ function InitEstFunc = InitialEstimateFunc(est_type,h,w,F,S,varargin)
                     rgb2bgr(double(demosaic(uint8(y(:,:,2)), 'bggr')))), ...
                 [], 6) ...
             / W', ...
-        h,w,S)*(S/2);
+        h,w,S);
     case 'maxfilter'
         mask = zeros(h,w,F);
         for k = 1:F
@@ -80,7 +79,7 @@ function InitEstFunc = InitialEstimateFunc(est_type,h,w,F,S,varargin)
                 reshape(cat(F, ...
                     max_filtering(mask.*y(:,:,1)), ...
                     max_filtering(mask.*y(:,:,2))),[],2*F) / W', ...
-            h,w,S)*(S/2);
+            h,w,S);
     otherwise
         warning('initial estimate function not set properly');
     end
