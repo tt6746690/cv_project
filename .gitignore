@@ -17,10 +17,12 @@ deep_demosaick/
 learn_prox_ops/
 argmin-TR-2016-code/
 On_RED/
+flexisp_demosaicking_demo/
 
 # RED specific
 external/RED/data
 external/RED/results/
+
 
 
 .ipynb_checkpoints

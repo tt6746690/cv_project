@@ -54,7 +54,8 @@
             conda install opencv-python
 
             ```
-
++ [flexisp_demosaicking_demo]
+    + https://research.nvidia.com/publication/flexisp-flexible-camera-image-processing-framework
 
 
 + [deep_demosaick]

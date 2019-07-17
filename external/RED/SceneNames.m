@@ -15,6 +15,8 @@ case "exp60"
         "pens"
         "pillow"
         "shoe"
+        "resolution"
+        "chart"
     ]';
 case "7patterns"
     scenes = [

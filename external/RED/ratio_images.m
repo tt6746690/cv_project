@@ -71,8 +71,8 @@ params_admm = GetSuperResADMMParams(light_mode);
 params_admm_ratio = GetSuperResADMMParams(light_mode);
 params_admm.denoiser_type = "tnrd";
 params_admm_ratio.denoiser_type = "tnrd";
-params_admm.outer_iters = 100;
-params_admm_ratio.outer_iters = 100;
+params_admm.outer_iters = 50;
+params_admm_ratio.outer_iters = 50;
 % params_admm_ratio.beta = 0.01;
 % params_admm_ratio.lambda = 0.25;
 
@@ -180,7 +180,7 @@ end
 
 psnr_baseline = ComputePSNR(orig_im,sum_im3);
 fprintf("psnr_baseline (RED in intensity space): %.3f\n",psnr_baseline);
-% 45.1312
+% 45.046
 
 imshow(scaling*FlattenChannels(orig_im,sum_im3)/255);
 
@@ -294,7 +294,7 @@ for scene = dataset_exp60
     %% save images
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ims = scaling*FlattenChannels(orig_im,ratio_orig_im,admm_intensity_im,admm_ratio_im,ratio_mult_inputsum_im,ratio_mult_inputsum_denoised_im);
+    ims = scaling*FlattenChannels(2*orig_im,ratio_orig_im,2*admm_intensity_im,admm_ratio_im,2*ratio_mult_inputsum_im,2*ratio_mult_inputsum_denoised_im);
     imshow(ims/255);
     imwrite(uint8(ims),sprintf("%s/%s.png",savedir,scene));
 
@@ -305,7 +305,6 @@ for scene = dataset_exp60
 
     m{iter} = data;
     iter = iter + 1;
-    break;
 end
 
 
@@ -362,8 +361,8 @@ dataset_7pattern = SceneNames("7patterns");
 
 params_admm.outer_iters = 100;
 params_admm_ratio.outer_iters = 100;
-params_admm.denoiser_type       = "medfilter";
-params_admm_ratio.denoiser_type = "medfilter";
+params_admm.denoiser_type       = "tnrd";
+params_admm_ratio.denoiser_type = "tnrd";
 
 % 
 % im1 = rand(h,w,S)*255;
