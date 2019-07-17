@@ -86,3 +86,10 @@
 + [On_RED]
     + https://github.com/edward-reehorst/On_RED/
     + new interpretation on red, proposed a faster algo
+
++ [OneNet]
+    + https://github.com/image-science-lab/OneNet.git
+    + One network to solve them all - solving linear inverse problem with deep projection models
+        + learn 1 proximal operator that projects to natural images for different inverse problems
+        + trained classifier and projector (discriminator) in adversarial setting
+    + looks promising 

@@ -328,7 +328,7 @@ for i = 1:nx
 end
 
 plot(1:nx,psnrs(1,:),'DisplayName',"intensity"); hold on;
-plot(1:nx,psnrs(2,:),'DisplayName','ratio'); hold on;
+% plot(1:nx,psnrs(2,:),'DisplayName','ratio'); hold on;
 plot(1:nx,psnrs(3,:),'DisplayName','ratio multiplied with inputsum'); hold on;
 plot(1:nx,psnrs(4,:),'DisplayName','ratio multiplied with denoised inputsum'); hold on;
 set(gca,'xtick',1:nx,'xticklabel',dataset_exp60);
