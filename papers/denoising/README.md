@@ -168,6 +168,12 @@
             + [13] admm
 
 
+## half quadratic splitting
+
++ https://pdfs.semanticscholar.org/1c99/baa92387ead70c668dde6a6ed73b20697a6f.pdf
+    + 
+
+
 ## ADMM and proximal methods for image reconstruction
 
 + [2016_proxImaL_efficient_image_optimization_using_proximal_algorithms](2016_proxImaL_efficient_image_optimization_using_proximal_algorithms.pdf)

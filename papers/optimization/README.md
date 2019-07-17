@@ -16,5 +16,12 @@
         + uniformly sharp minimums => calmness
         + optimality condition for unconstrained lower level problem
 
++ [2011_a_first_order_primal_dual_algorithm_for_convex_problems_with_applications_to_imaging](2011_a_first_order_primal_dual_algorithm_for_convex_problems_with_applications_to_imaging.pdf)
+    + 
+
+
++ [2014_fast_alternating_direction_optimization_methods](2014_fast_alternating_direction_optimization_methods.pdf)
+    + faster admm for strongly and weakly convex objectives
+
 + [2014_bregman_alternating_direction_method_of_multipliers](2014_bregman_alternating_direction_method_of_multipliers.pdf)
     + generalizes ADMM where the residual norm in augmented lagrangian is replaced with bregman divergence
