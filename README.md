@@ -96,3 +96,13 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
     + object to image distance
 + textured objects
     + 
+
+
+## Idea
+
+
++ flexisp   
+    + mask matrix `M` to mask pixels' contribution to data term when having low confidence in them, i.e.too saturated, or noisy
+    + denoiser + TV provides better regularization to the problem
+        + self-similarity prior of NLM, BM3D ... can fill in values even if lots of data are missing
+            + but only works if image exhibits self-similarity
