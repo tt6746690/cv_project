@@ -6,21 +6,12 @@
 %           - worse psnr values
 %
 clc; clear; close all;
-addpath(genpath('./tnrd_denoising/'));
-addpath(genpath('./minimizers/'));
-addpath(genpath('./parameters/'));
-addpath(genpath('./helper_functions/'));
-addpath(genpath('./test_images/'));
-addpath(genpath("./mian/helperFunctions/Camera"));
-addpath(genpath("./mian/helperFunctions/ASNCC"));
-addpath(genpath("./mian/helperFunctions/Algorithms"));
+ProjectPaths;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% set to 1 if debug, 0 otherwise
-short = 0;
 % crop the image to remove the borders
 [cx,cy] = deal(1:160,10:249);
 % [cx,cy]=deal(11:30,11:30);
@@ -67,12 +58,7 @@ ForwardFunc = @(in_im) reshape(H*in_im(:),h,w,2);
 BackwardFunc = @(in_im) reshape(H'*in_im(:),h,w,S);
 InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S, ...
         'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
-params_admm = GetSuperResADMMParams(light_mode);
-
-if short == 1
-    params_admm.outer_iters = 1;
-end
-
+params_admm = GetDemosaicDemultiplexParams(light_mode);
 params_admm.denoiser_type = "medfilter";
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

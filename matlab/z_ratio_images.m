@@ -1,5 +1,8 @@
 % Compare performance of RED when input_im is in {ratio,intensity} space
 %       the idea is that in ratio space, texture removed, so might be easier to do reconstruction
+%       turns out this is S dependent
+%           - S=4, using ratio images is better
+%           - S=7, using ratio images is worse
 clc; clear; close all;
 ProjectPaths;
 
@@ -59,8 +62,8 @@ BackwardFunc = @(in_im) reshape(H'*in_im(:),h,w,S);
 InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S, ...
         'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
 params_admm = GetDemosaicDemultiplexParams(light_mode);
+params_admm_ratio = GetDemosaicDemultiplexParams(light_mode);
 
-params_admm_ratio = GetSuperResADMMParams(light_mode);
 params_admm.denoiser_type = "tnrd";
 params_admm_ratio.denoiser_type = "tnrd";
 params_admm.outer_iters = 50;
@@ -145,7 +148,7 @@ sum_im1 = sum(input_im,3);
 sum_ims{1} = sum_im1;
 
 sum_im2 = sum(input_im,3);
-sum_im2 = rgb2bgr(double(demosaic(uint8(sum_im2),'bggr')));
+sum_im2 = Rgb2bgr(double(demosaic(uint8(sum_im2),'bggr')));
 sum_ims{2} = sum(sum_im2,3)*(1/3);
 
 [sum_im3,~,~] = RunADMM_demosaic(input_im,ForwardFunc,BackwardFunc,InitEstFunc,input_sigma,params_admm,orig_im);
@@ -185,7 +188,7 @@ for s = 1:S
         end
     end
     imshow(out/255)
-    imwrite(uint8(3*out),sprintf("%s/ratiocombinations_%s_S=%d.png",savedir,scene,s));
+    imwrite(uint8(3*out),sprintf("%s/combinations/ratiocombinations_%s_S=%d.png",savedir,scene,s));
 end
 
 
@@ -202,8 +205,8 @@ t = table(col_rownames,col_input_image_sum,col_sum_bayerdemosaic_sum,col_red_sum
 t
 
 
-writetable(t,sprintf("%s/psnrs_ratio_combinations.txt",savedir));
-% readtable(sprintf("%s/psnrs_masktypes_initialguesses.txt",savedir));
+writetable(t,sprintf("%s/combinations/psnrs_ratio_combinations.txt",savedir));
+% readtable(sprintf("%s/combinations/psnrs_ratio_combinations.txt",savedir));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Compare RED on both ratio/intensity space for exp60
