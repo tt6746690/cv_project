@@ -1,15 +1,7 @@
 % Compare performance of RED when input_im is in {ratio,intensity} space
 %       the idea is that in ratio space, texture removed, so might be easier to do reconstruction
 clc; clear; close all;
-addpath(genpath('./tnrd_denoising/'));
-addpath(genpath('./minimizers/'));
-addpath(genpath('./parameters/'));
-addpath(genpath('./helper_functions/'));
-addpath(genpath('./test_images/'));
-addpath(genpath("./mian/helperFunctions/Camera"));
-addpath(genpath("./mian/helperFunctions/ASNCC"));
-addpath(genpath("./mian/helperFunctions/Algorithms"));
-
+ProjectPaths;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Parameters
@@ -66,7 +58,7 @@ ForwardFunc = @(in_im) reshape(H*in_im(:),h,w,2);
 BackwardFunc = @(in_im) reshape(H'*in_im(:),h,w,S);
 InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S, ...
         'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
-params_admm = GetSuperResADMMParams(light_mode);
+params_admm = GetDemosaicDemultiplexParams(light_mode);
 
 params_admm_ratio = GetSuperResADMMParams(light_mode);
 params_admm.denoiser_type = "tnrd";

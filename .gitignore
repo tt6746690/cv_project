@@ -21,8 +21,7 @@ flexisp_demosaicking_demo/
 OneNet/
 
 # RED specific
-external/RED/data
-external/RED/results/
+matlab/results/
 
 
 
