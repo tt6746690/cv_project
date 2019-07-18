@@ -1,7 +1,29 @@
 function W = BucketMultiplexingMatrix(S)
 % Per-pixel bucket multiplexing matrix of size 2(S-1) x S
 %
-    if S == 7
+
+    switch S
+    case 3
+        C = [
+            1 0 0
+            0 1 0
+        ];
+    case 5
+        C = [
+            1 1 0 0 0
+            1 0 1 0 0
+            1 0 0 1 0
+            1 0 0 0 1
+        ];
+    case 6
+        C = [
+            1 1 1 0 0 0
+            1 1 0 0 1 0
+            1 0 1 1 1 0
+            1 0 1 0 1 1
+            1 0 0 1 0 1
+        ];
+    case 7
         C = [
             1 1 1 1 1 0 0
             1 1 1 0 0 0 1
@@ -10,7 +32,7 @@ function W = BucketMultiplexingMatrix(S)
             1 0 0 1 0 1 0
             1 0 0 0 1 0 1
         ];
-    else
+    otherwise
         C = hadamard(S);
         C = (C+1)/2;
         C = C(2:end,:);

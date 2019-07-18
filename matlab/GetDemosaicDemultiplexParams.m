@@ -5,9 +5,11 @@ function params = GetDemosaicDemultiplexParams(light_mode)
     
     % number of outer iterations
     if light_mode
-        params.outer_iters = 50;
+        params.outer_iters = 1;
+        params.denoiser_type = "medfilter";
     else
         params.outer_iters = 100;
+        params.denoiser_type = "tnrd";
     end
 
     % number of inner iterations
@@ -24,8 +26,5 @@ function params = GetDemosaicDemultiplexParams(light_mode)
 
     % relaxation parameter of ADMM
     params.alpha = 1;
-
-    % denoiser type: {medfilter, tnrd}
-    params.denoiser_type = "medfilter";
     
 return

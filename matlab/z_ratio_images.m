@@ -10,8 +10,6 @@ ProjectPaths;
 %% Parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% set to 1 if debug, 0 otherwise
-short = 0;
 % crop the image to remove the borders
 [cx,cy] = deal(1:160,10:247);
 % [cx,cy] = deal(51:80,51:80);

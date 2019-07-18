@@ -31,6 +31,13 @@ case "7patterns"
         "totem"
         "cover"
     ]';
+case "alphabet"
+    scenes = [
+        "alphabet4"
+        "alphabet5"
+        "alphabet6"
+        "alphabet7"
+    ]';
 otherwise
     warning(sprintf("did not have dataset %s",dataset));
 end
