@@ -25,3 +25,5 @@
 
 + [2014_bregman_alternating_direction_method_of_multipliers](2014_bregman_alternating_direction_method_of_multipliers.pdf)
     + generalizes ADMM where the residual norm in augmented lagrangian is replaced with bregman divergence
+
+    
