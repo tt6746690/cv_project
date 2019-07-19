@@ -1,167 +1,103 @@
-function [im_out,psnr_out,statistics] = ADMM(y,H,InitEstFunc,params,orig_im)
-
+function [im_out,psnr_out,ssim_out,statistics] = ADMM(y,H,InitEstFunc,params,orig_im)
+    %   Run ADMM to solve minimize 
+    %       E(x) = ||Hx-y||_2^2 + lambda * 0.5*x'*(x-denoise(x))
+    %   with the augmented lagrangian of form 
+    %       L_{rho}(x,v) = ||Hx-y||_2^2 + lambda * 0.5*x'*(x-denoise(x)) + 
+    %                        \mu^T(x-v) + (\rho/2) ||x-z||_2^2
+    %   
+    % Inputs:
+    %   y                        input image
+    %   H                        multiplexing and spatial subsampling operator
+    %   InitEstFunc              initial guess of `y` based on `x`
+    %   params.
+    %       lambda               relative scaling of data term and regularization term
+    %       rho                  augmented lagrangian parameter
+    %       outer_iters          number of ADMM iterations
+    %       inner_denoiser_iters number of fixed iterations in v-minimization step
+    %       denoiser_type        denoiser used in v-minimization step
+    %       effective_sigma      input noise level to denoiser
+    % 
+    % Outputs:
+    %   im_out                   imputed image
+    %   psnr_out                 psnr of `im_out` to `orig_im`
+    %   ssim_out                 ssim of `im_out` to `orig_im`
+    %   statistics               psnrs at each iterations
+ 
     QUIET = 0;
     PRINT_MOD = floor(params.outer_iters/10);
     if ~QUIET
-        fprintf('printmod: %d\n',PRINT_MOD);
-        fprintf('%7s\t%10s\t%12s\n', 'iter', 'PSNR', 'objective');
+        fprintf('%7s\t%10s\t%10s\t%12s\n', 'iter', 'PSNR/SSIM', 'objective');
     end
-
-    % parameters
+    
     lambda = params.lambda;
-    beta = params.beta;
+    rho = params.rho;
     outer_iters = params.outer_iters;
-    inner_iters = params.inner_iters;
     inner_denoiser_iters = params.inner_denoiser_iters;
-    effective_sigma = params.effective_sigma;
     denoiser_type = params.denoiser_type;
-
-
-end
-
-% Copyright 2017 Google Inc.
-%
-% Licensed under the Apache License, Version 2.0 (the "License");
-% you may not use this file except in compliance with the License.
-% You may obtain a copy of the License at
-%
-%     https://www.apache.org/licenses/LICENSE-2.0
-%
-% Unless required by applicable law or agreed to in writing, software
-% distributed under the License is distributed on an "AS IS" BASIS,
-% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-% See the License for the specific language governing permissions and
-% limitations under the License.
-
-% Objective:
-%   Minimize E(x) = 1/(2sigma^2)||Hx-y||_2^2 + 0.5*lambda*x'*(x-denoise(x))
-%   via the ADMM method.
-%   Please refer to Section 4.2 in the paper for more details:
-%   "Deploying the Denoising Engine for Solving Inverse Problems -- ADMM".
-%
-% Inputs:
-%   y - the input image
-%   ForwardFunc - the degradation operator H
-%   BackwardFunc - the transpose of the degradation operator H
-%   InitEstFunc - special initialization (e.g. the output of other method)
-%   input_sigma - noise level
-%   params.lambda - regularization parameter
-%   params.beta - ADMM parameter
-%   params.outer_iters - number of total iterations
-%   params.inner_iters - number of steps to minimize Part1 of ADMM
-%   params.inner_denoiser_iters - number of steps to minimize Part2 of ADMM
-%   params.effective_sigma - the input noise level to the denoiser
-%   orig_im - the original image, used for PSNR evaluation ONLY (only the Luminance Y component)
-
-% Outputs:
-%   im_out - the reconstructed image
-%   psnr_out - PSNR measured between x_est and orig_im
-
-function [im_out, psnr_out, statistics] = RunADMM_demosaic(y, ForwardFunc, BackwardFunc,...
-    InitEstFunc, input_sigma, params, orig_im)
-
-% print info every PRINT_MOD steps 
-QUIET = 0;
-PRINT_MOD = floor(params.outer_iters/10);
-if ~QUIET
-    fprintf('printmod: %d\n',PRINT_MOD);
-    fprintf('%7s\t%10s\t%12s\n', 'iter', 'PSNR', 'objective');
-end
-
-% parameters
-lambda = params.lambda;
-beta = params.beta;
-outer_iters = params.outer_iters;
-inner_iters = params.inner_iters;
-inner_denoiser_iters = params.inner_denoiser_iters;
-effective_sigma = params.effective_sigma;
-denoiser_type = params.denoiser_type;
-
-% initialization
-x_est = InitEstFunc(y);
-x_init = InitEstFunc(y);
-v_est = x_est;
-u_est = x_est*0;
-Ht_y = BackwardFunc(y)/(input_sigma^2);
-
-% keept track of convergence
-psnrs = zeros(1,0);
-costfunc = zeros(1,0);
-save_iter = 1;
-
-for k = 1:1:outer_iters
-
-    % imshow(FlattenChannels(x_est)/255);
-    % pause;
+    effective_sigma = params.effective_sigma;
+    v_update_method = params.v_update_method;
     
-    % Part1 of the ADMM, approximates the solution of:
-    % x = argmin_z 1/(2sigma^2)||Hz-y||_2^2 + 0.5*beta||z - v + u||_2^2
-    % use gradient descent        
-    for j = 1:1:inner_iters
-        % (v_est - u_est) is z^*
-        b = Ht_y + beta*(v_est - u_est);
-        A_x_est = BackwardFunc(ForwardFunc(x_est))/(input_sigma^2) + beta*x_est;
+    x_est = InitEstFunc(y);
+    v_est = x_est;
+    u_est = zeros(size(x_est));
+    history = zeros(3,0);
+    save_iter = 1;
 
-        % res = -e_j = (1/\sigma^2) ( H^T*y - H^T*H*z_{j-1} ) + beta*(z^* - z_{j-1})
-        res = b - A_x_est;
-
-        % r_j = (1/\sigma^2) H^T*H*e_j + \beta*e_j
-        a_res = BackwardFunc(ForwardFunc(res))/(input_sigma^2) + beta*res;
-
-        % `res` is gradient `e_j`
-        % `a_res` is `r_j`
-        % mu_opt = mean(\mu)
-        mu_opt = mean(res(:).*res(:))/mean(res(:).*a_res(:));
-
-        % z_j = z_{j-1} + \mu e_j
-        x_est = x_est + mu_opt*res;
-        x_est = max( min(x_est, 255), 0);
-
-        % fprintf("gradient mean: %.5f\n",mean(res,'all'));
-        % fprintf("step size:     %.5f\n",mu_opt);
-        % imshow(FlattenChannels(orig_im,res,Ht_y,x_est)/255);
+    [h,w,~] = size(x_est);
+    ToIm = @(x) reshape(x,h,w,[]);
+    
+    [R,flag] = chol(H'*H + rho*speye(size(H,2),size(H,2)));
+    if flag ~= 0
+        warning("H'H+rho*I should be symmetric positive definite");
+    end
+    
+    for k = 1:outer_iters
+        % imshow(FlattenChannels(x_est,v_est,u_est)/255);
         % pause;
+    
+        % primal x update
+        x_est = ToIm(H'*y(:))+rho*(v_est-u_est);
+        x_est = R\(R'\(x_est(:)));
+        x_est = ToIm(x_est);
+        x_est = Clip(x_est,0,255);
+    
+        % relaxation
+        x_hat = params.alpha*x_est + (1-params.alpha)*v_est;
+        
+        % primal v update
+        switch v_update_method
+        case "fixed_point"
+            for j = 1:1:inner_denoiser_iters
+                f_v_est = Denoiser(v_est,effective_sigma,denoiser_type);
+                v_est = (rho*(x_hat + u_est) + lambda*f_v_est)/(lambda + rho);
+            end
+        case "denoiser"
+            v_est = Denoiser(x_hat+u_est,effective_sigma,denoiser_type);
+        otherwise
+            warning("v-update method not correct");
+        end
+    
+        % scaled dual u update
+        u_est = u_est + x_hat - v_est;
+    
+        if ~QUIET && (mod(k,PRINT_MOD) == 0 || k == outer_iters)
+            f_est = Denoiser(x_est,effective_sigma,denoiser_type);
+            costfunc = norm(reshape(ToIm(H*x_est(:))-y,[],1)) + lambda*x_est(:)'*(x_est(:)-f_est(:));
+            im_out = x_est(1:size(orig_im,1), 1:size(orig_im,2),:);
+            [psnr,ssim] = ComputePSNRSSIM(orig_im, im_out);
+
+            fprintf('%7i %.5f/%.5f %12.5f \n',k,psnr,ssim,costfunc);
+            history(:,save_iter) = [psnr;ssim;costfunc];
+            save_iter = save_iter + 1;
+
+            imshow(FlattenChannels(orig_im,x_est,v_est,u_est)/255);
+        end
     end
-
     
-    % relaxation
-    x_hat = params.alpha*x_est + (1-params.alpha)*v_est;
-    
-    
-    % Part2 of the ADMM, approximates the solution of
-    % v = argmin_z lambda*z'*(z-denoiser(z)) +  0.5*beta||z - x - u||_2^2
-    % using gradient descent
-    for j = 1:1:inner_denoiser_iters
-        f_v_est = Denoiser(v_est, effective_sigma,denoiser_type);
-        v_est = (beta*(x_hat + u_est) + lambda*f_v_est)/(lambda + beta);
-    end
-    
-    % Part3 of the ADMM, update the dual variable
-    u_est = u_est + x_hat - v_est;
-    
-    if ~QUIET && (mod(k,PRINT_MOD) == 0 || k == outer_iters)
-        % evaluate the cost function
-        fun_val = CostFunc(y, x_est, ForwardFunc, input_sigma,...
-            lambda, effective_sigma,denoiser_type);
-        im_out = x_est(1:size(orig_im,1), 1:size(orig_im,2),:);
-        psnr_out = ComputePSNR(orig_im, im_out);
-        fprintf('%7i %12.5f %12.5f \n', k, psnr_out, fun_val);
+    im_out = x_est(1:size(orig_im,1), 1:size(orig_im,2),:);
+    [psnr_out,ssim_out] = ComputePSNRSSIM(orig_im, im_out);
 
-        psnrs(save_iter) = psnr_out;
-        costfunc(save_iter) = fun_val;
-        save_iter = save_iter+1;
-
-        % display image
-        imshow(FlattenChannels(orig_im,x_est)/255);
-    end
-end
-
-im_out = x_est(1:size(orig_im,1), 1:size(orig_im,2),:);
-psnr_out = ComputePSNR(orig_im, im_out);
-
-statistics.psnrs = psnrs;
-statistics.costfunc = costfunc;
-
-return
-
+    statistics.psnr     = history(1,:);
+    statistics.ssim     = history(2,:);
+    statistics.costfunc = history(3,:);
 end

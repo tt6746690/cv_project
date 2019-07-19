@@ -20,11 +20,15 @@ function params = GetDemosaicDemultiplexParams(light_mode)
 
     % admm parameter
     params.beta = 1e-3;
+    params.rho  = 1e-3;
 
     % number of denoising applications
     params.inner_denoiser_iters = 1;
 
     % relaxation parameter of ADMM
     params.alpha = 1;
+
+    % v-update step method {fixed_point,denoiser}
+    params.v_update_method = "fixed_point";
     
 return
