@@ -69,7 +69,7 @@ function [im_out,psnr_out,ssim_out,statistics] = ADMM(y,H,InitEstFunc,params,ori
         case "fixed_point"
             for j = 1:1:inner_denoiser_iters
                 f_v_est = Denoiser(v_est,effective_sigma,denoiser_type);
-                v_est = (rho*(x_hat + u_est) + lambda*f_v_est)/(lambda + rho);
+                v_est = (rho*(x_hat+u_est) + lambda*f_v_est)/(lambda + rho);
             end
         case "denoiser"
             v_est = Denoiser(x_hat+u_est,effective_sigma,denoiser_type);

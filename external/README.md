@@ -93,3 +93,16 @@
         + learn 1 proximal operator that projects to natural images for different inverse problems
         + trained classifier and projector (discriminator) in adversarial setting
     + looks promising 
+
++ [Neural proximal gradient method]
+    + https://github.com/MortezaMardani/Neural-PGD
+    + unrolled proximal gradient where proximal operator replaced by a denoiser parameterized by a ResNet
+
++ [ADMM-Net]
+    + https://github.com/yangyan92/Deep-ADMM-Net
+
++ [ISTA-Net]
+    + https://github.com/jianzhangcs/ISTA-Net
+
++ [provable PnP]
+    + https://github.com/uclaopt/Provable_Plug_and_Play/

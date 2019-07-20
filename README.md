@@ -106,3 +106,11 @@ python3 demosaicing/download_kodak.py --output-dir=data/kodak
     + denoiser + TV provides better regularization to the problem
         + self-similarity prior of NLM, BM3D ... can fill in values even if lots of data are missing
             + but only works if image exhibits self-similarity
++ denoiser 
+    + can be trained on T2 images
+        + groundtruth, and denoisy inputs (lots of them, since can record 1000 images, each with different noise characteristics)
+    + simply applying denoiser, is 
+        + unstable for median filter
+        + for tnrd denoiser, the performance is not as good as RED ...
+    + unet/resnet
++ 
