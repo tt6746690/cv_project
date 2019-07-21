@@ -7,6 +7,11 @@ data/*
 *.log
 *.out
 *.synctex.gz
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+
 
 *.pyc
 __pycache__
