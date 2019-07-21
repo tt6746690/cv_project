@@ -7,18 +7,19 @@
 \usepackage{graphicx}
 \graphicspath{{./assets}}
 \usepackage{hyperref}
-\hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=blue}
+\hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=red}
 \usepackage[backend=biber,sorting=none]{biblatex}
 \addbibresource{references.bib}
 \setcounter{MaxMatrixCols}{30}
 
 
-\let\vec\relax
-\DeclareMathOperator{\vec}{vec}
+\renewcommand{\vec}[1]{vec\left(#1\right)}
 \renewcommand{\si}{\boldsymbol{i}}
 \renewcommand{\sI}{\boldsymbol{I}}
 \newcommand{\wsI}{\widetilde{\boldsymbol{I}}}
 \renewcommand{\diag}{\mathbf{diag}}
+\newcommand{\minimize}{\textbf{minimize}\quad}
+\newcommand{\subjectto}{\textbf{subject to}\quad}
 
 
 \title{Project Report}
@@ -29,6 +30,8 @@
 
 \maketitle
 \newpage 
+\tableofcontents
+\newpage
 
 
 \section{Abstract}
@@ -67,11 +70,12 @@ The coded two-bucket (C2B) camera is a pixel-wise coded exposure camera that out
         $P\times S$          & $\bX = [\si^1 \cdots \si^P]^T$          & pixel intensity under $S$ illuminations \\    
         $2P\times 1$         & $\by = \vec{\bY}$                       & vectorized two-bucket illumination mosaic \\
         $SP\times 1$         & $\bx = \vec{\bX}$                       & vectorized pixel intensity under $S$ illumiantions \\
+        $2P\times 2PF$       & $\bB$                                   & subsampling linear map \\
+        $2P\times SP$        & $\bA = \bB(\bW\otimes \bI_P)$           & illumination multiplexing and subsampling linear map \\
     \end{tabular}
     \end{center}
 \end{table}
-$ $\\
-Illumination ratios are albedo \textit{quasi-invariant}, a property which can be exploited for downstream processing
+\noindent Illumination ratios are albedo \textit{quasi-invariant}, a property which can be exploited for downstream processing
 \[
     r = \frac{\bi^p[f]}{\bi^p[f] + \hat{\bi}^p[f]} 
     \quad\quad
@@ -83,24 +87,25 @@ Let $\bS \in \{1,2,\cdots,F\}^P$ be a vector specifying how the one-frame code t
 \[
     \tilde{\bc}_1^{p} := \bc_{\bS_p}^p    
 \]
-for all pixels $p$. We can view $\bS$ as a mask to construct a \textbf{S}ubsampling linear map that maps vectorized two-bucket image sequences $\sI$ to the vectorized illumination mosaics $\bY$. In particular, let $\bA' \in \R^{P\times PF}$ and $\bA \in \R^{2P \times PF}$ be defined as follows 
+for all pixels $p$. We can view $\bS$ as a mask to construct a \textbf{S}ubsampling linear map that maps vectorized two-bucket image sequences $\sI$ to the vectorized illumination mosaics $\bY$. In particular, let $\bB' \in \R^{P\times PF}$ and $\bB \in \R^{2P \times 2PF}$ be defined as follows 
 \[
-    \bA' =
+    \bB' =
     \begin{bmatrix}
         \diag{\mathbbm{1}_{\{1\}}(\bS) } & \diag{\mathbbm{1}_{\{2\}}(\bS) } & \cdots & \diag{\mathbbm{1}_{\{F\}}(\bS) }
     \end{bmatrix}    
     \quad\quad 
-    \bA = 
+    \bB = 
     \begin{bmatrix}
-        \bA' & \mathbf{0} \\
-        \mathbf{0} & \bA' \\
+        \bB' & \mathbf{0} \\
+        \mathbf{0} & \bB' \\
     \end{bmatrix}
 \]
 Then we have the following relation between $\sI$ and $\bY$,
-\[
-    \vec{\bY} = \bA \vec{\sI}
-\]
-We are motivated to think of an analogue where it is common place to perform spatial subsampling. In RGB color imaging, bayer mosaics trade spatial resolution for spectral resolution (R,G,B colors). We can find an analogous one-frame code tensor which generate illuination mosaics that trade spatial resolution for temporal resolution ($1,2,\cdots,F$ frames). As an example in case of $F=3$ and $P=4$, the corresponding $\bS$, when reshaped to dimension of a $2\times 2$ image, and single image subsampling linear map $\bA'$ are simply
+\begin{equation}
+    \label{eq:subsampling_relation}
+    \vec{\bY} = \bB \vec{\sI}
+\end{equation}
+We are motivated to think of an analogue where it is common place to perform spatial subsampling. In RGB color imaging, bayer mosaics trade spatial resolution for spectral resolution (R,G,B colors). We can find an analogous one-frame code tensor which generate illuination mosaics that trade spatial resolution for temporal resolution ($1,2,\cdots,F$ frames). As an example in case of $F=3$ and $P=4$, the corresponding $\bS$, when reshaped to dimension of a $2\times 2$ image, and single image subsampling linear map $\bB'$ are simply
 \[
     \bS = 
     \begin{pmatrix}
@@ -109,7 +114,7 @@ We are motivated to think of an analogue where it is common place to perform spa
     \end{pmatrix}    
 \]
 \[
-    \bA' = 
+    \bB' = 
     \begin{bmatrix}
         \diag{\mathbbm{1}_{\{1\}}(\bS) } & \diag{\mathbbm{1}_{\{2\}}(\bS) } & \diag{\mathbbm{1}_{\{3\}}(\bS) }
     \end{bmatrix}
@@ -145,7 +150,7 @@ Per-pixel image formation model is
 \]
 If bucket activity is same for all pixels and we use the optimal bucket multiplexing matrix $\bW$, then
 \begin{equation}
-    \label{eq:1}
+    \label{eq:image_formation}
     \sI = \bX \bW^T
 \end{equation}
 
@@ -154,17 +159,41 @@ The reconstruction pipeline is as follows
 \begin{enumerate}
     \item Use $\widetilde{\bC}$ for bucket activities and capture the two-bucket image $\bY$
     \item upsample the images to full resolution images $\sI$
-    \item demultiplex $\sI$ to obtain $S$ full resolution images $\bX$ as a least squares solution to a (\ref{eq:1})
+    \item demultiplex $\sI$ to obtain $S$ full resolution images $\bX$ as a least squares solution to a (\ref{eq:image_formation})
     \item use $\bX$ to solve for disparity and albedo
 \end{enumerate}
 Step 2 and 3 are critical to downstream reconstuctions. When $S=3,S=4$ and $\bS$ being analogous to bayer mask, we can upsample the images using standard demosaicing algorithms. However, it is not immediately obvious to extend demosaicing methods to support arbitrary $\bS$, or more specifically, for scenarios where the spatial subsampling scheme is not bayer and when number of frames is not 3. 
 
 
-\section{Inverse Problem Formulation}
+\section{Problem Formulation}
 
+\subsection{A Linear Inverse Problem}
 
+We consider the problem of recovering full resolution images $\bX$ under $S$ illuminations from a two-bucket image $\bY$ as an linear inverse problem. Let $\bA \in \R^{2P\times SP}$ represent a linear map that illumination multiplexes and subsamples $\bX$,
+\[
+    \bA = \bB(\bW\otimes \bI_P)
+\]
+where $\bI_P\in\R^{P\times P}$ is identity. From (\ref{eq:subsampling_relation}) and (\ref{eq:image_formation}), there exists a linear relationship between $\bx$ and $\by$,
+\begin{equation}
+    \label{eq:linear_mapping}
+    \by = \bB \vec{\sI} = \bB \vec{\bX \bW^T} = \bB(\bW \otimes \bI_P) \vec{\bX} = \bA\bx
+\end{equation}
+Note (\ref{eq:linear_mapping}) is an underdetermined system. Given 2 images, we want to recover $S$ images - the larger the number of subframes, the harder the recovery becomes. This asks for stronger prior knowledge of the underlying distribution of $\bx$ to restrict search space for solutions as $S$ increases. Jointly upsample and demultiplex enforces a prior knowledge of image formation. Instead of treating upsampling (recover $2F$ images $\sI$ from $2$ images $\bY$) and demultiplexing (recover $S$ images $\bX$ from $2F$ images $\sI$) as distinct steps, we aim to recover $\bX$ directy from $\bY$, in a single step, by solving the following unconstrained optimization problem,
+\begin{equation}
+    \label{eq:uncon_opt}
+    \begin{aligned}
+        \minimize & \norm{\bA\bx - \by}_2^2 + \lambda\rho(\bx) \\
+    \end{aligned}
+\end{equation}
+where $\rho:\R^{SP}\to\R$ is a regularizer for $\bx$, the optimization variable. The problem (\ref{eq:uncon_opt}) has a bayesian interpretation. Specifically, the $\ell$-2 norm can be interpreted as a log-likelihood \textit{data term} that captures the following probablistic relationship between recovered image $\bx$ and observation $\by$, 
+\[
+    \by = \bA\bx + \be    
+\]
+where $\be$ is the noise random variable, usually assumed to be Gaussian. The regularizer can be then interpreted as \textit{prior} knowledge on the distribution of $\bx$. The data term is continuous and fully differentiable in all of $\R^n$. Therefore, tractability of (\ref{eq:uncon_opt}) usually depends on how well behaved $\rho$ is. If $\rho$ is convex but possibly non-smooth, e.g. $\rho(\bx)=\norm{\bx}_1$, the problem can be efficiently solved with standard convex optimization methods like proximal gradients with guaranteed convergence and global optimality.~\cite{beckFastIterativeShrinkageThresholding2009} More realistic priors, i.e. regularizers that more precisely capture the prior knowledge of image distributions, might potentially make (\ref{eq:uncon_opt}) a much harder problem that compromises convergence and optimality properties.~\cite{ulyanovDeepImagePrior2017}
 
-The problem of image demosaicing and illumination demultiplexing can be considered as a standard linear inverse problem. 
+\subsection{Image Priors} 
+
+The choice of $\rho$ has been an important research topic in image processing. Handcrafted priors have been successful in a number of different image recovery tasks. For example, we can choose to enforce (1) the sparsity of $\bx$ with $\ell$-1 norm in image deblurring ~\cite{beckFastIterativeShrinkageThresholding2009} (2) total variation in image denoising ~\cite{buadesNonlocalImageMovie2008} (3) cross-channel correlation in RGB imaging ~\cite{malvarHighqualityLinearInterpolation2004} (4) dark channel prior in image dehazing ~\cite{fattalSingleImageDehazing2008}, etc. Of particular interest in recent years has been a 
 
 
 
