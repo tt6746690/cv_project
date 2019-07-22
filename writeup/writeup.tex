@@ -40,6 +40,8 @@ We aim to improve upon low level image proecssing pipeline for the coded two-buc
 
 \section{The Two-Bucket Camera}
 
+\subsection{Notations}
+
 The coded two-bucket (C2B) camera is a pixel-wise coded exposure camera that outputs two images in a single exposure.~\cite{weiCodedTwoBucketCameras2018} Each pixel in the sensor has two photo-collecting site, i.e. the two \textit{buckets}, as well as a 1-bit writable memory controlling which bucket is actively collecting light. It was shown previously that C2B camera is capable of one-shot 3D reconstruction by solving a simpler image demosaicing and illumination demultiplexing problem instead of a difficult 3D reconstruction problem. We summarize the following notations relevant to discussion
 
 \begin{table}[!htbp]
@@ -193,7 +195,11 @@ where $\be$ is the noise random variable, usually assumed to be Gaussian. The re
 
 \subsection{Image Priors} 
 
-The choice of $\rho$ has been an important research topic in image processing. Handcrafted priors have been successful in a number of different image recovery tasks. For example, we can choose to enforce (1) the sparsity of $\bx$ with $\ell$-1 norm in image deblurring ~\cite{beckFastIterativeShrinkageThresholding2009} (2) total variation in image denoising ~\cite{buadesNonlocalImageMovie2008} (3) cross-channel correlation in RGB imaging ~\cite{malvarHighqualityLinearInterpolation2004} (4) dark channel prior in image dehazing ~\cite{fattalSingleImageDehazing2008}, etc. Of particular interest in recent years has been a 
+The choice of regularization has been an important research topic in image processing. Handcrafted priors have been successful in a number of different image recovery tasks. For example, we can choose to enforce (1) the sparsity of $\bx$ with $\ell$-1 norm in image deblurring ~\cite{beckFastIterativeShrinkageThresholding2009} (2) total variation in image denoising ~\cite{buadesNonlocalImageMovie2008} (3) cross-channel correlation in color image demosaicing ~\cite{malvarHighqualityLinearInterpolation2004} (4) dark channel prior in image dehazing ~\cite{fattalSingleImageDehazing2008}, etc. 
+
+
+
+Recently, there has seen interest and development in algorithm induced priors. 
 
 
 
