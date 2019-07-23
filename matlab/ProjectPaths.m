@@ -4,4 +4,5 @@ function ProjectPaths()
     addpath(genpath('./red/parameters/'));
     addpath(genpath('./red/helper_functions/'));
     addpath(genpath("./mian/helperFunctions/"));
+    addpath(genpath("../external/BM3D"));
 end

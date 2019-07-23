@@ -104,5 +104,15 @@
 + [ISTA-Net]
     + https://github.com/jianzhangcs/ISTA-Net
 
++ [PnP]
+    + https://www.mathworks.com/matlabcentral/fileexchange/60641-plug-and-play-admm-for-image-restoration
+
 + [provable PnP]
     + https://github.com/uclaopt/Provable_Plug_and_Play/
+
++ https://github.com/wenbihan/reproducible-image-denoising-state-of-the-art
+
+
+
++ bm3d
+    + http://www.cs.tut.fi/~foi/GCF-BM3D/index.html#ref_software

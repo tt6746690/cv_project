@@ -1,40 +1,23 @@
 % demosaic+demultiplex a video sequence shot from c2b camera
 clc; clear; close all;
-addpath(genpath('./tnrd_denoising/'));
-addpath(genpath('./minimizers/'));
-addpath(genpath('./parameters/'));
-addpath(genpath('./helper_functions/'));
-addpath(genpath('./test_images/'));
-addpath(genpath("./mian/helperFunctions/Camera"));
-addpath(genpath("./mian/helperFunctions/ASNCC"));
-addpath(genpath("./mian/helperFunctions/Algorithms"));
+ProjectPaths;
 
 %% parameters 
 
-S=4;
-F=3;
+[S,F] = deal(4,3);
+scaling=3;
+
+% crop the image to remove the borders
+[cx,cy] = deal(1:160,11:248);
+% dimension of input image
 [h,w] = deal(176,288);
+[h,w] = deal(numel(cx),numel(cy));
+light_mode = false;
 
-videodir = '../../data/datafolder/Hand3';
-outputdir = sprintf('%s_demosaiced',videodir);
-mkdir(outputdir);
-
-W = BucketMultiplexingMatrix(S);
-
+videodir = "../data/datafolder/Hand3";
+outputdir = sprintf('%s_video',videodir); mkdir(outputdir);
 blackLevel = load("./mian/CalibrationCode/BlackIms.mat");
 blackLvl = blackLevel.blackLvl;
-
-% arguments requried for previous method
-OptimalMaskMatrix = [hadamard(4)];
-OptimalMaskMatrix = OptimalMaskMatrix(2:end,:) > 0;
-OptimalMaskMatrix = OptimalMaskMatrix(:,[4 1 2 3]);
-DemosaicFunction = @(X) demosaic(X, 'bggr');
-ASNCC.PatternCoeff = zeros(0,S);
-Bounds.LB=5; Bounds.UP=-5;
-opts.method='SL';
-opts.verbose=false;
-opts.interval = 30000;
-
 
 %% read bucket1+bucket2 pair
 
@@ -54,9 +37,11 @@ for i = 1:size(listingnames,2)
 
     im = m(id);
     if bkt == "bucket1"
-        im(:,:,1) = double(BlackLevelRead(sprintf('%s/%s',folder,name),blackLvl,1));
+        im_fullsize = double(BlackLevelRead(sprintf('%s/%s',folder,name),blackLvl,1));
+        im(:,:,1) = im_fullsize(cx,cy);
     elseif bkt == 'bucket2'
-        im(:,:,2) = double(BlackLevelRead(sprintf('%s/%s',folder,name),blackLvl,2));
+        im_fullsize = double(BlackLevelRead(sprintf('%s/%s',folder,name),blackLvl,2));
+        im(:,:,2) = im_fullsize(cx,cy);
     else
         warning('not one of bucket 1/2');
     end
@@ -83,37 +68,36 @@ end
 
 %% run demosaicing 
 
-save_im = @(im,p) ...
-    imwrite(uint8([im(:,:,1) im(:,:,2);im(:,:,3) im(:,:,4)]),p);
+mkdir(sprintf("%s/iter_ims/",outputdir));
 
-for i = 1:(size(listingnames,2)/2)
+M = SubsamplingMask("bayer",h,w,F);
+W = BucketMultiplexingMatrix(S);
+[H,B,C] = SubsampleMultiplexOperator(S,M);
+ForwardFunc = @(in_im) reshape(H*in_im(:),h,w,2);
+BackwardFunc = @(in_im) reshape(H'*in_im(:),h,w,S);
+InitEstFunc = InitialEstimateFunc("bayerdemosaic",h,w,F,S, 'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
+params_admm = GetDemosaicDemultiplexParams(light_mode);
+
+for i = 100:(size(listingnames,2)/2)
     k = ks{i};
     input_im = m(k);
     [h,w,~] = size(input_im);
 
     tic;
-    admm_im = red_demosaic_demultiplex(input_im);
+    params_admm.outer_iters = 10;
+    params_admm.v_update_method = "fixed_point";
+    [admm_im,psnr,ssim,~,iter_ims] = ADMM(input_im,H,InitEstFunc,params_admm,zeros(h,w,S));
     time_red = toc;
+    for i = 1:size(iter_ims,3)
+        imwrite(uint8(iter_ims(:,:,i)),sprintf("%s/iter_ims/%d.png",i));
+    end
 
     tic;
-    demosaic_im = ...
-        reshape(...
-            reshape( ...
-                cat(3, ...
-                    Rgb2bgr(double(demosaic(uint8(input_im(:,:,1)), 'bggr'))), ...
-                    Rgb2bgr(double(demosaic(uint8(input_im(:,:,2)), 'bggr')))), ...
-                [], 6) ...
-            / W', ...
-        h,w,S);
+    demosaic_im = InitEstFunc(input_im);
     time_demosaic = toc;
-% 
-%     ims = [input_im(:,:,1) input_im(:,:,2) zeros(h,w) zeros(h,w)
-%            admm_im(:,:,1) admm_im(:,:,2) admm_im(:,:,3) admm_im(:,:,4)
-%            demosaic_im(:,:,1) demosaic_im(:,:,2) demosaic_im(:,:,3) demosaic_im(:,:,4)];
-%     imshow(ims/255);
 
-    save_im(admm_im,sprintf('%s/red_%s',outputdir,k));
-    save_im(demosaic_im,sprintf('%s/demosaic_%s',outputdir,k));
+    ims = FlattenChannels(demosaic_im,admm_im);
+    imwrite(uint8(3*ims),sprintf("%s/%s",outputdir,k));
 
     v.input_im = input_im;
     v.admm_im = admm_im;
@@ -122,6 +106,7 @@ for i = 1:(size(listingnames,2)/2)
     v.time_demosaic = time_demosaic;
     v
     m(k) = v;
+    break;
 end
 
 save(sprintf('%s/video.mat',outputdir),'m');
@@ -145,31 +130,3 @@ end
 close(vid);
 
 %%
-
-
-function out_admm_im = red_demosaic_demultiplex(input_im)
-
-    S=4;
-    F=3;
-    light_mode = true;
-    
-    [h,w] = deal(size(input_im,1),size(input_im,2));
-    input_sigma = 1;
-    M = BayerMask(h,w);
-    W = BucketMultiplexingMatrix(S);
-    [H,B,C] = SubsampleMultiplexOperator(S,M);
-    
-    ForwardFunc = @(in_im) reshape(H*in_im(:),h,w,2);
-    BackwardFunc = @(in_im) reshape(H'*in_im(:),h,w,S);
-    InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S,W);
-
-    orig_im = zeros(h,w,S); % not available ...
-    params_admm = GetSuperResADMMParams(light_mode);
-    [out_admm_im, psnr_admm, admm_statistics] = RunADMM_demosaic(input_im,...
-                                                ForwardFunc,...
-                                                BackwardFunc,...
-                                                InitEstFunc,...
-                                                input_sigma,...
-                                                params_admm,...
-                                                orig_im);
-end

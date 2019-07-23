@@ -30,5 +30,5 @@ function params = GetDemosaicDemultiplexParams(light_mode)
 
     % v-update step method {fixed_point,denoiser}
     params.v_update_method = "fixed_point";
-    
-return
+
+end

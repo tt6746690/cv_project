@@ -1,4 +1,4 @@
-function [im_out,psnr_out,ssim_out,statistics] = ADMM(y,H,InitEstFunc,params,orig_im)
+function [im_out,psnr_out,ssim_out,statistics,iter_ims] = ADMM(y,H,InitEstFunc,params,orig_im)
     %   Run ADMM to solve minimize 
     %       E(x) = ||Hx-y||_2^2 + lambda * 0.5*x'*(x-denoise(x))
     %   with the augmented lagrangian of form 
@@ -26,9 +26,9 @@ function [im_out,psnr_out,ssim_out,statistics] = ADMM(y,H,InitEstFunc,params,ori
     QUIET = 0;
     PRINT_MOD = floor(params.outer_iters/10);
     if ~QUIET
-        fprintf('%7s\t%10s\t%10s\t%12s\n', 'iter', 'PSNR/SSIM', 'objective');
+        fprintf('%7s\t%10s\t%12s\n', 'iter', 'PSNR/SSIM', 'objective');
     end
-    
+
     lambda = params.lambda;
     rho = params.rho;
     outer_iters = params.outer_iters;
@@ -43,42 +43,48 @@ function [im_out,psnr_out,ssim_out,statistics] = ADMM(y,H,InitEstFunc,params,ori
     history = zeros(3,0);
     save_iter = 1;
 
-    [h,w,~] = size(x_est);
+    [h,w,S] = size(x_est);
     ToIm = @(x) reshape(x,h,w,[]);
     
     [R,flag] = chol(H'*H + rho*speye(size(H,2),size(H,2)));
     if flag ~= 0
         warning("H'H+rho*I should be symmetric positive definite");
     end
+
+    iter_ims = zeros(5*h,S*w,outer_iters);
     
     for k = 1:outer_iters
-        % imshow(FlattenChannels(x_est,v_est,u_est)/255);
+        % iter_ims(:,:,k) = 3*FlattenChannels(x_est,v_est,u_est,...
+        % Clip(ToIm(R\(R'\(reshape(ToIm(H'*y(:))+rho*(v_est-u_est),[],1)))),0,255)+u_est, ...
+        % Denoiser(Clip(ToIm(R\(R'\(reshape(ToIm(H'*y(:))+rho*(v_est-u_est),[],1)))),0,255)+u_est,effective_sigma,denoiser_type));
+        % imshow(iter_ims(:,:,k)/255);
         % pause;
+
+        x_old = x_est;
+        v_old = v_est;
+        u_old = u_est;
     
         % primal x update
         x_est = ToIm(H'*y(:))+rho*(v_est-u_est);
         x_est = R\(R'\(x_est(:)));
         x_est = ToIm(x_est);
         x_est = Clip(x_est,0,255);
-    
-        % relaxation
-        x_hat = params.alpha*x_est + (1-params.alpha)*v_est;
         
         % primal v update
         switch v_update_method
         case "fixed_point"
             for j = 1:1:inner_denoiser_iters
                 f_v_est = Denoiser(v_est,effective_sigma,denoiser_type);
-                v_est = (rho*(x_hat+u_est) + lambda*f_v_est)/(lambda + rho);
+                v_est = (rho*(x_est+u_est) + lambda*f_v_est)/(lambda + rho);
             end
         case "denoiser"
-            v_est = Denoiser(x_hat+u_est,effective_sigma,denoiser_type);
+            v_est = Denoiser(x_est+u_est,lambda/rho,denoiser_type);
         otherwise
             warning("v-update method not correct");
         end
     
         % scaled dual u update
-        u_est = u_est + x_hat - v_est;
+        u_est = u_est + x_est - v_est;
     
         if ~QUIET && (mod(k,PRINT_MOD) == 0 || k == outer_iters)
             f_est = Denoiser(x_est,effective_sigma,denoiser_type);
@@ -90,11 +96,16 @@ function [im_out,psnr_out,ssim_out,statistics] = ADMM(y,H,InitEstFunc,params,ori
             history(:,save_iter) = [psnr;ssim;costfunc];
             save_iter = save_iter + 1;
 
-            imshow(FlattenChannels(orig_im,x_est,v_est,u_est)/255);
+            % imshow(3*FlattenChannels(orig_im,x_est,v_est,u_est,...
+            %     Clip(ToIm(R\(R'\(reshape(ToIm(H'*y(:))+rho*(v_est-u_est),[],1)))),0,255)+u_est, ...
+            %     Denoiser(Clip(ToIm(R\(R'\(reshape(ToIm(H'*y(:))+rho*(v_est-u_est),[],1)))),0,255)+u_est,lambda/rho,denoiser_type))/255);
+
+            imshow(2*FlattenChannels(orig_im,x_old,x_est,v_old,v_est,u_old,u_est)/255);
         end
     end
     
     im_out = x_est(1:size(orig_im,1), 1:size(orig_im,2),:);
+    im_out = Clip(x_est,0,255);
     [psnr_out,ssim_out] = ComputePSNRSSIM(orig_im, im_out);
 
     statistics.psnr     = history(1,:);

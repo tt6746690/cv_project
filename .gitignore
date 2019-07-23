@@ -25,6 +25,11 @@ argmin-TR-2016-code/
 On_RED/
 flexisp_demosaicking_demo/
 OneNet/
+DnCNN/
+BM3D/
+PlugPlay_v1/
+Provable_Plug_and_Play/
+bm3d_src/
 
 # RED specific
 matlab/results/
