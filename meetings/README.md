@@ -360,3 +360,56 @@ I think from last meeting with Kyros and you, it seems that a more general frame
         + run RED/demosaic on input that is multiplexed and spatially subsampled (according to a chosen mask) from `S` noisy input
         + compare PSNR/SSIM
     
+
+
+## 07.24
+
++ summary 
+    + red performs a lot better in ratio space, maintains spatial resolution
+    + using images captured with c2b camera, ~1dB increase in performance than previous method
+    + spatial spectral trade-off
+        + 41 -> 40 from S=4 -> S=7 on resolution chart image
++ what to do next?
+    + retraining denoiser on c2b images
+        + probably not that necessary, since almost no visible noise
+    + end-to-end training of an optimization based network optimizing for mse or psnr
+        + probably increase in performance, but 
+        + might not give more insights to the problem
+    + investigate more on how to regulate depth/disparity?
+        + depth/disparity a nonlinear function of ratio images, do regularization on disparity
+        + is there a nonlinear mapping from ratio to disparity, analytical?
+        + can we regularize on ratio images instead? 
+            + not sure how to start on this
+
+
++ todo  
+    + noise characteristic of different sensor masks
+        + alphabet or more objects
+        + sensor masks to use
+            + all goto bucket 1
+            + 
+    + spatial spectral 
+        + aquisition time should be same (constant exposure) for different subframes ..
+            + ask Xia
+        + S increase, get noisier and projector quantization error...
+        + use parsa/wenjian's projector patterns for ZNCC decoder
+        + structured light solver also changed ... 
+            + not solving linear system -> ZNCC decoder (3pixel decoder?)
+            + column disparity
+    + make sure performance carry over to reconstruction
+        + end-to-end performance carry over to disparity reconstruction?
+            + albedo, disparity, or both
+            + albedo affects depth?
+            + performance dominated at depth discontiuities
+        + if ratio images are indeed carry over to depth estimation
+    + training a denoiser on c2b images help?
+        + temporal noise ... 
+        + positional pecularity? fixed pattern noise
+        + positional dependency?
+        + even ratio images alter the images
+    + precise noise model should not be pursued..
+    + ratio/disparity
+        + idea of using ratio as proxy for disparity is to maintain convexity
+    + discuss next steps
+    + check if ratio images are promising
+    + write some report before leave ...

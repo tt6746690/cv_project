@@ -1,6 +1,3 @@
-
-
-
 env_create:
 	conda env create -f cv_project.yml
 env_update:
@@ -8,8 +5,6 @@ env_update:
 
 run_tests:
 	python3 -m unittest discover
-
-
 
 
 RSYNC = /usr/local/Cellar/rsync/3.1.3_1/bin/rsync

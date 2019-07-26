@@ -33,8 +33,7 @@ bm3d_src/
 
 # RED specific
 matlab/results/
-
-
+matlab/mian/
 
 .ipynb_checkpoints
  
