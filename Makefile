@@ -8,7 +8,7 @@ run_tests:
 
 
 RSYNC = /usr/local/Cellar/rsync/3.1.3_1/bin/rsync
-RSYNCTAGS = --archive --verbose --info=progress2 -au
+RSYNCTAGS = --archive --verbose --info=progress2 -au --update
 HOST_FOLDER = $(HOME)/github/cv_project
 REMOTE = wpq@$(COMPS0)
 REMOTE_FOLDER = /u/wpq/github/cv_project

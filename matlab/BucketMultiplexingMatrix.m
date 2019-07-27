@@ -8,6 +8,12 @@ function W = BucketMultiplexingMatrix(S)
             1 0 0
             0 1 0
         ];
+    % case 4
+    %     C = [
+    %         1 0 1 0
+    %         1 1 0 0
+    %         1 0 0 1
+    %     ];
     case 5
         C = [
             1 1 0 0 0

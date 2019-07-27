@@ -385,12 +385,29 @@ I think from last meeting with Kyros and you, it seems that a more general frame
 + todo  
     + noise characteristic of different sensor masks
         + alphabet or more objects
-        + sensor masks to use
+        + sensor masks to use (`512x(176*4=704)`)
             + all goto bucket 1
-            + 
+            + bayer
+            + cant do because code wrong
+                + toeplitz
+                + rand
+                + vert
+                + horz 
+        + projector pattern 
+            + sinusoids
     + spatial spectral 
+        + experiments
+            + given a fixed total exposure in terms of clock cycles 420
+            + divide by S to get subframe time 105/84/70/60
+            + sensor mask: all_black
+            + projector pattern: optimized, sinusoids
+            + image with S=4,5,6,7
+            + triggernumber=24,16,12
         + aquisition time should be same (constant exposure) for different subframes ..
             + ask Xia
+            + `(int((205+exp)/trig_value)*trig_value + trig_value - 205)*n_subframes * 10ns` or 0.01ms
+                + `exp` for 1 frame
+                + `trig_value` number of frames to make a trigger
         + S increase, get noisier and projector quantization error...
         + use parsa/wenjian's projector patterns for ZNCC decoder
         + structured light solver also changed ... 
