@@ -37,3 +37,6 @@ matlab/mian/
 
 .ipynb_checkpoints
  
+# soft link 
+matlab/red
+matlab/data

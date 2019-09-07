@@ -430,3 +430,13 @@ I think from last meeting with Kyros and you, it seems that a more general frame
     + discuss next steps
     + check if ratio images are promising
     + write some report before leave ...
+
+
+## 09.04
+
++ what has been done
+    + spatial spectral trade-off
+    + wrote first part of the report, still needs to fill in experiments
++ what needs to be done
+    + images acquired with constant total exposure for sinusoidal/optimized pattern, check if depth corresponds to ground-truth. 
+    + verify that the subframe exposure time is indeed the exposure time excluding mask upload time ..
