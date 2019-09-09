@@ -1,14 +1,14 @@
 function [albedo,wrapped_phase,phase] = SLTriangulation(im,W,depthbounds,spatialfrequency)
-    %%  Structured light triangulation, solves for shape unknowns (albedo, phase)
-    %   from demultiplexed intensities
-    %
-    %   im     hxwxS        demultiplexed images under S projector illuminations
-    %   W      2FxS         optimal bucket multiplexing matrix
-    %   depthbounds \in [0,1]^(h*w)
-    %       LB  hxw         pixel-wise phase lower bound
-    %       UB  hxw         pixel-wise phase upper bound
-    %   spatialfrequency    number of vertically varying spatial sinusoids in pattern
-    %
+%%  Structured light triangulation, solves for shape unknowns (albedo, phase)
+%       from demultiplexed images
+%
+%   im     hxwxS        demultiplexed images under S projector illuminations
+%   W      2FxS         optimal bucket multiplexing matrix
+%   depthbounds \in [0,1]^(h*w)
+%       LB  hxw         pixel-wise phase lower bound
+%       UB  hxw         pixel-wise phase upper bound
+%   spatialfrequency    number of vertically varying spatial sinusoids in projected patterns
+%
     [h,w,S] = size(im);
 
     shifts = transpose((0:S-1)*2*pi/S);
