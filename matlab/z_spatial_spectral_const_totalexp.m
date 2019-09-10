@@ -76,7 +76,6 @@ for s = 1:numel(Ss)
     imholder(:,:,3:4) = input_ratio_im;
     imshow(FlattenChannels(orig_im,orig_ratio_im,orig_noisy_im,imholder)/255);
 
-
     %% Run RED
 
     % 1: admm+tnrd in intensity space
