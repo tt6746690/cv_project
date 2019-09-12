@@ -90,18 +90,17 @@ Let $\bS \in \{1,2,\cdots,F\}^P$ be a vector specifying how the one-frame code t
     \tilde{\bc}_1^{p} := \bc_{\bS_p}^p    
 \]
 for all pixels $p$. We can view $\bS$ as a mask to construct a \textbf{S}ubsampling linear map that maps vectorized two-bucket image sequences $\sI$ to the vectorized illumination mosaics $\bY$. In particular, let $\bB' \in \R^{P\times PF}$ and $\bB \in \R^{2P \times 2PF}$ be defined as follows 
-\[
-    \bB' =
+\begin{align*}
+    \bB' &=
     \begin{bmatrix}
         \diag{\mathbbm{1}_{\{1\}}(\bS) } & \diag{\mathbbm{1}_{\{2\}}(\bS) } & \cdots & \diag{\mathbbm{1}_{\{F\}}(\bS) }
-    \end{bmatrix}    
-    \quad\quad 
-    \bB = 
+    \end{bmatrix} \\
+    \bB &= \bB' \oplus \bB' = 
     \begin{bmatrix}
         \bB' & \mathbf{0} \\
         \mathbf{0} & \bB' \\
     \end{bmatrix}
-\]
+\end{align*}
 Then we have the following relation between $\sI$ and $\bY$,
 \begin{equation}
     \label{eq:subsampling_relation}
