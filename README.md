@@ -14,6 +14,9 @@ conda activate cv_project
 
 # download the datasets 
 python3 demosaicing/download_kodak.py --output-dir=data/kodak
+
+# matlab bug: duplicate libomp loaded
+export KMP_DUPLICATE_LIB_OK=True
 ```
 
 

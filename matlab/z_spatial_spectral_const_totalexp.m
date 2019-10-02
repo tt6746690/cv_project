@@ -55,8 +55,11 @@ Ss = [4 5 6 7];
 
 m = {}; iter = 1;
 
+%%
+
 for s = 1:numel(Ss)
     [S,F] = deal(Ss(s),Ss(s)-1);
+    
 
     M = SubsamplingMask(mask_type,h,w,F);
     W = BucketMultiplexingMatrix(S);
@@ -76,6 +79,7 @@ for s = 1:numel(Ss)
     imholder(:,:,3:4) = input_ratio_im;
     imshow(FlattenChannels(orig_im,orig_ratio_im,orig_noisy_im,imholder)/255);
 
+
     %% Run RED
 
     % 1: admm+tnrd in intensity space
@@ -90,12 +94,13 @@ for s = 1:numel(Ss)
     fprintf("psnr_intensity                     %.4f\n",psnr_intensity);
     fprintf("psnr_ratio_mult_inputsum           %.4f\n",psnr_ratio_mult_inputsum);
     
-    
     %% Photemetric stereo
-    
+
+    [orig_im_albedo,~,orig_im_phase] = SLTriangulation(orig_im,W,Bounds,4);
     [intensity_im_albedo,~,intensity_im_phase] = SLTriangulation(admm_intensity_im,W,Bounds,4);
     [ratio_im_albedo,~,ratio_im_phase] = SLTriangulation(ratio_mult_inputsum_im,W,Bounds,4);
     
+    orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
     intensity_im_disparity = disparityFunc((intensity_im_phase*hproj/(2*pi)),Y);
     ratio_im_disparity = disparityFunc((ratio_im_phase*hproj/(2*pi)),Y);
     
@@ -104,9 +109,11 @@ for s = 1:numel(Ss)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     ims1 = scaling*FlattenChannels(orig_im,orig_ratio_im,admm_intensity_im,admm_ratio_im,ratio_mult_inputsum_im);
-    ims2 = zeros(2*h,w*S);
-    ims2(:,1:3*w) = [intensity_im_albedo,255*intensity_im_phase/(2*pi),intensity_im_disparity; ...
-            ratio_im_albedo,255*ratio_im_phase/(2*pi),ratio_im_disparity];
+    ims2 = zeros(3*h,w*S);
+    ims2(:,1:3*w) = [
+        orig_im_albedo,255*orig_im_phase/(2*pi),orig_im_disparity;...
+        intensity_im_albedo,255*intensity_im_phase/(2*pi),intensity_im_disparity; ...
+        ratio_im_albedo,255*ratio_im_phase/(2*pi),ratio_im_disparity];
     ims = [ims1;ims2];
     imshow(ims/255);
     imwrite(uint8(ims),sprintf("%s/%s%d.png",savedir,scene,S));
