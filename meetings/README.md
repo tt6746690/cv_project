@@ -440,3 +440,15 @@ I think from last meeting with Kyros and you, it seems that a more general frame
 + what needs to be done
     + images acquired with constant total exposure for sinusoidal/optimized pattern, check if depth corresponds to ground-truth. 
     + verify that the subframe exposure time is indeed the exposure time excluding mask upload time ..
+
+
+## 10.01
+
+
++ think more about how multiplexing matrix is constructed 
+    + why the resulting demultiplexed images are out of order
+    + making assumptions?
++ do some experiment 
+    + given S=7, we can take 4 images, and do corresponding reconstructions
+    + only difference is in trying to do reconstruction, change the shifts from uniformly sample to sample according to what images are taken in the first place ...
+    + compare different S for scene with varying depth

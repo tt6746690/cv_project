@@ -26,7 +26,7 @@ if ~isfile(blacklevelpath)
 end
 blacklvl = load(blacklevelpath); blacklvl = blacklvl.blacklvl;
 % toggle to false for long runs
-light_mode = false;
+light_mode = true;
 % sigmas 
 input_sigma = 1;
 % sensor mask type 
@@ -54,6 +54,67 @@ Bounds.UB = double(Bounds.yErrorUB)*2*pi/hproj + tempshift;
 Ss = [4 5 6 7];
 
 m = {}; iter = 1;
+
+% %% experimentally try to determine the shifts required 
+% %  for computing SLTriangulation 
+% 
+% 
+% for s = 1:numel(Ss)
+%     [S,F] = deal(Ss(s),Ss(s)-1);
+%     M = SubsamplingMask(mask_type,h,w,F);
+%     W = BucketMultiplexingMatrix(S);
+%     [H,B,C] = SubsampleMultiplexOperator(S,M);
+%     ForwardFunc = @(in_im) reshape(H*in_im(:),h,w,2);
+%     BackwardFunc = @(in_im) reshape(H'*in_im(:),h,w,S);
+%     InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S, 'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
+%     params_admm = GetDemosaicDemultiplexParams(light_mode);
+%     params_admm_ratio = GetDemosaicDemultiplexParams(light_mode);
+% 
+%     [orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s%d",stackeddir,scene,S),h,w,S,'CropX',cx,'CropY',cy);
+%     [input_im,input_ratio_im,orig_noisy_im] = ReadInputIm(sprintf("%s/%s%d",rawimagedir,scene,S),h,w,S,'CropX',cx,'CropY',cy,'BlackLevel',blacklvl,'ForwardFunc',ForwardFunc);
+% 
+%     
+%     ims = zeros(h,S*w);
+%     
+%     for i = 1:S
+%         shifts = transpose(circshift((0:S-1),i)*2*pi/S);
+%         [orig_im_albedo,~,orig_im_phase] = SLTriangulation(orig_im,W,Bounds,4,shifts);
+%         orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
+%         
+%         ims(:,((i-1)*w+1):i*w) = orig_im_disparity;
+%         
+%         [S,i,mean(orig_im_disparity,'all')]
+%     end
+%     imwrite(uint8(ims),sprintf("%s/%d.png",savedir,S));
+%     
+% end
+
+% 4.0000    1.0000   35.6697
+% 4.0000    2.0000   78.4063
+% 4.0000    3.0000  121.1518
+% 4.0000    4.0000  163.8883
+
+% 5.0000    1.0000  189.9567
+% 5.0000    2.0000   53.1881
+% 5.0000    3.0000   87.3881
+% 5.0000    4.0000  121.5836
+% 5.0000    5.0000  155.7836
+
+% 6.0000    1.0000  149.6110
+% 6.0000    2.0000  178.0886
+% 6.0000    3.0000   35.6290
+% 6.0000    4.0000   64.1155
+% 6.0000    5.0000   92.6155
+% 6.0000    6.0000  121.1110
+
+% 7.0000    1.0000   72.2633
+% 7.0000    2.0000   96.6919
+% 7.0000    3.0000  121.1160
+% 7.0000    4.0000  145.5445
+% 7.0000    5.0000  169.9507
+% 7.0000    6.0000  178.1639
+% 7.0000    7.0000   47.8392
+
 
 %%
 
@@ -108,7 +169,7 @@ for s = 1:numel(Ss)
     %% save images
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    ims1 = scaling*FlattenChannels(orig_im,orig_ratio_im,admm_intensity_im,admm_ratio_im,ratio_mult_inputsum_im);
+    ims1 = scaling*FlattenChannels(2*orig_im,orig_ratio_im,admm_intensity_im,admm_ratio_im,ratio_mult_inputsum_im);
     ims2 = zeros(3*h,w*S);
     ims2(:,1:3*w) = [
         orig_im_albedo,255*orig_im_phase/(2*pi),orig_im_disparity;...
