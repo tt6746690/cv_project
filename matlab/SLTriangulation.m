@@ -1,4 +1,4 @@
-function [albedo,wrapped_phase,phase] = SLTriangulation(im,W,depthbounds,spatialfrequency,shifts)
+function [albedo,wrapped_phase,phase] = SLTriangulation(im,W,depthbounds,spatialfrequency,varargin)
 %%  Structured light triangulation, solves for shape unknowns (albedo, phase)
 %       from demultiplexed images
 %
@@ -15,22 +15,30 @@ function [albedo,wrapped_phase,phase] = SLTriangulation(im,W,depthbounds,spatial
 %       `S` for a fixed scene that has the same disparity map intensity
 %
 %
+
+    % Map of parameter names to variable names
+    params_to_variables = containers.Map( ...
+        {'Shifts'}, ...
+        {'shifts'});
+    v = 1;
+    while v <= numel(varargin)
+        param_name = varargin{v};
+        if isKey(params_to_variables,param_name)
+            assert(v+1<=numel(varargin));
+            v = v+1;
+            % Trick: use feval on anonymous function to use assignin to this workspace
+            feval(@()assignin('caller',params_to_variables(param_name),varargin{v}));
+        else
+            error('Unsupported parameter: %s',varargin{v});
+        end
+        v=v+1;
+    end
+
     [h,w,S] = size(im);
 
-    switch S
-        case 4
-            shiftby = 3;
-        case 5
-            shiftby = 4;
-        case 6
-            shiftby = 6;
-        case 7
-            shiftby = 3;
-        otherwise
-            error(sprintf("need to determine shifts for S=%d ",S));
+    if ~exist('shifts','var')
+        shifts = transpose((0:S-1)*2*pi/S);
     end
-    
-    shifts = transpose(circshift((0:S-1),shiftby)*2*pi/S);
 
     L = [ones(S,1) cos(shifts) -sin(shifts)];
     b = (W*L)';

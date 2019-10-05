@@ -1,4 +1,4 @@
-function scenes = SceneNames(dataset)
+function [scenes,shifts] = SceneNames(dataset)
 % get a list of scene names for dataset {exp60,7patterns}
 %
 %
@@ -20,17 +20,31 @@ case "exp60"
     ]';
 case "7patterns"
     scenes = [
-        "sponge"
-        "lamp"
-        "cup"
         "chameleon"
+        "cover"
+        "cup"
         "giraffe"
         "head"
+        "lamp"
         "minion"
-        "train"
+        "sponge"
         "totem"
-        "cover"
+        "train"
     ]';
+
+    % shift input image to match order of projector phase shifts
+    shifts = [
+        0,
+        1,
+        0,
+        5,
+        1,
+        5,
+        0,
+        1,
+        2,
+        5,
+    ];
 case "alphabet"
     scenes = [
         "alphabet4"

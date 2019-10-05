@@ -14,8 +14,8 @@ function [orig_im,orig_ratio_im] = ReadOrigIm(impath,h,w,S,varargin)
 
     % Map of parameter names to variable names
     params_to_variables = containers.Map( ...
-        {'CropX','CropY'}, ...
-        {'cx','cy'});
+        {'CropX','CropY','CircShiftInputImageBy'}, ...
+        {'cx','cy','circshiftby'});
     v = 1;
     while v <= numel(varargin)
         param_name = varargin{v};
@@ -30,6 +30,9 @@ function [orig_im,orig_ratio_im] = ReadOrigIm(impath,h,w,S,varargin)
         v=v+1;
     end
 
+    if ~exist('circshiftby','var')
+        circshiftby = 0;
+    end
 
     orig_im = zeros(h,w,S);
     orig_ratio_im = zeros(h,w,S);
@@ -39,5 +42,6 @@ function [orig_im,orig_ratio_im] = ReadOrigIm(impath,h,w,S,varargin)
         orig_im(:,:,s) = im(cx,cy);
     end
 
+    orig_im = circshift(orig_im,circshiftby,3);
     orig_ratio_im = IntensityToRatio(orig_im)*255;
 end

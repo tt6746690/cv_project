@@ -16,8 +16,8 @@ function [input_im,input_ratio_im,orig_noisy_im] = ReadInputIm(imagedir,h,w,S,va
 
     % Map of parameter names to variable names
     params_to_variables = containers.Map( ...
-        {'CropX','CropY','BlackLevel','ForwardFunc'}, ...
-        {'cx','cy','blacklevel','ForwardFunc'});
+        {'CropX','CropY','BlackLevel','ForwardFunc','CircShiftInputImageBy'}, ...
+        {'cx','cy','blacklevel','ForwardFunc','circshiftby'});
     v = 1;
     while v <= numel(varargin)
         param_name = varargin{v};
@@ -30,6 +30,10 @@ function [input_im,input_ratio_im,orig_noisy_im] = ReadInputIm(imagedir,h,w,S,va
             error('Unsupported parameter: %s',varargin{v});
         end
         v=v+1;
+    end
+
+    if ~exist('circshiftby','var')
+        circshiftby = 0;
     end
 
     input_im        = zeros(h,w,2);
@@ -49,6 +53,14 @@ function [input_im,input_ratio_im,orig_noisy_im] = ReadInputIm(imagedir,h,w,S,va
         orig_noisy_im(:,:,i) = im(cx,cy);
     end
 
-    input_im = ForwardFunc(orig_noisy_im);
-    input_ratio_im = ForwardFunc(IntensityToRatio(orig_noisy_im))*255;
+    orig_noisy_im = circshift(orig_noisy_im,circshiftby,3);
+
+    if exist('ForwardFunc','var')
+        input_im = ForwardFunc(orig_noisy_im);
+        input_ratio_im = ForwardFunc(IntensityToRatio(orig_noisy_im))*255;
+    else
+        input_im = [];
+        input_ratio_im = [];
+    end
+
 end
