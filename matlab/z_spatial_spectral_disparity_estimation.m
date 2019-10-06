@@ -99,7 +99,7 @@ for k = 1:numel(scenes)
     scene = scenes(k);
     shift = shifts(k); 
 
-    [orig_im,unordered_orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy,'CircShiftInputImageBy',shift);
+    [orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy,'CircShiftInputImageBy',shift);
     [~,~,orig_noisy_im] = ReadInputIm(sprintf("%s/%s",rawimagedir,scene),h,w,S,'CropX',cx,'CropY',cy,'BlackLevel',blacklvl,'CircShiftInputImageBy',shift);
 
     ims = [];
@@ -126,7 +126,7 @@ for k = 1:numel(scenes)
         [admm_ratio_im,~,~,~] = ADMM(input_ratio_im,H,InitEstFunc,params_admm_ratio,IntensityToRatio(orig_noisy_im(:,:,take_idx)));
         ratio_mult_inputsum_im = admm_ratio_im/255;
         ratio_mult_inputsum_im = RatioToIntensity(ratio_mult_inputsum_im,sum(input_im,3));
-        [psnr_ratio_mult_inputsum,ssim_ratio_mult_inputsum] = ComputePSNRSSIM(orig_im(:,:,take_idx),ratio_mult_inputsum_im)
+        [psnr_ratio_mult_inputsum,ssim_ratio_mult_inputsum] = ComputePSNRSSIM(orig_im(:,:,take_idx),ratio_mult_inputsum_im);
         
         %% photometric stereo
 

@@ -20,13 +20,14 @@ export KMP_DUPLICATE_LIB_OK=True
 ```
 
 
-## Questions 
+## Ideas
 
-+ is R,G,B in exposure space or log of that ...
-    + not sure
-+ (psnr comparison) numbers are different (even for bilinear) and the results are often times conflicting, i.e. 2016 Klatz is a lot worse than 2014 flexISP in `demosaicnet` but the reverse is true in Klatz's paper
-    + keep track of a table, report psnr of methods in each paper, -> wholistic view
-+ (test dataset) for now, given `S` stacked (noise-less) / scene, multiplex to `2F` bucket images which serve as groudtruth images. These images are then downsampled (according to bayer pattern) and different demosaicing methods are tested. However, this might not capture the realistic noise characteristic of the camera, since the low-res image is a spatial downsampling of a _noiseless_ grounth truth image. Could we do better than this?
++ multi-convex programming for estimating multiple latent factors
+    + used in: Non-Line-of-Sight Imaging with Partial Occluders and Surface Normals
++ graphical model approach
+    + somehow take into account geometry (depth/disparity) is causal factor to illuminated images (S demutiplexed images)
+    + define a sensible potential
+    + look more into graphical model approach to image processing, inference of geometry, etc.
 
 
 ## Learning
