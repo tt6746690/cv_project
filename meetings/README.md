@@ -452,3 +452,15 @@ I think from last meeting with Kyros and you, it seems that a more general frame
     + given S=7, we can take 4 images, and do corresponding reconstructions
     + only difference is in trying to do reconstruction, change the shifts from uniformly sample to sample according to what images are taken in the first place ...
     + compare different S for scene with varying depth
++ think about how chinese reminder theorem can be used to determine the amount of circular shift required for input images
+
+
+##  10.09
+
++ questions 
+    + S=4 -> S=7
+        + ground-truth disparity does look a lot better ?
++ problem/goal 
+    + [done] demosaic/demultiplex for varying S
+    + human face recognition ?
+    +  

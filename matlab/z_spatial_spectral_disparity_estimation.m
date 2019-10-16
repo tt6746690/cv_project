@@ -106,7 +106,7 @@ for k = 1:numel(scenes)
 
     m = {}; iter = 1;
 
-    for S = 4:7
+    for S = 7:-1:4
         F=S-1;
         M = SubsamplingMask(mask_type,h,w,F);
         W = BucketMultiplexingMatrix(S);
@@ -178,10 +178,10 @@ for k = 1:numel(scenes)
 
         m{iter} = data;
         iter = iter + 1;
+        break;
     end
 
     mm(scene) = m;
-
     break;
 end
 

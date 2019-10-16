@@ -18,9 +18,11 @@
 \renewcommand{\sI}{\boldsymbol{I}}
 \newcommand{\wsI}{\widetilde{\boldsymbol{I}}}
 \renewcommand{\diag}{\mathbf{diag}}
-\newcommand{\minimize}{\textbf{minimize}\quad}
-\newcommand{\subjectto}{\textbf{subject to}\quad}
+\newcommand{\minimize}{\text{minimize}\quad}
+\newcommand{\subjectto}{\text{subject to}\quad}
+\newcommand{\prox}{\textbf{prox}}
 
+\newcommand{\blambda}{\boldsymbol{\lambda}}
 
 \title{Project Report}
 \author{Peiqi Wang}
@@ -42,7 +44,7 @@ We aim to improve upon low level image proecssing pipeline for the coded two-buc
 
 \subsection{Notations}
 
-The coded two-bucket (C2B) camera is a pixel-wise coded exposure camera that outputs two images in a single exposure.~\cite{weiCodedTwoBucketCameras2018} Each pixel in the sensor has two photo-collecting site, i.e. the two \textit{buckets}, as well as a 1-bit writable memory controlling which bucket is actively collecting light. It was shown previously that C2B camera is capable of one-shot 3D reconstruction by solving a simpler image demosaicing and illumination demultiplexing problem instead of a difficult 3D reconstruction problem. We summarize the following notations relevant to discussion
+The coded two-bucket (C2B) camera is a pixel-wise coded exposure camera that outputs two images in a single exposure.\cite{weiCodedTwoBucketCameras2018} Each pixel in the sensor has two photo-collecting site, i.e. the two \textit{buckets}, as well as a 1-bit writable memory controlling which bucket is actively collecting light. It was shown previously that C2B camera is capable of one-shot 3D reconstruction by solving a simpler image demosaicing and illumination demultiplexing problem instead of a difficult 3D reconstruction problem. We summarize the following notations relevant to discussion
 
 \begin{table}[!htbp]
     \begin{center}
@@ -165,8 +167,79 @@ The reconstruction pipeline is as follows
 \end{enumerate}
 Step 2 and 3 are critical to downstream reconstuctions. When $S=3,S=4$ and $\bS$ being analogous to bayer mask, we can upsample the images using standard demosaicing algorithms. However, it is not immediately obvious to extend demosaicing methods to support arbitrary $\bS$, or more specifically, for scenarios where the spatial subsampling scheme is not bayer and when number of frames is not 3. 
 
+\section{Literature Review}
 
-\section{Problem Formulation}
+\subsection{Image Priors} 
+
+The choice of regularization has been an important research topic in image processing. Handcrafted priors have been successful in a number of different image recovery tasks. For example, we can choose to enforce task-specific priors: (1) the sparsity of $\bx$ with $\ell$-1 norm in image deblurring \cite{beckFastIterativeShrinkageThresholding2009} (2) total variation in image denoising \cite{buadesNonlocalImageMovie2008} (3) cross-channel correlation in color image demosaicing \cite{malvarHighqualityLinearInterpolation2004} (4) dark channel prior in image dehazing \cite{fattalSingleImageDehazing2008}, etc. More exhotically, randomly initialized neural network can inject inductive bias to the optimization and act as image priors. \cite{ulyanovDeepImagePrior2017}
+
+$ $\\
+In addition to hand-crafted priors, there has been interest in algorithm induced priors. Alternating direction method of multipliers (ADMM) is a common convex optimization method for inverse problem where the objective function is separable with respect to the \textit{data term} and the \textit{regularizer}. Each primal update involves an evaluation of a proximal operator, which can be interpreted as performing denoising on some iterate. \cite{venkatakrishnanPlugandPlayPriorsModel2013,heideFlexISPFlexibleCamera2014,chanAlgorithmInducedPriorImage2016} proposed plug-and-play priors where the choice of regularization is implicitly specified by the denoiser used. \cite{romanoLittleEngineThat2016} proposed an explicit laplacian-based expression for the regularizer and generalizes the method to a number of different iterative optimization algorithms.
+
+$ $\\
+The convergence of plug-and-play ADMM is studied by a number of papers. \cite{chanPlugandPlayADMMImage2016} showed fixed point convergence of plug-and-play ADMM. \cite{romanoLittleEngineThat2016} showed convergence of the algorithm under some mild conditions of the denoiser, which are satisfied by some state of the art denoisers like \textit{Block-matching and 3D filtering
+ (BM3D)} \cite{dabovImageDenoisingSparse2007} and \textit{Trainable Nonlienar Reaction Diffusion (TNRD)} \cite{chenTrainableNonlinearReaction2017}. Most recently, \cite{ryuPlugandPlayMethodsProvably2019} established convergence given that the denoising network satisfy certain Lipschitz condition.
+
+$ $\\ 
+Some proposed to learn proximal operator from data. \cite{meinhardtLearningProximalOperators2017} used a CNN denoiser \cite{zhangGaussianDenoiserResidual2017}. Instead of substituting the proximal operator with a denoiser, \cite{changOneNetworkSolve2017} learns a projection mapping to the space of natural images by training a single neural network and showed impressive results on a number of different linear inverse problems.
+
+\subsection{Proximal Consensus Algorithm}
+
+Alternating Method of Multipliers (ADMM) is an efficient convex optimization algorithm for minimizing the sum of nonsmooth convex separable functions subject to linear equality constraints. It combines the advantage of dual decomposition, where we can solve subproblems at each iteration, and that of method of multipliers, where optimization over augmented lagrangian relaxes strict convexity condition for the objective.\cite{boydDistributedOptimizationStatistical2011} In general, we are interested in solving the following consensus problem using ADMM
+\begin{equation}
+    \label{eq:admm_minimization}
+    \begin{aligned}
+        \underset{\bx_1,\cdots,\bx_N,\bz}{\minimize}  & \sum_{i=1}^N f_i(\bx_i) \\
+        \subjectto & \bx_i - \bz = 0 \quad\quad i = 1,\cdots,N \\
+    \end{aligned}
+\end{equation}
+where $\bx_i\in\R^{n}$, $f_i: \R^{n} \to (-\infty,\infty)$ are closed proper convex functions for $i=1,\cdots,N$. The ADMM algorithm for solving (\ref{eq:admm_minimization}) iterates according to 
+\begin{align*}
+    \bx_i^{k+1} 
+        &= \argmin_{\bx_i} \sL_{\rho}(\bx_1^k,\cdots,\bx_i,\cdots,\bx_N^k,\bz,\blambda_1^k,\cdots,\blambda_N^k) \\
+        &= \argmin_{\bx_i} \left( f_i(\bx_i) + \inner{\blambda_i^k}{\bx_i-\bz^k} + \frac{\rho}{2} \norm{\bx_i-\bz^k}_2^2 \right) 
+            \tag{for $i=1,\cdots,N$}\\
+    \bz^{k+1}
+        &= \argmin_{\bz} \sL_{\rho}(\bx_1^{k+1},\cdots,\bx_N^{k+1},\bz,\blambda_1^k,\cdots,\blambda_N^k) \\
+        &= \frac{1}{N} \sum_{i=1}^N \left( \bx_i^{k+1} + \frac{1}{\rho}\blambda_i^k \right) \\
+    \blambda_i^{k+1}
+        &= \blambda_i^k + \rho(\bx_i^{k+1} - \bz^{k+1}) \tag{for $i=1,\cdots,N$}
+\end{align*}
+where $\blambda_i\in\R^n$ are the dual variable associated with the consensus constraint. $\rho>0$ is the augmented lagrangian parameter. $\sL_{\rho}$ is the separable augmented lagrangian
+\[
+    \sL_{\rho}(\bx_1,\cdots,\bx_N,\bz,\blambda_1,\cdots,\blambda_N) = \sum_{i=1}^N 
+        \left( 
+            f_i(\bx_i) + \blambda_i^T (\bx_i-\bz) + \frac{\rho}{2} \norm{\bx_i-\bz}_2^2 
+        \right)
+\]
+We can write in an equivalent scaled form 
+\begin{align*}
+    \bx_i^{k+1} 
+        &= \argmin_{\bx_i} \left( f_i(\bx_i) + \frac{\rho}{2} \norm{\bx_i-(\bz^k-\bu_i^k)}_2^2 \right) 
+         = \prox_{(1/\rho)f_i}(\bz^k-\bu_i^k) 
+         \tag{for $i=1,\cdots,N$}\\
+    \bz^{k+1}
+        &= \frac{1}{N} \sum_{i=1}^N \left( \bx_i^{k+1} + \bu_i^k \right) \\
+    \bu_i^{k+1}
+        &= \bu_i^k + \bx_i^{k+1} - \bz^{k+1} \tag{for $i=1,\cdots,N$}
+\end{align*}
+where $\bu_i^k = (1/\rho)\blambda_i^k$ is the scaled dual. $\prox_{\lambda f}: \R^n \to \R^n$ is the proximal operator of $\lambda f$, $\lambda >0$, 
+\[
+    \prox_{\lambda f}(\bv) = \argmin_{\bx} \left( f(\bx) + \frac{1}{2\lambda} \norm{\bx-\bv}_2^2 \right)    
+\]
+We can simplify the algorithm further by substituting $\bz^k = \overline{\bx}^k$ to above, where $\overline{\bx}^k = \sum_{i=1}^N \bx_i^k$ \cite{boydDistributedOptimizationStatistical2011,parikhProximalAlgorithms2014} 
+\begin{align*}
+    \bx_i^{k+1} 
+        &= \prox_{(1/\rho)f_i}(\overline{\bx}^k-\bu_i^k) 
+         \tag{for $i=1,\cdots,N$}\\
+    \bu_i^{k+1}
+        &= \bu_i^k + \bx_i^{k+1} - \overline{\bx}^{k+1} \tag{for $i=1,\cdots,N$}
+\end{align*}
+This is a proximal consensus algorithm.
+
+
+
+\section{Methods}
 
 \subsection{A Linear Inverse Problem}
 
@@ -186,21 +259,18 @@ Note (\ref{eq:linear_mapping}) is an underdetermined system. Given 2 images, we 
         \minimize & \norm{\bA\bx - \by}_2^2 + \lambda\rho(\bx) \\
     \end{aligned}
 \end{equation}
-where $\rho:\R^{SP}\to\R$ is a regularizer for $\bx$, the optimization variable. The problem (\ref{eq:uncon_opt}) has a bayesian interpretation. Specifically, the $\ell$-2 norm can be interpreted as a log-likelihood \textit{data term} that captures the following probablistic relationship between recovered image $\bx$ and observation $\by$, 
+where $\rho:\R^{SP}\to\R$ are regularizers for $\bx$, the optimization variable. The problem (\ref{eq:uncon_opt}) has a bayesian interpretation. Specifically, the $\ell$-2 norm can be interpreted as a log-likelihood \textit{data term} that captures the following probablistic relationship between recovered image $\bx$ and observation $\by$, 
 \[
     \by = \bA\bx + \be    
 \]
-where $\be$ is the noise random variable, usually assumed to be Gaussian. The regularizer can be then interpreted as \textit{prior} knowledge on the distribution of $\bx$. The data term is continuous and fully differentiable in all of $\R^n$. Therefore, tractability of (\ref{eq:uncon_opt}) usually depends on how well behaved $\rho$ is. If $\rho$ is convex but possibly non-smooth, e.g. $\rho(\bx)=\norm{\bx}_1$, the problem can be efficiently solved with standard convex optimization methods like proximal gradients with guaranteed convergence and global optimality.~\cite{beckFastIterativeShrinkageThresholding2009} More realistic priors, i.e. regularizers that more precisely capture the prior knowledge of image distributions, might potentially make (\ref{eq:uncon_opt}) a much harder problem that compromises convergence and optimality properties.~\cite{ulyanovDeepImagePrior2017}
+where $\be$ is the noise random variable, usually assumed to be Gaussian. The regularizer can be then interpreted as \textit{prior} knowledge on the distribution of $\bx$. The data term is continuous and fully differentiable in all of $\R^n$. Therefore, tractability of (\ref{eq:uncon_opt}) usually depends on how well behaved $\rho$ is. If $\rho$ is convex but possibly non-smooth, e.g. $\rho(\bx)=\norm{\bx}_1$, the problem can be efficiently solved with standard convex optimization methods like proximal gradients with guaranteed convergence and global optimality.\cite{beckFastIterativeShrinkageThresholding2009} More realistic priors, i.e. regularizers that more precisely capture the prior knowledge of image distributions, might potentially make (\ref{eq:uncon_opt}) a much harder problem that compromises convergence and optimality properties.\cite{ulyanovDeepImagePrior2017}
 
-\subsection{Image Priors} 
+$ $\\
+Specific to our problem, we use a combination of regularization by denoising \cite{romanoLittleEngineThat2016} and regularization on smoothness of the illumination ratios.
 
-The choice of regularization has been an important research topic in image processing. Handcrafted priors have been successful in a number of different image recovery tasks. For example, we can choose to enforce (1) the sparsity of $\bx$ with $\ell$-1 norm in image deblurring ~\cite{beckFastIterativeShrinkageThresholding2009} (2) total variation in image denoising ~\cite{buadesNonlocalImageMovie2008} (3) cross-channel correlation in color image demosaicing ~\cite{malvarHighqualityLinearInterpolation2004} (4) dark channel prior in image dehazing ~\cite{fattalSingleImageDehazing2008}, etc. 
+\subsection{Optimization}
 
-
-
-Recently, there has seen interest and development in algorithm induced priors. 
-
-
+ 
 
 \newpage
 \printbibliography
