@@ -27,7 +27,7 @@ if ~isfile(blacklevelpath)
 end
 blacklvl = load(blacklevelpath); blacklvl = blacklvl.blacklvl;
 % toggle to false for long runs
-light_mode = true;
+light_mode = false;
 % sigmas 
 input_sigma = 1;
 % sensor mask type 
@@ -92,43 +92,47 @@ imshow(FlattenChannels(orig_im,orig_ratio_im,imholder)/255);
 take_idx = take_indices(S);
 
 % 1. admm+tnrd+smooth in ratio space 
-[admmsmooth_ratio_im,~,~,~] = ADMMSmooth(input_ratio_im,H,InitEstFunc,params_admm_ratio,255*IntensityToRatio(orig_noisy_im(:,:,take_idx)));
-ratio_mult_inputsum_im = admmsmooth_ratio_im/255;
-ratio_mult_inputsum_im = RatioToIntensity(ratio_mult_inputsum_im,sum(input_im,3));
-[psnr_ratio_mult_inputsum,ssim_ratio_mult_inputsum] = ComputePSNRSSIM(orig_im(:,:,take_idx),ratio_mult_inputsum_im);
-fprintf("admm smooth      psnr_ratio_mult_inputsum      %.4f/%.4f\n",psnr_ratio_mult_inputsum,ssim_ratio_mult_inputsum);
+[radmmsmooth_ratio_im,~,~,~] = ADMMSmooth(input_ratio_im,H,InitEstFunc,params_admm_ratio,255*IntensityToRatio(orig_noisy_im(:,:,take_idx)));
+
+radmmsmooth_im = radmmsmooth_ratio_im/255;
+radmmsmooth_im = RatioToIntensity(radmmsmooth_im,sum(input_im,3));
+[psnr_radmmsmooth,ssim_radmmsmooth] = ComputePSNRSSIM(orig_im(:,:,take_idx),radmmsmooth_im);
+fprintf("admm smooth      psnr_ratio_mult_inputsum      %.4f/%.4f\n",psnr_radmmsmooth,ssim_radmmsmooth);
 
 %% 
 
-% % 2. admm+tnrd in ratio space
-% [admm_ratio_im,~,~,~] = ADMM(input_ratio_im,H,InitEstFunc,params_admm_ratio,IntensityToRatio(orig_noisy_im(:,:,take_idx)));
-% ratio_mult_inputsum_im = admm_ratio_im/255;
-% ratio_mult_inputsum_im = RatioToIntensity(ratio_mult_inputsum_im,sum(input_im,3));
-% [psnr_ratio_mult_inputsum,ssim_ratio_mult_inputsum] = ComputePSNRSSIM(orig_im(:,:,take_idx),ratio_mult_inputsum_im);
-% fprintf("admm             psnr_ratio_mult_inputsum      %.4f/%.4f\n",psnr_ratio_mult_inputsum,ssim_ratio_mult_inputsum);
+% 2. admm+tnrd in ratio space
+[radmm_ratio_im,~,~,~] = ADMM(input_ratio_im,H,InitEstFunc,params_admm_ratio,255*IntensityToRatio(orig_noisy_im(:,:,take_idx)));
+radmm_im = radmm_ratio_im/255;
+radmm_im = RatioToIntensity(radmm_im,sum(input_im,3));
+[psnr_radmm,ssim_radmm] = ComputePSNRSSIM(orig_im(:,:,take_idx),radmm_im);
+fprintf("admm             psnr_ratio_mult_inputsum      %.4f/%.4f\n",psnr_radmm,ssim_radmm);
 
 
-% %% photometric stereo
-% projector_phase_shift = transpose((take_idx-1)*2*pi/7);
+%% photometric stereo
+projector_phase_shift = transpose((take_idx-1)*2*pi/7);
 
-% [orig_im_albedo,~,orig_im_phase] = SLTriangulation(orig_im(:,:,take_idx),W,Bounds,4,'Shifts',projector_phase_shift);
-% orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
+[orig_im_albedo,~,orig_im_phase] = SLTriangulation(orig_im(:,:,take_idx),W,Bounds,4,'Shifts',projector_phase_shift);
+orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
 
+[radmmsmooth_im_albedo,~,radmmsmooth_im_phase] = SLTriangulation(radmmsmooth_im,W,Bounds,4,'Shifts',projector_phase_shift);
+radmmsmooth_im_disparity = disparityFunc((radmmsmooth_im_phase*hproj/(2*pi)),Y);
 
-% [ratio_im_albedo,~,ratio_im_phase] = SLTriangulation(ratio_mult_inputsum_im,W,Bounds,4,'Shifts',projector_phase_shift);
-% ratio_im_disparity = disparityFunc((ratio_im_phase*hproj/(2*pi)),Y);
+[radmm_im_albedo,~,radmm_im_phase] = SLTriangulation(radmm_im,W,Bounds,4,'Shifts',projector_phase_shift);
+radmm_im_disparity = disparityFunc((radmm_im_phase*hproj/(2*pi)),Y);
 
 
 % %% save images 
 
-% ims1 = scaling*FlattenChannels(orig_im,orig_ratio_im*scaling,admm_ratio_im*scaling,ratio_mult_inputsum_im);
-% ims2 = zeros(2*h,w*S);
-% ims2(:,1:3*w) = [
-%     orig_im_albedo,255*orig_im_phase/(2*pi),orig_im_disparity;...
-%     ratio_im_albedo,255*ratio_im_phase/(2*pi),ratio_im_disparity];
-% ims = [ims1;ims2];
-% imshow(ims/255);
-% imwrite(uint8(ims),sprintf("%s/%s_%d.png",savedir,scene,S));
+ims1 = scaling*FlattenChannels(orig_im,orig_ratio_im*scaling,radmmsmooth_ratio_im*scaling,radmmsmooth_im);
+ims2 = zeros(3*h,w*S);
+ims2(:,1:3*w) = [
+    orig_im_albedo,255*orig_im_disparity/(2*pi),orig_im_disparity;...
+    radmm_im_albedo,255*radmm_im_disparity/(2*pi),radmm_im_disparity;...
+    radmmsmooth_im_albedo,255*radmmsmooth_im_disparity/(2*pi),radmmsmooth_im_disparity];
+ims = [ims1;ims2];
+imshow(ims/255);
 
 
-% % intensity_im_albedo,255*intensity_im_phase/(2*pi),intensity_im_disparity; ...
+imwrite(uint8(ims),sprintf("%s/%s_%d.png",savedir,scene,S));
+
