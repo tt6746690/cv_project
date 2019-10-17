@@ -13,7 +13,7 @@ ProjectPaths;
 [h,w] = deal(176,288);
 [h,w] = deal(numel(cx),numel(cy));
 % scale the intensity of image for better visualization 
-scaling = 1.5;
+scaling = 2;
 % directory containing the raw noisy images
 rawimagedir =  "data/7patterns";
 % directory containing groundtruth images
@@ -80,39 +80,55 @@ InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S, 'BucketMultiplexingMatrix
 [orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy,'CircShiftInputImageBy',shift);
 [input_im,input_ratio_im,orig_noisy_im] = ReadInputIm(sprintf("%s/%s",rawimagedir,scene),h,w,S,'CropX',cx,'CropY',cy,'BlackLevel',blacklvl,'CircShiftInputImageBy',shift,'ForwardFunc',ForwardFunc);
 
-imshow(FlattenChannels(orig_im)/255);
-imshow(FlattenChannels(input_im)/255);
+
+imholder = zeros(h,w,S);
+imholder(:,:,1:2) = input_im;
+imholder(:,:,3:4) = input_ratio_im;
+imshow(FlattenChannels(orig_im,orig_ratio_im,imholder)/255);
+
+
 
 %% 
 take_idx = take_indices(S);
 
-% 2. admm+tnrd in ratio space
-[admm_ratio_im,~,~,~] = ADMM(input_ratio_im,H,InitEstFunc,params_admm_ratio,IntensityToRatio(orig_noisy_im(:,:,take_idx)));
-ratio_mult_inputsum_im = admm_ratio_im/255;
+% 1. admm+tnrd+smooth in ratio space 
+[admmsmooth_ratio_im,~,~,~] = ADMMSmooth(input_ratio_im,H,InitEstFunc,params_admm_ratio,IntensityToRatio(orig_noisy_im(:,:,take_idx)));
+ratio_mult_inputsum_im = admmsmooth_ratio_im/255;
 ratio_mult_inputsum_im = RatioToIntensity(ratio_mult_inputsum_im,sum(input_im,3));
 [psnr_ratio_mult_inputsum,ssim_ratio_mult_inputsum] = ComputePSNRSSIM(orig_im(:,:,take_idx),ratio_mult_inputsum_im);
-fprintf("admm      psnr_ratio_mult_inputsum      %.4f/%.4f\n",psnr_ratio_mult_inputsum,ssim_ratio_mult_inputsum);
+fprintf("admm smooth      psnr_ratio_mult_inputsum      %.4f/%.4f\n",psnr_ratio_mult_inputsum,ssim_ratio_mult_inputsum);
+
+%% 
+
+% % 2. admm+tnrd in ratio space
+% [admm_ratio_im,~,~,~] = ADMM(input_ratio_im,H,InitEstFunc,params_admm_ratio,IntensityToRatio(orig_noisy_im(:,:,take_idx)));
+% ratio_mult_inputsum_im = admm_ratio_im/255;
+% ratio_mult_inputsum_im = RatioToIntensity(ratio_mult_inputsum_im,sum(input_im,3));
+% [psnr_ratio_mult_inputsum,ssim_ratio_mult_inputsum] = ComputePSNRSSIM(orig_im(:,:,take_idx),ratio_mult_inputsum_im);
+% fprintf("admm             psnr_ratio_mult_inputsum      %.4f/%.4f\n",psnr_ratio_mult_inputsum,ssim_ratio_mult_inputsum);
 
 
-%% photometric stereo
-projector_phase_shift = transpose((take_idx-1)*2*pi/7);
+% %% photometric stereo
+% projector_phase_shift = transpose((take_idx-1)*2*pi/7);
 
-[orig_im_albedo,~,orig_im_phase] = SLTriangulation(orig_im(:,:,take_idx),W,Bounds,4,'Shifts',projector_phase_shift);
-orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
-
-
-[ratio_im_albedo,~,ratio_im_phase] = SLTriangulation(ratio_mult_inputsum_im,W,Bounds,4,'Shifts',projector_phase_shift);
-ratio_im_disparity = disparityFunc((ratio_im_phase*hproj/(2*pi)),Y);
+% [orig_im_albedo,~,orig_im_phase] = SLTriangulation(orig_im(:,:,take_idx),W,Bounds,4,'Shifts',projector_phase_shift);
+% orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
 
 
-ims1 = scaling*FlattenChannels(orig_im,orig_ratio_im,admm_ratio_im,ratio_mult_inputsum_im);
-ims2 = zeros(2*h,w*S);
-ims2(:,1:3*w) = [
-    orig_im_albedo,255*orig_im_phase/(2*pi),orig_im_disparity;...
-    ratio_im_albedo,255*ratio_im_phase/(2*pi),ratio_im_disparity];
-ims = [ims1;ims2];
-imshow(ims/255);
-imwrite(uint8(ims),sprintf("%s/%s_%d.png",savedir,scene,S));
+% [ratio_im_albedo,~,ratio_im_phase] = SLTriangulation(ratio_mult_inputsum_im,W,Bounds,4,'Shifts',projector_phase_shift);
+% ratio_im_disparity = disparityFunc((ratio_im_phase*hproj/(2*pi)),Y);
 
 
-% intensity_im_albedo,255*intensity_im_phase/(2*pi),intensity_im_disparity; ...
+% %% save images 
+
+% ims1 = scaling*FlattenChannels(orig_im,orig_ratio_im*scaling,admm_ratio_im*scaling,ratio_mult_inputsum_im);
+% ims2 = zeros(2*h,w*S);
+% ims2(:,1:3*w) = [
+%     orig_im_albedo,255*orig_im_phase/(2*pi),orig_im_disparity;...
+%     ratio_im_albedo,255*ratio_im_phase/(2*pi),ratio_im_disparity];
+% ims = [ims1;ims2];
+% imshow(ims/255);
+% imwrite(uint8(ims),sprintf("%s/%s_%d.png",savedir,scene,S));
+
+
+% % intensity_im_albedo,255*intensity_im_phase/(2*pi),intensity_im_disparity; ...

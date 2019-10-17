@@ -2,6 +2,10 @@ function params = GetDemosaicDemultiplexParams(light_mode)
 
     % regularization factor
     params.lambda = 0.008;
+
+    % for ADMMSmooth
+    params.lambda2 = params.lambda;
+    params.lambda3 = params.lambda;
     
     % number of outer iterations
     if light_mode

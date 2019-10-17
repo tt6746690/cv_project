@@ -244,9 +244,9 @@ Evaluating the proximal operator involves solving a convex optimization problem.
     \[
         \prox_{(1/\rho)f}(\bv) 
             = \prox_{(2/\rho)(1/2)f}
-            = (I + \frac{2}{\rho} A^TA)^{-1} (\bv + \frac{2}{\rho} A^T \by)
+            = (I + \frac{2}{\rho}A^TA)^{-1} (\bv + \frac{2}{\rho}A^T \by)
     \]
-    which can be solved efficiently with conjugate gradient, as $(I + \frac{2}{\rho} A^TA) \succ 0$
+    which can be solved efficiently with conjugate gradient, as $(I + \frac{2}{\rho} A^TA) \succ 0$. If $\rho$ is fixed throughout, we can use Cholesky factorization to factor $(I + (2/\rho)A^TA)$ in $\sO(n^3)$. Any subsequent computation of the inverse would only cost $\sO(mn)$.
     \item Let $f(\bx) = \norm{\bx}_1$, then the proximal operator of $(\lambda/\rho) f$ is element-wise soft shrinkage operator $\sS$
     \[
         \prox_{(\lambda/\rho)f}(\bv) 
@@ -306,18 +306,18 @@ where $\rho:\R^{SP}\to\R$ are regularizers for $\bx$, the optimization variable.
 where $\be$ is the noise random variable, usually assumed to be Gaussian. The regularizer can be then interpreted as \textit{prior} knowledge on the distribution of $\bx$. The data term is continuous and fully differentiable in all of $\R^n$. Therefore, tractability of (\ref{eq:generic_inverse_problem}) usually depends on how well behaved $\rho$ is. If $\rho$ is convex but possibly non-smooth, e.g. $\rho(\bx)=\norm{\bx}_1$, the problem can be efficiently solved with standard convex optimization methods like proximal gradients with guaranteed convergence and global optimality.\cite{beckFastIterativeShrinkageThresholding2009} More realistic priors, i.e. regularizers that more precisely capture the prior knowledge of image distributions, might potentially make (\ref{eq:generic_inverse_problem}) a much harder problem that compromises convergence and optimality properties.\cite{ulyanovDeepImagePrior2017}
 
 $ $\\
-We first note that the illumination ratios are albedo quasi-invariant, and therefore smooth within object boundaries. Therefore, total variation regularization on illuination ratio images could be particularly effective. To avoid ambiguities, we assume $\bx,\by$ are the corresponding illumination ratios that we want to reconstruct. Additionally, we adapt algorithm in \cite{romanoLittleEngineThat2016} for imposing priors with state-of-the-art denoisers. In summary, we want to optimize the following constrained problem with a set of affine constraints,
+We first note that the illumination ratios are albedo quasi-invariant, and therefore smooth within object boundaries. Therefore, total variation regularization on illuination ratio images could be particularly effective. To avoid extra notations, we use $\bx,\by$ as the corresponding illumination ratios that we want to reconstruct. Additionally, we adapt algorithm in \cite{romanoLittleEngineThat2016} for imposing algorithm induced priors with state-of-the-art denoisers. In summary, we want to optimize the following constrained problem with a set of affine constraints,
 \begin{align*}
     \minimize  & \norm{\bA\bx_1 - \by}_2^2 + \frac{\lambda_2}{2} \bx_2^T(\bx_2 - \sD(\bx_2)) + \lambda_3 \norm{\bx_3}_1 \\
     \subjectto & \bx_1 - \bx_2 = 0 \\
                & G\bx_1 - \bx_3 = 0 \\
 \end{align*}
-where $\bx_1,\bx_2\in\R^{P}$, $\bx_3\in\R^{2P}$, $G = (G_{x}, G_{y})^T \in \R^{2P\times P}$ is discrete image gradient computed using forward difference. $\lambda_2,\lambda_3>0$ are weights to the regularizers. We can gather constraints into a single linear system 
+where $\bx_1,\bx_2\in\R^{SP}$, $\bx_3\in\R^{2SP}$, $G = (G_{x}, G_{y})^T \in \R^{2SP\times SP}$ is discrete image gradient computed using forward difference. $\lambda_2,\lambda_3>0$ are weights to the regularizers. We can gather constraints into a single linear system 
 \[
     \underbrace{
         \begin{bmatrix}
-        I_P & -I_P & 0  \\
-        G   & 0    & -I_P  \\
+        I & -I & 0  \\
+        G   & 0    & -I  \\
     \end{bmatrix}}_{H}
     \underbrace{
         \begin{bmatrix}
@@ -334,7 +334,7 @@ and arrive at an equivalent optimization problem
         \subjectto & (\bx_1,\bx_2,\bx_3) \in \sC
     \end{aligned}
 \end{equation}
-where $\sC = \{\bx\in\R^{4P} \;\mid\; H\bx = 0\}$ and 
+where $\sC = \{\bx\in\R^{4SP} \;\mid\; H\bx = 0\}$ and 
 \begin{align*}
     f_1(\bx_1)
         &=\norm{\bA\bx_1 - \by}_2^2 \\
@@ -346,7 +346,7 @@ where $\sC = \{\bx\in\R^{4P} \;\mid\; H\bx = 0\}$ and
 
 \subsection{Optimization}
 
-As shown previously, the scaled form ADMM for (\ref{eq:method_optimization_problem}) is given by 
+As shown previously, the scaled form ADMM for solving (\ref{eq:method_optimization_problem}) is given by 
 \begin{align*}
     \bx_1^{k+1}
         &= \prox_{(1/\rho)f_1}(\bz_1^k - \bu_1^k) 
@@ -363,6 +363,7 @@ As shown previously, the scaled form ADMM for (\ref{eq:method_optimization_probl
     \bu^{k+1}
         &= \bu^{k} + \bx^{k+1} - \bz^{k+1}
 \end{align*}
+
  
 
 

@@ -1,4 +1,4 @@
-function y = SoftThresholding(x,k)
+function y = SoftShrinkage(x,k)
     %% Soft threshold operator
     %      S_k(x) = sign(x)(|x_i|-\lambda)_+
     %
