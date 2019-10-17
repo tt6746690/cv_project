@@ -98,7 +98,7 @@ for all pixels $p$. We can view $\bS$ as a mask to construct a \textbf{S}ubsampl
     \begin{bmatrix}
         \diag{\mathbbm{1}_{\{1\}}(\bS) } & \diag{\mathbbm{1}_{\{2\}}(\bS) } & \cdots & \diag{\mathbbm{1}_{\{F\}}(\bS) }
     \end{bmatrix} \\
-    \bB &= \bB' \oplus \bB' = 
+    \bB &=  \bI_2 \otimes \bB' = 
     \begin{bmatrix}
         \bB' & \mathbf{0} \\
         \mathbf{0} & \bB' \\
@@ -247,7 +247,7 @@ Evaluating the proximal operator involves solving a convex optimization problem.
             = (I + \frac{2}{\rho}A^TA)^{-1} (\bv + \frac{2}{\rho}A^T \by)
     \]
     which can be solved efficiently with conjugate gradient, as $(I + \frac{2}{\rho} A^TA) \succ 0$. If $\rho$ is fixed throughout, we can use Cholesky factorization to factor $(I + (2/\rho)A^TA)$ in $\sO(n^3)$. Any subsequent computation of the inverse would only cost $\sO(mn)$.
-    \item Let $f(\bx) = \norm{\bx}_1$, then the proximal operator of $(\lambda/\rho) f$ is element-wise soft shrinkage operator $\sS$
+    \item Let $f(\bx) = \norm{\bx}_1$, then the proximal operator of $(\lambda/\rho) f$ is
     \[
         \prox_{(\lambda/\rho)f}(\bv) 
             = \sS_{\lambda/\rho}(\bv)
@@ -310,21 +310,30 @@ We first note that the illumination ratios are albedo quasi-invariant, and there
 \begin{align*}
     \minimize  & \norm{\bA\bx_1 - \by}_2^2 + \frac{\lambda_2}{2} \bx_2^T(\bx_2 - \sD(\bx_2)) + \lambda_3 \norm{\bx_3}_1 \\
     \subjectto & \bx_1 - \bx_2 = 0 \\
-               & G\bx_1 - \bx_3 = 0 \\
+               & \bG\bx_1 - \bx_3 = 0 \\
 \end{align*}
-where $\bx_1,\bx_2\in\R^{SP}$, $\bx_3\in\R^{2SP}$, $G = (G_{x}, G_{y})^T \in \R^{2SP\times SP}$ is discrete image gradient computed using forward difference. $\lambda_2,\lambda_3>0$ are weights to the regularizers. We can gather constraints into a single linear system 
+where $\bx_1,\bx_2\in\R^{SP}$, $\bx_3\in\R^{2SP}$. $\lambda_2,\lambda_3>0$ are weights to the regularizers. $\bG\in \R^{2SP\times SP}$ is the discrete image gradient for $S$ images 
 \[
-    \underbrace{
-        \begin{bmatrix}
-        I & -I & 0  \\
-        G   & 0    & -I  \\
-    \end{bmatrix}}_{H}
-    \underbrace{
-        \begin{bmatrix}
-            \bx_1 \\ \bx_2 \\ \bx_3
-        \end{bmatrix}
-    }_{\bx}
-    = 0
+    \bG =
+    \begin{bmatrix}
+        \bI_S \otimes \bG_x \\
+        \bI_S \otimes \bG_y \\
+    \end{bmatrix} 
+\]
+where $\bG_x,\bG_y\in\R^{P\times P}$ are the discrete image gradients for a single image computed using forward difference. We can gather constraints into a single linear system 
+\[
+    \bH\bx = 0
+    \quad\quad \text{where}\quad\quad
+    \bH = 
+    \begin{bmatrix}
+        \bI_{SP} & -\bI_{SP} & 0  \\
+        \bG    & 0    & -\bI_{SP}  \\
+    \end{bmatrix}
+    \quad
+    \bx = 
+    \begin{bmatrix}
+        \bx_1 \\ \bx_2 \\ \bx_3
+    \end{bmatrix}
 \]
 and arrive at an equivalent optimization problem
 \begin{equation}
@@ -334,7 +343,7 @@ and arrive at an equivalent optimization problem
         \subjectto & (\bx_1,\bx_2,\bx_3) \in \sC
     \end{aligned}
 \end{equation}
-where $\sC = \{\bx\in\R^{4SP} \;\mid\; H\bx = 0\}$ and 
+where $\sC = \{\bx\in\R^{4SP} \;\mid\; \bH\bx = 0\}$ and 
 \begin{align*}
     f_1(\bx_1)
         &=\norm{\bA\bx_1 - \by}_2^2 \\
@@ -359,7 +368,7 @@ As shown previously, the scaled form ADMM for solving (\ref{eq:method_optimizati
         = \sS_{\lambda_3/\rho}(\bz_3^k - \bu_3^k) \\
     \bz^{k+1}
         &= \prox_{(1/\rho)\sI_{\sC}}(\bx^{k+1} + \bu^k)
-        = (I - H^{\dagger}H)(\bx^{k+1}+\bu^k) \\
+        = (I - \bH^{\dagger}\bH)(\bx^{k+1}+\bu^k) \\
     \bu^{k+1}
         &= \bu^{k} + \bx^{k+1} - \bz^{k+1}
 \end{align*}

@@ -9,7 +9,7 @@ function params = GetDemosaicDemultiplexParams(light_mode)
     
     % number of outer iterations
     if light_mode
-        params.outer_iters = 1;
+        params.outer_iters = 5;
         params.denoiser_type = "medfilter";
     else
         params.outer_iters = 100;

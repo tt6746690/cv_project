@@ -92,7 +92,7 @@ imshow(FlattenChannels(orig_im,orig_ratio_im,imholder)/255);
 take_idx = take_indices(S);
 
 % 1. admm+tnrd+smooth in ratio space 
-[admmsmooth_ratio_im,~,~,~] = ADMMSmooth(input_ratio_im,H,InitEstFunc,params_admm_ratio,IntensityToRatio(orig_noisy_im(:,:,take_idx)));
+[admmsmooth_ratio_im,~,~,~] = ADMMSmooth(input_ratio_im,H,InitEstFunc,params_admm_ratio,255*IntensityToRatio(orig_noisy_im(:,:,take_idx)));
 ratio_mult_inputsum_im = admmsmooth_ratio_im/255;
 ratio_mult_inputsum_im = RatioToIntensity(ratio_mult_inputsum_im,sum(input_im,3));
 [psnr_ratio_mult_inputsum,ssim_ratio_mult_inputsum] = ComputePSNRSSIM(orig_im(:,:,take_idx),ratio_mult_inputsum_im);

@@ -43,89 +43,85 @@ function [im_out,psnr_out,ssim_out,statistics,iter_ims] = ADMMSmooth(y,A,InitEst
     l = [hwS hwS hwS*2];
     l = [0 cumsum(l)];
 
+    % {x1} {x2} {x3} -> [x1;x2;x3]
+    Stack = @(x) [x{1}(:);x{2}(:);x{3}(:)];
+    % [x1;x2;x3] -> {x1} {x2} {x3}
+    Split = @(X) arrayfun( @(i) X(l(i)+1:l(i+1)), (1:3).','uniform',false);
+
+    ToIm = @(x) reshape(x,h,w,[]);
+    Vec = @(x) x(:);
+
     [Gx,Gy] = ImGrad([h w]);
-    G = [Gx;Gy];
+    G = [kron(speye(S),Gx);kron(speye(S),Gy)];
 
-    x{1} = x_init(:);
-    x{2} = x_init(:);
-    x{3} = G*x_init(:);
+    EYE = speye(hwS);
+    ZERO = sparse(hwS,hwS);
+    H = [
+        EYE -EYE  ZERO  ZERO
+        G [ZERO;ZERO] [-EYE;ZERO]  [ZERO;-EYE]
+    ];
 
-    z{1} = x{1};
-    z{2} = x{2};
-    z{3} = x{3};
+    X = [x_init(:);x_init(:);G*x_init(:)];
+    Z = X;
+    U = zeros(size(X));
 
-    u{1} = zeros(size(x{1}));
-    u{2} = zeros(size(x{2}));
-    u{3} = zeros(size(x{3}));
-
-    X = [x{1};x{2};x{3}];
-    Z = [z{1};z{2};z{3}];
-    U = [u{1};u{2};u{3}];
+    x = Split(X);
+    z = Split(Z);
+    u = Split(U);
 
     history = zeros(3,0);
     save_iter = 1;
-
-    ToIm = @(x) reshape(x,h,w,[]);
     
     [R,flag] = chol(speye(size(A,2)) + (2/rho)*A'*A);
     if flag ~= 0
         warning("A'A+(rho/2)*I should be symmetric positive definite");
     end
 
-    I = speye(hwS);
-    Z = sparse(hwS,hwS);
-    H = [
-        I -I  Z  Z
-        Gx Z -I  Z
-        Gy Z  Z -I
-    ];
-
     iter_ims = zeros(5*h,S*w,outer_iters);
     
     for k = 1:outer_iters
-        % iter_ims(:,:,k) = 3*FlattenChannels(x_est,v_est,u_est,...
-        % Clip(ToIm(R\(R'\(reshape(ToIm(A'*y(:))+rho*(v_est-u_est),[],1)))),0,255)+u_est, ...
-        % Denoiser(Clip(ToIm(R\(R'\(reshape(ToIm(A'*y(:))+rho*(v_est-u_est),[],1)))),0,255)+u_est,effective_sigma,denoiser_type));
-        % imshow(iter_ims(:,:,k)/255);
-        % pause;
 
-        for i = 1:3
-            x_old{i} = X( l(i)+1 : l(i+1) );
-            z_old{i} = Z( l(i)+1 : l(i+1) );
-            u_old{i} = U( l(i)+1 : l(i+1) );
-        end
+        x_old = Split(X);
+        z_old = Split(Z);
+        u_old = Split(U);
 
-        x1 = (2/rho)*ToIm(A'*y(:))+(z_old{1}-u_old{1});
-        x1 = Clip(R\(R'\(x1(:))),0,255);
-        x{1} = x1;
+        % primal x updates
+
+        x1 = (2/rho)*A'*y(:) + ( z_old{1}-u_old{1} );
+        x1 = Clip(R\(R'\(x1)),0,255);
 
         switch v_update_method
         case "fixed_point"
             for j = 1:1:inner_denoiser_iters
-                Dx = Denoiser(ToIm(x_old{2}),effective_sigma,denoiser_type);
-                x2 = (lambda2*Dx + rho*(ToIm(z_old{2}-u_old{2})))/(lambda2 + rho);
+                Dx = Denoiser(ToIm( x_old{2} ),effective_sigma,denoiser_type);
+                x2 = (lambda2*Dx + rho*(ToIm( z_old{2}-u_old{2} )))/(lambda2 + rho);
             end
         case "denoiser"
-            x2 = Denoiser(ToIm(z_old{2}-u_old{2}),lambda2/rho,denoiser_type);
+            x2 = Denoiser(ToIm( z_old{2}-u_old{2} ),lambda2/rho,denoiser_type);
         otherwise
             warning("v-update method not correct");
         end
 
-        x{2} = x2(:);
-        x{3} = SoftShrinkage(z_old{3}-u_old{3},lambda3/rho);
+        x3 = SoftShrinkage( z_old{3}-u_old{3} ,lambda3/rho);
+        
+        x = Split([x1(:);x2(:);x3(:)]);
+        X = Stack(x);
 
-        U_old = [u_old{1};u_old{2};u_old{3}];
-        X = [x{1};x{2};x{3}];
-        V = X + U_old;
+        % primal z updates
+
+        V = X + U;
         Z = V - lsqminnorm(H,H*V);
 
-        U = U_old + X - Z;
+        % scaled dual u updates
+
+        U = U + X - Z;
     
         if ~QUIET && (mod(k,PRINT_MOD) == 0 || k == outer_iters)
-            im = ToIm(x{1});
+            v = x{1};
+            im = ToIm(v);
 
             f_est = Denoiser(im,effective_sigma,denoiser_type);
-            costfunc = norm(reshape(ToIm(A*im(:))-y,[],1)) + lambda*im(:)'*(im(:)-f_est(:));
+            costfunc = norm(A*v-y(:)) + lambda2*v'*(v-f_est(:)) + lambda3*norm(G*v,1);
 
             im_out = im(1:size(orig_im,1), 1:size(orig_im,2),:);
             [psnr,ssim] = ComputePSNRSSIM(orig_im, im_out);
@@ -134,7 +130,10 @@ function [im_out,psnr_out,ssim_out,statistics,iter_ims] = ADMMSmooth(y,A,InitEst
             history(:,save_iter) = [psnr;ssim;costfunc];
             save_iter = save_iter + 1;
 
-            imshow(2*FlattenChannels(orig_im,ToIm(x{1}),ToIm(x{2}),ToIm(x{3}))/255);
+            imshow(3*FlattenChannels(orig_im,...
+            ToIm(x_old{1}),ToIm(x_old{2}),ToIm(10*x_old{3}),...
+            ToIm(z_old{1}),ToIm(z_old{2}),ToIm(10*z_old{3}),...
+            ToIm(u_old{1}),ToIm(u_old{2}),ToIm(10*u_old{3}))/255);
         end
     end
     
