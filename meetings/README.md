@@ -454,13 +454,34 @@ I think from last meeting with Kyros and you, it seems that a more general frame
     + compare different S for scene with varying depth
 + think about how chinese reminder theorem can be used to determine the amount of circular shift required for input images
 
+## 10.17 (Mian)
 
-##  10.09
++ regularization 
+    + be cautious about adding arbitrary regularizers
 
-+ questions 
-    + S=4 -> S=7
-        + ground-truth disparity does look a lot better ?
-+ problem/goal 
-    + [done] demosaic/demultiplex for varying S
-    + human face recognition ?
-    +  
++ todo 
+    + do zncc on optimized code first
+        + take a look at ratio images with zncc code 
+    + compare ratio and intensity images for disparity estimation 
+        + look at fourier transform of intensity/ratio
+        + reduce frequency bandwidth in fourier domain -> easier to demosaic
+    + why texture in ratio images
+    + need to do capture more images with total exposure fixed
+
+
++ think about 
+    + what patterns to use ?
+        + cosine vs. optimized, debrujn
+    + arrange illuminations mosaics ?
+        + toeplitz, etc.
+    + but these are algorithm dependent
+    + __reglarizer that takes into the pattern into account__
+        + take information of pattern 
+        + pattern-specific prior 
+        + lookup table
+            + ~600 proejctor pattens 
+            + enforce prior that colinear with one of 600 pixels, at each pixel
+                + every pixel, NCC with 600 projector pixel, larger the better
+            + ratio images do this
+                + each pixel scaled the same
+            + for now, disregard interaction between pixels, think about each pixel independently
