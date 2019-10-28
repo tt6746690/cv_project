@@ -4,7 +4,7 @@ function [albedo,wrapped_phase,phase] = SLTriangulation(im,W,depthbounds,spatial
 %
 %   im     hxwxS        demultiplexed images under S projector illuminations
 %   W      2FxS         optimal bucket multiplexing matrix
-%   depthbounds \in [0,1]^(h*w)
+%   depthbounds \in [0,2pi]^(h*w)
 %       LB  hxw         pixel-wise phase lower bound
 %       UB  hxw         pixel-wise phase upper bound
 %   spatialfrequency    number of vertically varying spatial sinusoids in projected patterns
