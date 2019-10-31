@@ -17,3 +17,11 @@ sync:
 	$(RSYNC) $(RSYNCTAGS) $(HOST_FOLDER)/ $(REMOTE):$(REMOTE_FOLDER)
 syncr:
 	$(RSYNC) $(RSYNCTAGS) $(REMOTE):$(REMOTE_FOLDER)/ $(HOST_FOLDER)
+
+
+matlab:
+	# duplicate openmp problem for running the denoisers
+	export KMP_DUPLICATE_LIB_OK=True
+
+	cd matlab
+	matlab -desktop . &

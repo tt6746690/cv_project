@@ -62,75 +62,51 @@ ProjectorInfoFolder = 'mian/CalibrationCode';
 Bounds = load(sprintf('%s/%s.mat', ProjectorInfoFolder, 'Bounds'));
 Bounds.yErrorLB = Bounds.yErrorLB(cx,cy); %  5;
 Bounds.yErrorUB = Bounds.yErrorUB(cx,cy); % - 5;
-tempshift = 1.2984; tempshift = 0.25; tempshift = -0.34; tempshift=0;
+tempshift = 1.2984; tempshift = 0.25; tempshift = -0.34; tempshift = 1;
 Bounds.LB = double(Bounds.yErrorLB)*2*pi/hproj + tempshift;
 Bounds.UB = double(Bounds.yErrorUB)*2*pi/hproj + tempshift;
 
-% synthetic pattern
+%% synthetic pattern
 
 PatternCoeff = 0.5 + 0.5*cos(usedFreq*(0:hproj-1)'*2*pi/hproj + linspace(0,3*pi/2, 4));
 PatternCoeff = floor(PatternCoeff * 24) / 24;
 
 stackeddir = "data/exp60/organized";
 scene = "pillow";
-[orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy);
 
-phase = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB);
-disparity = disparityFunc((phase*hproj/(2*pi)),Y);
+ims = [];
 
-imshow([orig_im(:,:,1) 255*phase/(2*pi) disparity]/255);
+for shift = 1:S-1
+    [orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy,'CircShiftInputImageBy',shift);
+
+    phase = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB);
+    disparity = disparityFunc((phase*hproj/(2*pi)),Y);
+    
+    ims = [ims; [orig_im(:,:,1) 255*phase/(2*pi) disparity]];
+end
+
+imshow(ims/255);
 
 
 
 %% optimized pattern
 
-patterns = dlmread('../external/SLtraining-Python/OptimizedCodes/608/pt01-608-4-64.txt');
-PatternCoeff = zeros(hproj,S);
-PatternCoeff(41:40+608,:) = patterns;
+
+S=4;
+PatternCoeff = GeneratePatternMatrix(hproj,S);
 
 stackeddir = "data/alphabet_const_totalexp/organized";
 scene = sprintf("optimizedpattern_S=%d",S);
-[orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy);
 
-phase = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB);
-disparity = disparityFunc((phase*hproj/(2*pi)),Y);
+ims = [];
 
-imshow([orig_im(:,:,1) 255*phase/(2*pi) disparity]/255);
+for shift = 1:S-1
+    [orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy,'CircShiftInputImageBy',shift);
 
+    phase = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB);
+    disparity = disparityFunc((phase*hproj/(2*pi)),Y);
+    
+    ims = [ims; [orig_im(:,:,1) 255*phase/(2*pi) disparity]];
+end
 
-
-% orig_im = orig_im;
-
-% % Px1
-% imgs2np = reshape(orig_im,[],S);
-
-% % PxS observation matrix 
-% %   hxS for one column where h=160
-% imgs2np = imgs2np - repmat(mean(imgs2np,2),1,S);
-
-% % NxS
-% %   where N = 684 is projector height
-% asnccgtnp = PatternCoeff;
-% asnccgtnp = asnccgtnp - repmat(mean(asnccgtnp,2),1,S);
-
-% % PxS x SxN -> PxN
-% scores = imgs2np * asnccgtnp';
-
-% % argmax ZNCC
-
-% for i = 1 : size(scores,1)
-%     scores(i,1:floor(Bounds.yErrorLB(i))) = - inf;
-%     if Bounds.yErrorUB(i) == 0
-%         continue
-%     end
-%    scores(i,ceil(Bounds.yErrorUB(i)) : end) = - inf; 
-% end
-
-
-% [~, I] = max(scores,[],2);
- 
-% phase = (2*pi)*reshape(I,h,w)/hproj;
-
-% disparity = disparityFunc((phase*hproj/(2*pi)),Y);
-
-% imshow([255*phase/(2*pi) disparity; 255*phasezncc/(2*pi) disparityzncc; abs(255*phase/(2*pi)-255*phasezncc/(2*pi)) abs(disparity-disparityzncc)]/255)
+imshow(ims/255);

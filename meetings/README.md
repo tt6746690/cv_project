@@ -470,6 +470,10 @@ I think from last meeting with Kyros and you, it seems that a more general frame
 
 
 + think about 
+    + __read more on adrian dalca's papers on using VI/VAE etc. for data imputation__
+        + perhaps there is an equivalent probabilistic formulation
+        + mechanistically incorporates neural network in the setup
+        + https://arxiv.org/pdf/1903.03503.pdf
     + what patterns to use ?
         + cosine vs. optimized, debrujn
     + arrange illuminations mosaics ?
