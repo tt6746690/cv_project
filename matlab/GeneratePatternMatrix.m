@@ -26,4 +26,6 @@ function patternMatrix = GeneratePatternMatrix(numCodes,numImages)
     end
 
     patternMatrix = patternMatrix / (max(patternMatrix(:)));
+    % a = patternMatrix - sum(patternMatrix,2);
+    % patternMatrix = a ./ sqrt(sum(a.^2,2));
 end
