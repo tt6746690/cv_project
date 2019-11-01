@@ -14,6 +14,8 @@ function [input_im,input_ratio_im,orig_noisy_im] = ReadInputIm(imagedir,h,w,S,va
     %       - orig_noisy_im      \in [0,255]
     %
 
+    circshiftby = 0;
+
     % Map of parameter names to variable names
     params_to_variables = containers.Map( ...
         {'CropX','CropY','BlackLevel','ForwardFunc','CircShiftInputImageBy'}, ...
@@ -30,10 +32,6 @@ function [input_im,input_ratio_im,orig_noisy_im] = ReadInputIm(imagedir,h,w,S,va
             error('Unsupported parameter: %s',varargin{v});
         end
         v=v+1;
-    end
-
-    if ~exist('circshiftby','var')
-        circshiftby = 0;
     end
 
     input_im        = zeros(h,w,2);

@@ -25,7 +25,7 @@ if ~isfile(blacklevelpath)
 end
 blacklvl = load(blacklevelpath); blacklvl = blacklvl.blacklvl;
 % toggle to false for long runs
-light_mode = false;
+light_mode = true;
 % sigmas 
 input_sigma = 1;
 % sensor mask type 

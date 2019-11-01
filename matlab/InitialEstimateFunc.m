@@ -83,4 +83,5 @@ function InitEstFunc = InitialEstimateFunc(est_type,h,w,F,S,varargin)
     otherwise
         warning('initial estimate function not set properly');
     end
+    cellfun(@(v) assignin('base',v,evalin('caller',v)),who);
 end
