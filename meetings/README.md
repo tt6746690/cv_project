@@ -461,6 +461,9 @@ I think from last meeting with Kyros and you, it seems that a more general frame
 
 + todo 
     + do zncc on optimized code first
+        + do zncc reconstruction on 
+            + spatial sinusoids 
+            + optimized pattern on `alphabet` scene
         + take a look at ratio images with zncc code 
     + compare ratio and intensity images for disparity estimation 
         + look at fourier transform of intensity/ratio

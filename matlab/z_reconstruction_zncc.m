@@ -62,7 +62,7 @@ ProjectorInfoFolder = 'mian/CalibrationCode';
 Bounds = load(sprintf('%s/%s.mat', ProjectorInfoFolder, 'Bounds'));
 Bounds.yErrorLB = Bounds.yErrorLB(cx,cy); %  5;
 Bounds.yErrorUB = Bounds.yErrorUB(cx,cy); % - 5;
-tempshift = 1.2984; tempshift = 0.25; tempshift = -0.34; tempshift = 1;
+tempshift = 1.2984; tempshift = 0.25; tempshift = 0;
 Bounds.LB = double(Bounds.yErrorLB)*2*pi/hproj + tempshift;
 Bounds.UB = double(Bounds.yErrorUB)*2*pi/hproj + tempshift;
 
@@ -70,43 +70,55 @@ Bounds.UB = double(Bounds.yErrorUB)*2*pi/hproj + tempshift;
 
 PatternCoeff = 0.5 + 0.5*cos(usedFreq*(0:hproj-1)'*2*pi/hproj + linspace(0,3*pi/2, 4));
 PatternCoeff = floor(PatternCoeff * 24) / 24;
+imshow(FlattenChannels(repmat(reshape(PatternCoeff,hproj,1,S),[1 w 1])));
 
 stackeddir = "data/exp60/organized";
 scene = "pillow";
 
+% [scenes,shifts] = SceneNames("7patterns");
+% kk = 4;
+% scene = scenes(kk);
+% shift = shifts(kk);
+
 ims = [];
+shift=0
 
-for shift = 1:S-1
-    [orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy,'CircShiftInputImageBy',shift);
+[orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy,'CircShiftInputImageBy',shift);
 
-    phase = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB);
-    disparity = disparityFunc((phase*hproj/(2*pi)),Y);
-    
-    ims = [ims; [orig_im(:,:,1) 255*phase/(2*pi) disparity]];
-end
+[phase,zncc,I] = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB);
+disparity = disparityFunc((phase*hproj/(2*pi)),Y);
+
+ims = [ims; [orig_im(:,:,1) 255*phase/(2*pi) disparity]];
 
 imshow(ims/255);
-
-
 
 %% optimized pattern
 
 
 S=4;
 PatternCoeff = GeneratePatternMatrix(hproj,S);
+imshow(FlattenChannels(repmat(reshape(PatternCoeff,hproj,1,S),[1 w 1])));
+
+%% 
 
 stackeddir = "data/alphabet_const_totalexp/organized";
 scene = sprintf("optimizedpattern_S=%d",S);
 
 ims = [];
 
-for shift = 1:S-1
+for shift = 0:S-1
+
     [orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy,'CircShiftInputImageBy',shift);
 
-    phase = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB);
+    % not rotational problem ...
+    for s = 1:S
+        orig_im(:,:,s) = imrotate(orig_im(:,:,s),0.5,'bilinear','crop');
+    end
+
+    [phase,zncc,I] = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB);
     disparity = disparityFunc((phase*hproj/(2*pi)),Y);
     
-    ims = [ims; [orig_im(:,:,1) 255*phase/(2*pi) disparity]];
+    ims = [ims; [orig_im(:,:,shift+1) 255*phase/(2*pi) disparity]];
 end
 
 imshow(ims/255);

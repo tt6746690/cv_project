@@ -1,4 +1,4 @@
-function phase = DecodeZNCC(X,P,lb,ub,varargin)
+function [phase,zncc,I] = DecodeZNCC(X,P,lb,ub,varargin)
     % Decode phase 
     %       - maximizing ZNCC between observed vs. projected pattern along epipolar line
     %           http://www.dgp.toronto.edu/optimalsl/
@@ -74,4 +74,6 @@ function phase = DecodeZNCC(X,P,lb,ub,varargin)
 
     phase = reshape(I,h,w);
     phase = (2*pi)*phase/hproj;
+
+    % cellfun(@(v) assignin('base',v,evalin('caller',v)),who);
 end
