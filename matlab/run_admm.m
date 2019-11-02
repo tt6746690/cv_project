@@ -28,7 +28,7 @@ function demul_im = run_admm(y,A,InitEstFunc,params,orig_im,varargin)
         input_ratio_im = IntensityToRatio(y);
         [admm_ratio_im,~,~,~] = ADMMFunc(input_ratio_im,A,InitEstFunc,params,orig_im);
         demul_im = admm_ratio_im/255;
-        demul_im = RatioToIntensity(demul_im,sum(y,3));
+        demul_im = RatioToIntensity(demul_im,sum(y,3))*255;
     case 'intensity'
         [demul_im,~,~,~] = ADMMFunc(y,A,InitEstFunc,params,orig_im);
     otherwise

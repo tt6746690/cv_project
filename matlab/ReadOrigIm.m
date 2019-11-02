@@ -11,7 +11,8 @@ function [orig_im,orig_ratio_im] = ReadOrigIm(impath,h,w,S,varargin)
     %       - orig_im           \in [0,255]
     %       - orig_ratio_im     \in [0,255]
     %
-
+    circshiftby = 0;
+    
     % Map of parameter names to variable names
     params_to_variables = containers.Map( ...
         {'CropX','CropY','CircShiftInputImageBy'}, ...
@@ -30,16 +31,16 @@ function [orig_im,orig_ratio_im] = ReadOrigIm(impath,h,w,S,varargin)
         v=v+1;
     end
 
-    if ~exist('circshiftby','var')
-        circshiftby = 0;
-    end
-
     orig_im = zeros(h,w,S);
     orig_ratio_im = zeros(h,w,S);
     
     for s = 1:S
         im = double(imread(sprintf("%s_%d.png",impath,s-1)));
-        orig_im(:,:,s) = im(cx,cy);
+        if ~all([exist('cx','var') exist('cy','var')])
+            orig_im(:,:,s) = im;
+        else
+            orig_im(:,:,s) = im(cx,cy);
+        end
     end
 
     orig_im = circshift(orig_im,circshiftby,3);

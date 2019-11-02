@@ -62,9 +62,8 @@ ProjectorInfoFolder = 'mian/CalibrationCode';
 Bounds = load(sprintf('%s/%s.mat', ProjectorInfoFolder, 'Bounds'));
 Bounds.yErrorLB = Bounds.yErrorLB(cx,cy); %  5;
 Bounds.yErrorUB = Bounds.yErrorUB(cx,cy); % - 5;
-tempshift = 1.2984; tempshift = 0.25; tempshift = 0;
-Bounds.LB = double(Bounds.yErrorLB)*2*pi/hproj + tempshift;
-Bounds.UB = double(Bounds.yErrorUB)*2*pi/hproj + tempshift;
+Bounds.LB = double(Bounds.yErrorLB)*2*pi/hproj;
+Bounds.UB = double(Bounds.yErrorUB)*2*pi/hproj;
 
 %% synthetic pattern
 
@@ -75,15 +74,9 @@ imshow(FlattenChannels(repmat(reshape(PatternCoeff,hproj,1,S),[1 w 1])));
 stackeddir = "data/exp60/organized";
 scene = "pillow";
 
-% [scenes,shifts] = SceneNames("7patterns");
-% kk = 4;
-% scene = scenes(kk);
-% shift = shifts(kk);
-
 ims = [];
-shift=0
 
-[orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy,'CircShiftInputImageBy',shift);
+[orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy);
 
 [phase,zncc,I] = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB);
 disparity = disparityFunc((phase*hproj/(2*pi)),Y);
@@ -92,14 +85,12 @@ ims = [ims; [orig_im(:,:,1) 255*phase/(2*pi) disparity]];
 
 imshow(ims/255);
 
-%% optimized pattern
+%% optimized pattern over `alphabet`
 
 
 S=4;
 PatternCoeff = GeneratePatternMatrix(hproj,S);
 imshow(FlattenChannels(repmat(reshape(PatternCoeff,hproj,1,S),[1 w 1])));
-
-%% 
 
 stackeddir = "data/alphabet_const_totalexp/organized";
 scene = sprintf("optimizedpattern_S=%d",S);
@@ -122,3 +113,79 @@ for shift = 0:S-1
 end
 
 imshow(ims/255);
+
+
+%% mannequin spatial sinusoids 
+
+% directory containing demosaiced image
+rawimagedir =  "data/mannequin";
+% save images to 
+savedir = "results/reconstruction_zncc"; mkdir(savedir);
+
+% bounds
+Bounds = load('data/mannequin/Bounds.mat');
+Bounds.yErrorLB = Bounds.yErrorLB(cx,cy);
+Bounds.yErrorUB = Bounds.yErrorUB(cx,cy);
+Bounds.LB = double(Bounds.yErrorLB)*2*pi/hproj;
+Bounds.UB = double(Bounds.yErrorUB)*2*pi/hproj;
+
+
+
+%% find correct shifts for spatial sinusoids: shift=1
+
+for usedFreq = [4 7]
+ims = [];
+for shift = 0:S-1
+
+PatternCoeff = 0.5 + 0.5*cos(usedFreq*(0:hproj-1)'*2*pi/hproj + linspace(0,3*pi/2, 4));
+PatternCoeff = floor(PatternCoeff * 24) / 24;
+imshow(FlattenChannels(repmat(reshape(PatternCoeff,hproj,1,S),[1 w 1])));
+
+stackeddir = sprintf('%s/organized',rawimagedir);
+scene = sprintf('Freq%d',usedFreq);
+
+
+orig_im = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy,'CircShiftInputImageBy',shift);
+
+
+[phase,zncc,I] = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB);
+disparity = disparityFunc((phase*hproj/(2*pi)),Y);
+
+ims = [ims; [orig_im(:,:,1) 255*phase/(2*pi) disparity]];
+
+
+end
+imwrite(uint8(ims),sprintf('%s/find_shift_Freq%d.png',savedir,usedFreq));
+end
+
+%% zncc on optimized pattern 
+
+S=7;
+patternMatrix = load('data/mannequin/PatternMat.mat');
+patternMatrix = patternMatrix.patternMatrix;
+PatternCoeff = zeros(hproj,S);
+PatternCoeff(1:size(patternMatrix,1),1:end) = patternMatrix;
+imshow(FlattenChannels(repmat(reshape(PatternCoeff,hproj,1,S),[1 w 1])));
+
+stackeddir = sprintf('%s/organized',rawimagedir);
+scene = 'optimized_pattern';
+ims = [];
+
+for shift = 0:S-1
+
+[orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy,'CircShiftInputImageBy',shift);
+
+% not rotational problem ...
+for s = 1:S
+    orig_im(:,:,s) = imrotate(orig_im(:,:,s),0.5,'bilinear','crop');
+end
+
+[phase,zncc,I] = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB);
+disparity = disparityFunc((phase*hproj/(2*pi)),Y);
+
+ims = [ims; [orig_im(:,:,shift+1) 255*phase/(2*pi) disparity]];
+
+end
+
+imshow(ims/255);
+imwrite(uint8(ims),sprintf('%s/find_shift_%s.png',savedir,scene));
