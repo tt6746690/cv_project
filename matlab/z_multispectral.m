@@ -35,52 +35,50 @@ rawimagedir = sprintf('data/MultiSpectral/%s/',scene);
 %% initfunc 
 % 
 
-% for si = 1:size(scenes,1)
-% scene = scenes(si);
-% subdir = 'initfunc';
-% mkdir(sprintf('%s/%s/%s',outdir,scene,subdir));
-% for i = 1:999
-%     scene,i
-%     ims = reconstruct_im(i,h,w,perm,InitEstFunc,scaling,rawimagedir,scene,InitEstFunc);
-%     imwrite(uint8(scaling*ims),sprintf('%s/%s/%s/%.4d.png',outdir,scene,subdir,i-1));
-% end
-% break;
-% end
+for si = 1:size(scenes,1)
+scene = scenes(si);
+subdir = 'initfunc';
+mkdir(sprintf('%s/%s/%s',outdir,scene,subdir));
+for i = 1:999
+    scene,i
+    ims = reconstruct_im(i,h,w,perm,InitEstFunc,scaling,rawimagedir,scene,InitEstFunc);
+    imwrite(uint8(scaling*ims),sprintf('%s/%s/%s/%.4d.png',outdir,scene,subdir,i-1));
+end
+break;
+end
 
 %% admmparams
 
-% i=490;
+subdir = 'admmparams';
+mkdir(sprintf('%s/%s/%s',outdir,scene,subdir));
+denoiser_types = [
+    "medfilter",
+    "tnrd" 
+];
 
-% subdir = 'admmparams';
-% mkdir(sprintf('%s/%s/%s',outdir,scene,subdir));
-% denoiser_types = [
-%     "medfilter",
-%     "tnrd" 
-% ];
+for outer_iters = [5 10 20 40 80]
+params_admm.outer_iters = outer_iters;
 
-% for outer_iters = [5 10 20 40 80]
-% params_admm.outer_iters = outer_iters;
+for di = [1 2]
+    denoiser_type = denoiser_types(di);
+    params_admm.denoiser_type = denoiser_type;
 
-% for di = [1 2]
-%     denoiser_type = denoiser_types(di);
-%     params_admm.denoiser_type = denoiser_type;
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    outer_iters
+    denoiser_type
 
-%     outer_iters
-%     denoiser_type
+    input_im = imread(sprintf('%s/%04d.png',rawimagedir,i-1));
+    input_im = double(cat(3,input_im(:,1:w),input_im(:,(w+1):(2*w))));
 
-%     input_im = imread(sprintf('%s/%04d.png',rawimagedir,i-1));
-%     input_im = double(cat(3,input_im(:,1:w),input_im(:,(w+1):(2*w))));
+    reconfunc = @(input_im) run_admm(input_im,H,InitEstFunc,params_admm,zeros(h,w,S),'RatioIntensity','ratio','ADMMFunc',@ADMMSmooth);
+    ims = reconstruct_im(i,h,w,perm,InitEstFunc,scaling,rawimagedir,scene,reconfunc);
+    imwrite(uint8(scaling*ims),sprintf('%s/%s/%s/smooth_%s_%d_%.4d.png',outdir,scene,subdir,denoiser_type,outer_iters,i-1));
 
-%     reconfunc = @(input_im) run_admm(input_im,H,InitEstFunc,params_admm,zeros(h,w,S),'RatioIntensity','ratio','ADMMFunc',@ADMMSmooth);
-%     ims = reconstruct_im(i,h,w,perm,InitEstFunc,scaling,rawimagedir,scene,reconfunc);
-%     imwrite(uint8(scaling*ims),sprintf('%s/%s/%s/smooth_%s_%d_%.4d.png',outdir,scene,subdir,denoiser_type,outer_iters,i-1));
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% end
-% end
+end
+end
 
 %% create video with medfilter,outer_iters=10,ADMMSmooth
 
@@ -89,7 +87,7 @@ params_admm.denoiser_type = 'medfilter';
 
 for si = 1:size(scenes,1)
 scene = scenes(si);
-subdir = 'video';
+subdir = 'smooth_medfilter_10';
 mkdir(sprintf('%s/%s/%s',outdir,scene,subdir));
 for i = 1:999
     scene,i

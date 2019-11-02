@@ -171,20 +171,14 @@ stackeddir = sprintf('%s/organized',rawimagedir);
 scene = 'optimized_pattern';
 ims = [];
 
-for shift = 0:S-1
+for NPixelNeighbors = [1 3 5]
 
-[orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy,'CircShiftInputImageBy',shift);
+[orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy);
 
-% not rotational problem ...
-for s = 1:S
-    orig_im(:,:,s) = imrotate(orig_im(:,:,s),0.5,'bilinear','crop');
-end
-
-[phase,zncc,I] = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB);
+[phase,zncc,I] = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB,'NPixelNeighbors',NPixelNeighbors);
 disparity = disparityFunc((phase*hproj/(2*pi)),Y);
 
 ims = [ims; [orig_im(:,:,shift+1) 255*phase/(2*pi) disparity]];
-
 end
 
 imshow(ims/255);

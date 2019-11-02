@@ -18,12 +18,13 @@ function [phase,zncc,I] = DecodeZNCC(X,P,lb,ub,varargin)
     %           unwrapped phase 
     %
 
-    normalize_by = 'std';
+    NormalizeBy = 'std';
+    NPixelNeighbors = 1;
 
     % Map of parameter names to variable names
     params_to_variables = containers.Map( ...
-        {'NormalizeBy'}, ...
-        {'normalize_by'});
+        {'NormalizeBy','NPixelNeighbors'}, ...
+        {'NormalizeBy','NPixelNeighbors'});
     v = 1;
     while v <= numel(varargin)
         param_name = varargin{v};
@@ -38,7 +39,7 @@ function [phase,zncc,I] = DecodeZNCC(X,P,lb,ub,varargin)
         v=v+1;
     end
 
-    switch normalize_by
+    switch NormalizeBy
     case 'none'
         normalize_ = @(x) normalize(x,2,'center','mean');
     case 'std'
@@ -59,6 +60,18 @@ function [phase,zncc,I] = DecodeZNCC(X,P,lb,ub,varargin)
 
     [h,w,S] = size(X);
     X = reshape(X,[],S);
+
+    switch NPixelNeighbors
+    case 1
+    case 3
+        X = [circshift(X,1,1) X circshift(X,-1,1)];
+        P = [circshift(P,1,1) P circshift(P,-1,1)];
+    case 5
+        X = [circshift(X,2,1) circshift(X,1,1) X circshift(X,-1,1) circshift(X,-2,1)];
+        P = [circshift(P,2,1) circshift(P,1,1) P circshift(P,-1,1) circshift(P,-2,1)];
+    otherwise
+        warning("invalid npixelneighbors");
+    end
 
     X = normalize_(X);
     P = normalize_(P);
