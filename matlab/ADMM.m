@@ -1,9 +1,9 @@
 function [im_out,psnr_out,ssim_out,statistics,iter_ims] = ADMM(y,H,InitEstFunc,params,orig_im)
     %   Run ADMM to solve minimize 
-    %       E(x) = ||Hx-y||_2^2 + lambda * 0.5*x'*(x-denoise(x))
+    %       E(x) = ||Hx-y||_2^2 + λ * 0.5*x'*(x-denoise(x))
     %   with the augmented lagrangian of form 
-    %       L_{rho}(x,v) = ||Hx-y||_2^2 + lambda * 0.5*x'*(x-denoise(x)) + 
-    %                        \mu^T(x-v) + (\rho/2) ||x-z||_2^2
+    %       L_{ρ}(x,v) = ||Hx-y||_2^2 + λ * 0.5*x'*(x-denoise(x)) + 
+    %                        μ^T(x-v) + (ρ/2) ||x-z||_2^2
     %   
     % Inputs:
     %   y                        input image

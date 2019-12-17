@@ -171,7 +171,7 @@ stackeddir = sprintf('%s/organized',rawimagedir);
 scene = 'optimized_pattern';
 ims = [];
 
-for NPixelNeighbors = [1 3 5]
+for NPixelNeighbors = [5 3 1]
 
 [orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy);
 

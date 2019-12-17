@@ -492,3 +492,38 @@ I think from last meeting with Kyros and you, it seems that a more general frame
             + ratio images do this
                 + each pixel scaled the same
             + for now, disregard interaction between pixels, think about each pixel independently
+
+
+## 11.26 Mian & Parsa 
+
++ ask Parsa
+    + where could ZNCC decoding go wrong? 
+        + setup
+            + optimized_patterns_pt01-608-4-64
+                + 608 padded to 684 with zeros, since the projector Mian has more pixels (vertically)
+    + solution 
+        + try low frequency
+        + get good groundtruth
+            + project 100 cosines, compute ground truth
+            + get pixel wise error
+        + new zncc patterns,
+            + 
+    + old zncc
+        + error = number of pixels that are more tha epsilon away from groundtruth
+    + new zncc can define new loss functions 
+        + error = sum of l1 norm pixel wise 
+    + neighborhood
+        + along the epipolar line
+        + performance does not matter much
+    + no improvement with increasing neighborhood
+    + Hamiltonian pattern !
+        + very good performance
+        + ECCV 2018
+    + a single frequency code 
+        + heuristic for number of patterns, ...
+        + 7 patterns
+            + 5 pattern
+            + 2 different frequencies, coprime with prev
+    + neural network inspired
+        + extract features from 5 neighbors, before going to zncc layer
+        + adapt to different noise levels
