@@ -11,6 +11,9 @@
 \hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=red}
 \usepackage[backend=biber,sorting=none]{biblatex}
 \addbibresource{references.bib}
+\addbibresource{structured_light.bib}
+
+
 \setcounter{MaxMatrixCols}{30}
  
 
@@ -23,7 +26,16 @@
 \newcommand{\subjectto}{\text{subject to}\quad}
 \newcommand{\prox}{\textbf{prox}}
 
-\newcommand{\blambda}{\boldsymbol{\lambda}}
+
+\newcommand\ry{\ensuremath{\mathsf{y}}}
+\newcommand\rx{\ensuremath{\mathsf{x}}}
+\newcommand\rb{\ensuremath{\mathsf{b}}}
+
+\renewcommand\bmu{\ensuremath{\boldsymbol{\mu}}}
+\newcommand\bSigma{\ensuremath{\boldsymbol{\Sigma}}}
+
+
+
 
 \title{Project Report}
 \author{Peiqi Wang}
@@ -169,6 +181,7 @@ The reconstruction pipeline is as follows
 Step 2 and 3 are critical to downstream reconstuctions. When $S=3,S=4$ and $\bS$ being analogous to bayer mask, we can upsample the images using standard demosaicing algorithms. However, it is not immediately obvious to extend demosaicing methods to support arbitrary $\bS$, or more specifically, for scenarios where the spatial subsampling scheme is not bayer and when number of frames is not 3. 
 
 \section{Literature Review}
+
 
 \subsection{Image Priors} 
 

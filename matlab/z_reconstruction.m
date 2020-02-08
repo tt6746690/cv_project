@@ -1,13 +1,6 @@
 %% Structured light reconstruction for disparity map
 clc; clear; close all;
-addpath(genpath('./tnrd_denoising/'));
-addpath(genpath('./minimizers/'));
-addpath(genpath('./parameters/'));
-addpath(genpath('./helper_functions/'));
-addpath(genpath('./test_images/'));
-addpath(genpath("./mian/helperFunctions/Camera"));
-addpath(genpath("./mian/helperFunctions/ASNCC"));
-addpath(genpath("./mian/helperFunctions/Algorithms"));
+ProjectPaths;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Parameters

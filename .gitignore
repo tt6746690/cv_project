@@ -12,6 +12,7 @@ data/*
 *.blg
 *.toc
 *.run.xml
+*-blx.bib
 
 
 *.pyc

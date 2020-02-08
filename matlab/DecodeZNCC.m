@@ -78,10 +78,10 @@ function [phase,zncc,I] = DecodeZNCC(X,P,lb,ub,varargin)
 
     zncc = X*P';
 
-    for i = 1:size(zncc,1)
-        zncc(i, 1 : floor(lb(i)) ) = -inf;
-        zncc(i, ceil(ub(i)) : end) = -inf; 
-    end
+    % for i = 1:size(zncc,1)
+    %     zncc(i, 1 : floor(lb(i)) ) = -inf;
+    %     zncc(i, ceil(ub(i)) : end) = -inf; 
+    % end
 
     [~,I] = max(zncc,[],2);
 
