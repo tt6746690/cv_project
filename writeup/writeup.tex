@@ -1,17 +1,16 @@
 \documentclass[11pt]{article}
 \input{\string~/.macros}
 \usepackage[a4paper, total={7in, 9in}]{geometry}
-% \usepackage[a4paper]{geometry}
 \usepackage{bm}
 \usepackage{accents}
 \usepackage{bbm}
 \usepackage{graphicx}
-\graphicspath{{./assets}}
+    \graphicspath{{./assets}}
 \usepackage{hyperref}
-\hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=red}
+    \hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=red}
 \usepackage[backend=biber,sorting=none]{biblatex}
-\addbibresource{references.bib}
-\addbibresource{structured_light.bib}
+    \addbibresource{references.bib}
+    \addbibresource{structured_light.bib}
 
 
 \setcounter{MaxMatrixCols}{30}
@@ -24,17 +23,18 @@
 \renewcommand{\diag}{\mathbf{diag}}
 \newcommand{\minimize}{\text{minimize}\quad}
 \newcommand{\subjectto}{\text{subject to}\quad}
-\newcommand{\prox}{\textbf{prox}}
-
+\newcommand{\prox}{\textsf{prox}}
 
 \newcommand\ry{\ensuremath{\mathsf{y}}}
 \newcommand\rx{\ensuremath{\mathsf{x}}}
 \newcommand\rb{\ensuremath{\mathsf{b}}}
+\newcommand\rn{\ensuremath{\mathsf{n}}}
 
 \renewcommand\bmu{\ensuremath{\boldsymbol{\mu}}}
 \newcommand\bSigma{\ensuremath{\boldsymbol{\Sigma}}}
 
 
+\usepackage{subfiles} 
 
 
 \title{Project Report}
@@ -180,22 +180,103 @@ The reconstruction pipeline is as follows
 \end{enumerate}
 Step 2 and 3 are critical to downstream reconstuctions. When $S=3,S=4$ and $\bS$ being analogous to bayer mask, we can upsample the images using standard demosaicing algorithms. However, it is not immediately obvious to extend demosaicing methods to support arbitrary $\bS$, or more specifically, for scenarios where the spatial subsampling scheme is not bayer and when number of frames is not 3. 
 
-\section{Literature Review}
+ 
 
+\section{Methods}
 
-\subsection{Image Priors} 
+\subsection{A Linear Inverse Problem}
 
-The choice of regularization has been an important research topic in image processing. Handcrafted priors have been successful in a number of different image recovery tasks. For example, we can choose to enforce task-specific priors: (1) the sparsity of $\bx$ with $\ell$-1 norm in image deblurring \cite{beckFastIterativeShrinkageThresholding2009} (2) total variation in image denoising \cite{buadesNonlocalImageMovie2008} (3) cross-channel correlation in color image demosaicing \cite{malvarHighqualityLinearInterpolation2004} (4) dark channel prior in image dehazing \cite{fattalSingleImageDehazing2008}, etc. More exhotically, randomly initialized neural network can inject inductive bias to the optimization and act as image priors. \cite{ulyanovDeepImagePrior2017}
+We consider the problem of recovering full resolution images $\bX$ under $S$ illuminations from a two-bucket image $\bY$ as an linear inverse problem. Let $\bA \in \R^{2P\times SP}$ represent a linear map that illumination multiplexes and subsamples $\bX$,
+\[
+    \bA = \bB(\bW\otimes \bI_P)
+\]
+where $\bI_P\in\R^{P\times P}$ is identity. From (\ref{eq:subsampling_relation}) and (\ref{eq:image_formation}), there exists a linear relationship between $\bx$ and $\by$,
+\begin{equation}
+    \label{eq:linear_mapping}
+    \by = \bB \vec{\sI} = \bB \vec{\bX \bW^T} = \bB(\bW \otimes \bI_P) \vec{\bX} = \bA\bx
+\end{equation}
+Note (\ref{eq:linear_mapping}) is an underdetermined system. Given 2 images, we want to recover $S$ images - the larger the number of subframes, the harder the recovery becomes. This asks for stronger prior knowledge of the underlying distribution of $\bx$ to restrict search space for solutions as $S$ increases. Jointly upsample and demultiplex enforces a prior knowledge of image formation. Instead of treating upsampling (recover $2F$ images $\sI$ from $2$ images $\bY$) and demultiplexing (recover $S$ images $\bX$ from $2F$ images $\sI$) as distinct steps, we aim to recover $\bX$ directy from $\bY$, in a single step, by solving the following unconstrained optimization problem,
+\begin{equation}
+    \label{eq:generic_inverse_problem}
+    \begin{aligned}
+        \minimize & \norm{\bA\bx - \by}_2^2 + \lambda\rho(\bx) \\
+    \end{aligned}
+\end{equation}
+where $\rho:\R^{SP}\to\R$ are regularizers for $\bx$, the optimization variable. The problem (\ref{eq:generic_inverse_problem}) has a bayesian interpretation. Specifically, the $\ell$-2 norm can be interpreted as a log-likelihood \textit{data term} that captures the following probablistic relationship between recovered image $\bx$ and observation $\by$, 
+\[
+    \by = \bA\bx + \be    
+\]
+where $\be$ is the noise random variable, usually assumed to be Gaussian. The regularizer can be then interpreted as \textit{prior} knowledge on the distribution of $\bx$. The data term is continuous and fully differentiable in all of $\R^n$. Therefore, tractability of (\ref{eq:generic_inverse_problem}) usually depends on how well behaved $\rho$ is. If $\rho$ is convex but possibly non-smooth, e.g. $\rho(\bx)=\norm{\bx}_1$, the problem can be efficiently solved with standard convex optimization methods like proximal gradients with guaranteed convergence and global optimality.\cite{beckFastIterativeShrinkageThresholding2009} More realistic priors, i.e. regularizers that more precisely capture the prior knowledge of image distributions, might potentially make (\ref{eq:generic_inverse_problem}) a much harder problem that compromises convergence and optimality properties.\cite{ulyanovDeepImagePrior2017}
 
 $ $\\
-In addition to hand-crafted priors, there has been interest in algorithm induced priors. Alternating direction method of multipliers (ADMM) is a common convex optimization method for inverse problem where the objective function is separable with respect to the \textit{data term} and the \textit{regularizer}. Each primal update involves an evaluation of a proximal operator, which can be interpreted as performing denoising on some iterate. \cite{venkatakrishnanPlugandPlayPriorsModel2013,heideFlexISPFlexibleCamera2014,chanAlgorithmInducedPriorImage2016} proposed plug-and-play priors where the choice of regularization is implicitly specified by the denoiser used. \cite{romanoLittleEngineThat2016} proposed an explicit laplacian-based expression for the regularizer and generalizes the method to a number of different iterative optimization algorithms.
+We first note that the illumination ratios are albedo quasi-invariant, and therefore smooth within object boundaries. Therefore, total variation regularization on illuination ratio images could be particularly effective. To avoid extra notations, we use $\bx,\by$ as the corresponding illumination ratios that we want to reconstruct. Additionally, we adapt algorithm in \cite{romanoLittleEngineThat2016} for imposing algorithm induced priors with state-of-the-art denoisers. In summary, we want to optimize the following constrained problem with a set of affine constraints,
+\begin{align*}
+    \minimize  & \norm{\bA\bx_1 - \by}_2^2 + \frac{\lambda_2}{2} \bx_2^T(\bx_2 - \sD(\bx_2)) + \lambda_3 \norm{\bx_3}_1 \\
+    \subjectto & \bx_1 - \bx_2 = 0 \\
+               & \bG\bx_1 - \bx_3 = 0 \\
+\end{align*}
+where $\bx_1,\bx_2\in\R^{SP}$, $\bx_3\in\R^{2SP}$. $\lambda_2,\lambda_3>0$ are weights to the regularizers. $\bG\in \R^{2SP\times SP}$ is the discrete image gradient for $S$ images 
+\[
+    \bG =
+    \begin{bmatrix}
+        \bI_S \otimes \bG_x \\
+        \bI_S \otimes \bG_y \\
+    \end{bmatrix} 
+\]
+where $\bG_x,\bG_y\in\R^{P\times P}$ are the discrete image gradients for a single image computed using forward difference. We can gather constraints into a single linear system 
+\[
+    \bH\bx = 0
+    \quad\quad \text{where}\quad\quad
+    \bH = 
+    \begin{bmatrix}
+        \bI_{SP} & -\bI_{SP} & 0  \\
+        \bG    & 0    & -\bI_{SP}  \\
+    \end{bmatrix}
+    \quad
+    \bx = 
+    \begin{bmatrix}
+        \bx_1 \\ \bx_2 \\ \bx_3
+    \end{bmatrix}
+\]
+and arrive at an equivalent optimization problem
+\begin{equation}
+    \label{eq:method_optimization_problem}
+    \begin{aligned}
+        \minimize  & f_1(\bx_1) + \lambda_2 f_2(\bx_2) + \lambda_3 f_3(\bx_3) \\
+        \subjectto & (\bx_1,\bx_2,\bx_3) \in \sC
+    \end{aligned}
+\end{equation}
+where $\sC = \{\bx\in\R^{4SP} \;\mid\; \bH\bx = 0\}$ and 
+\begin{align*}
+    f_1(\bx_1)
+        &=\norm{\bA\bx_1 - \by}_2^2 \\
+    f_2(\bx_2)
+        &=\frac{1}{2} \bx_2^T(\bx_2 - \sD(\bx_2)) \\
+    f_3(\bx_3)
+        &=\norm{\bx_3}_1
+\end{align*}
 
-$ $\\
-The convergence of plug-and-play ADMM is studied by a number of papers. \cite{chanPlugandPlayADMMImage2016} showed fixed point convergence of plug-and-play ADMM. \cite{romanoLittleEngineThat2016} showed convergence of the algorithm under some mild conditions of the denoiser, which are satisfied by some state of the art denoisers like \textit{Block-matching and 3D filtering
- (BM3D)} \cite{dabovImageDenoisingSparse2007} and \textit{Trainable Nonlienar Reaction Diffusion (TNRD)} \cite{chenTrainableNonlinearReaction2017}. Most recently, \cite{ryuPlugandPlayMethodsProvably2019} established convergence given that the denoising network satisfy certain Lipschitz condition.
+\subsection{Optimization}
 
-$ $\\ 
-Some proposed to learn proximal operator from data. \cite{meinhardtLearningProximalOperators2017} used a CNN denoiser \cite{zhangGaussianDenoiserResidual2017}. Instead of substituting the proximal operator with a denoiser, \cite{changOneNetworkSolve2017} learns a projection mapping to the space of natural images by training a single neural network and showed impressive results on a number of different linear inverse problems.
+As shown below, the scaled form ADMM for solving (\ref{eq:method_optimization_problem}) is given by 
+\begin{align*}
+    \bx_1^{k+1}
+        &= \prox_{(1/\rho)f_1}(\bz_1^k - \bu_1^k) 
+        = (I + \frac{2}{\rho} A^TA)^{-1} ( \bz_1^k - \bu_1^k + \frac{2}{\rho}A^T y) \\
+    \bx_2^{k+1}
+        &= \prox_{(\lambda_2/\rho)f_2}(\bz_2^k - \bu_2^k) 
+        = \frac{1}{\lambda_2+\rho} (\lambda_2 \sD(\bx_2^k) + \rho(\bz_2^k - \bu_2^k)) \\
+    \bx_3^{k+1}
+        &= \prox_{(\lambda_3/\rho)f_3} (\bz_3^k - \bu_3^k) 
+        = \sS_{\lambda_3/\rho}(\bz_3^k - \bu_3^k) \\
+    \bz^{k+1}
+        &= \prox_{(1/\rho)\sI_{\sC}}(\bx^{k+1} + \bu^k)
+        = (I - \bH^{\dagger}\bH)(\bx^{k+1}+\bu^k) \\
+    \bu^{k+1}
+        &= \bu^{k} + \bx^{k+1} - \bz^{k+1}
+\end{align*}
+
+ 
 
 \subsection{Constrained Convex Optimization}
 
@@ -292,102 +373,7 @@ Evaluating the proximal operator involves solving a convex optimization problem.
 \end{enumerate}
 
 
-\section{Methods}
-
-\subsection{A Linear Inverse Problem}
-
-We consider the problem of recovering full resolution images $\bX$ under $S$ illuminations from a two-bucket image $\bY$ as an linear inverse problem. Let $\bA \in \R^{2P\times SP}$ represent a linear map that illumination multiplexes and subsamples $\bX$,
-\[
-    \bA = \bB(\bW\otimes \bI_P)
-\]
-where $\bI_P\in\R^{P\times P}$ is identity. From (\ref{eq:subsampling_relation}) and (\ref{eq:image_formation}), there exists a linear relationship between $\bx$ and $\by$,
-\begin{equation}
-    \label{eq:linear_mapping}
-    \by = \bB \vec{\sI} = \bB \vec{\bX \bW^T} = \bB(\bW \otimes \bI_P) \vec{\bX} = \bA\bx
-\end{equation}
-Note (\ref{eq:linear_mapping}) is an underdetermined system. Given 2 images, we want to recover $S$ images - the larger the number of subframes, the harder the recovery becomes. This asks for stronger prior knowledge of the underlying distribution of $\bx$ to restrict search space for solutions as $S$ increases. Jointly upsample and demultiplex enforces a prior knowledge of image formation. Instead of treating upsampling (recover $2F$ images $\sI$ from $2$ images $\bY$) and demultiplexing (recover $S$ images $\bX$ from $2F$ images $\sI$) as distinct steps, we aim to recover $\bX$ directy from $\bY$, in a single step, by solving the following unconstrained optimization problem,
-\begin{equation}
-    \label{eq:generic_inverse_problem}
-    \begin{aligned}
-        \minimize & \norm{\bA\bx - \by}_2^2 + \lambda\rho(\bx) \\
-    \end{aligned}
-\end{equation}
-where $\rho:\R^{SP}\to\R$ are regularizers for $\bx$, the optimization variable. The problem (\ref{eq:generic_inverse_problem}) has a bayesian interpretation. Specifically, the $\ell$-2 norm can be interpreted as a log-likelihood \textit{data term} that captures the following probablistic relationship between recovered image $\bx$ and observation $\by$, 
-\[
-    \by = \bA\bx + \be    
-\]
-where $\be$ is the noise random variable, usually assumed to be Gaussian. The regularizer can be then interpreted as \textit{prior} knowledge on the distribution of $\bx$. The data term is continuous and fully differentiable in all of $\R^n$. Therefore, tractability of (\ref{eq:generic_inverse_problem}) usually depends on how well behaved $\rho$ is. If $\rho$ is convex but possibly non-smooth, e.g. $\rho(\bx)=\norm{\bx}_1$, the problem can be efficiently solved with standard convex optimization methods like proximal gradients with guaranteed convergence and global optimality.\cite{beckFastIterativeShrinkageThresholding2009} More realistic priors, i.e. regularizers that more precisely capture the prior knowledge of image distributions, might potentially make (\ref{eq:generic_inverse_problem}) a much harder problem that compromises convergence and optimality properties.\cite{ulyanovDeepImagePrior2017}
-
-$ $\\
-We first note that the illumination ratios are albedo quasi-invariant, and therefore smooth within object boundaries. Therefore, total variation regularization on illuination ratio images could be particularly effective. To avoid extra notations, we use $\bx,\by$ as the corresponding illumination ratios that we want to reconstruct. Additionally, we adapt algorithm in \cite{romanoLittleEngineThat2016} for imposing algorithm induced priors with state-of-the-art denoisers. In summary, we want to optimize the following constrained problem with a set of affine constraints,
-\begin{align*}
-    \minimize  & \norm{\bA\bx_1 - \by}_2^2 + \frac{\lambda_2}{2} \bx_2^T(\bx_2 - \sD(\bx_2)) + \lambda_3 \norm{\bx_3}_1 \\
-    \subjectto & \bx_1 - \bx_2 = 0 \\
-               & \bG\bx_1 - \bx_3 = 0 \\
-\end{align*}
-where $\bx_1,\bx_2\in\R^{SP}$, $\bx_3\in\R^{2SP}$. $\lambda_2,\lambda_3>0$ are weights to the regularizers. $\bG\in \R^{2SP\times SP}$ is the discrete image gradient for $S$ images 
-\[
-    \bG =
-    \begin{bmatrix}
-        \bI_S \otimes \bG_x \\
-        \bI_S \otimes \bG_y \\
-    \end{bmatrix} 
-\]
-where $\bG_x,\bG_y\in\R^{P\times P}$ are the discrete image gradients for a single image computed using forward difference. We can gather constraints into a single linear system 
-\[
-    \bH\bx = 0
-    \quad\quad \text{where}\quad\quad
-    \bH = 
-    \begin{bmatrix}
-        \bI_{SP} & -\bI_{SP} & 0  \\
-        \bG    & 0    & -\bI_{SP}  \\
-    \end{bmatrix}
-    \quad
-    \bx = 
-    \begin{bmatrix}
-        \bx_1 \\ \bx_2 \\ \bx_3
-    \end{bmatrix}
-\]
-and arrive at an equivalent optimization problem
-\begin{equation}
-    \label{eq:method_optimization_problem}
-    \begin{aligned}
-        \minimize  & f_1(\bx_1) + \lambda_2 f_2(\bx_2) + \lambda_3 f_3(\bx_3) \\
-        \subjectto & (\bx_1,\bx_2,\bx_3) \in \sC
-    \end{aligned}
-\end{equation}
-where $\sC = \{\bx\in\R^{4SP} \;\mid\; \bH\bx = 0\}$ and 
-\begin{align*}
-    f_1(\bx_1)
-        &=\norm{\bA\bx_1 - \by}_2^2 \\
-    f_2(\bx_2)
-        &=\frac{1}{2} \bx_2^T(\bx_2 - \sD(\bx_2)) \\
-    f_3(\bx_3)
-        &=\norm{\bx_3}_1
-\end{align*}
-
-\subsection{Optimization}
-
-As shown previously, the scaled form ADMM for solving (\ref{eq:method_optimization_problem}) is given by 
-\begin{align*}
-    \bx_1^{k+1}
-        &= \prox_{(1/\rho)f_1}(\bz_1^k - \bu_1^k) 
-        = (I + \frac{2}{\rho} A^TA)^{-1} ( \bz_1^k - \bu_1^k + \frac{2}{\rho}A^T y) \\
-    \bx_2^{k+1}
-        &= \prox_{(\lambda_2/\rho)f_2}(\bz_2^k - \bu_2^k) 
-        = \frac{1}{\lambda_2+\rho} (\lambda_2 \sD(\bx_2^k) + \rho(\bz_2^k - \bu_2^k)) \\
-    \bx_3^{k+1}
-        &= \prox_{(\lambda_3/\rho)f_3} (\bz_3^k - \bu_3^k) 
-        = \sS_{\lambda_3/\rho}(\bz_3^k - \bu_3^k) \\
-    \bz^{k+1}
-        &= \prox_{(1/\rho)\sI_{\sC}}(\bx^{k+1} + \bu^k)
-        = (I - \bH^{\dagger}\bH)(\bx^{k+1}+\bu^k) \\
-    \bu^{k+1}
-        &= \bu^{k} + \bx^{k+1} - \bz^{k+1}
-\end{align*}
-
- 
-
+\subfile{literature_review/summary}
 
 
 \newpage
