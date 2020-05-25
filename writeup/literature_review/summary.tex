@@ -2,19 +2,53 @@
 
 \begin{document}  
 
-\section{Literature Review} 
+\section{Clarifications} 
  
+\subsection{Structured Light Stereo}
+
+Some relevant reiews are \cite{salviPatternCodificationStrategies2004},\cite{salviStateArtStructured2010} and \href{http://www.sci.utah.edu/~gerig/CS6320-S2013/Materials/CS6320-CV-S2012-StructuredLight-II.pdf}{slides}. A \textit{structured light stereometric system} is similar to a passive stereo system where one of the camera is replaced by a projector. A light source projects light a vertical plane of light that creates a narrow stripe on the scene. The intersection of an illumination plane of known spatial position (corresponds to a projector column) and a line of sight (corresponds to a camera pixel) determines a point. For dense reconstruction of the scene, many images must be taken. To speed up the scanning process, spatially modulated light projector has been suggested, in which multiple illumination planes or rays can be projected simultaneously as part of a single illumination pattern. Spatial-temporal modulation of illumination, i.e. sequentially projecting several patterns, can be used for reliable identification of light planes. To enable acquisition of dynamic scenes, the number of projected patterns used should be as small as possible. Intuitively, the projected pattern impose illusion of texture on the object, increasing the number of correspondences, which enables reconstruction. Structured light stereo is equivalent to (1) solving the correspondence problem and then (2) computing stereo using triangulation.
+
+
+\paragraph{The Correspondence Problem}
+
+The correspondence problem can be stated simply
+\begin{center}
+    \textit{
+        For each point in the left image, find the corresponding point in the right image
+    }
+\end{center}
+We first note that search space for the corresponding point can be restricted to pixels lying on the epipolar line. Epipolar plane is plane formed from points $p,o_1,o_2$ and epipolar line is intersection of epipolar plane with the image plane.
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=5in]{epipolar_constraint_correspondence}
+        \caption{non parallel (left) and parallel (right) camera setup. $pe$ and $p'e'$ are the epipolar lines}
+    \end{center}
+\end{figure}
+For structured light stereo systems, the art of designing robust, fast, reliable coding schemes serves to solve the correspondence problem.
+
+
+\paragraph{Triangulation}
+
+Given correspondence between projector and camera images, triangulation refers to the process of computing the distance of object relative to camera. Since a 3D point can be obtained by intersecting a ray (pixel of camera image) with a projector plane (a single code), it is necessary to encode a single axis in projected image to ensure unique reconstruction. 
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=3in]{parallel_camera}
+        \caption{parallel-calibrated binocular stereo}
+    \end{center}
+\end{figure}
+\noindent \textit{disparity} is the displacement between points of a conjugate pair $p_l,p_r$ (points in different images of projection of same point in the scene) when the two images are superimposed. In the context of parallel calibrated cameras, disparity is inversely proportional to depth, when baseline $b$ and focal length $f$ are known
+\begin{align*}
+    \frac{b}{z} = \frac{b + x_l - x_r}{z-f}
+    \quad\text{implies}\quad
+    z = \frac{bf}{x_l-x_r}
+\end{align*}
+
 \subsection{Structured Light Coding}
 
-Some relevant reiews are \cite{salviPatternCodificationStrategies2004},\cite{salviStateArtStructured2010} and \href{http://www.sci.utah.edu/~gerig/CS6320-S2013/Materials/CS6320-CV-S2012-StructuredLight-II.pdf}{slides}. A \textit{structured light stereometric system} is similar to a passive stereo system where one of the camera is replaced by a projector. A light source projects light a vertical plane of light that creates a narrow stripe on the scene. The intersection of an illumination plane of known spatial position and a line of sight determines a point. For dense reconstruction of the scene, many images must be taken. To speed up the scanning process, spatially modulated light projector has been suggested, in which multiple illumination planes or rays can be projected simultaneously as part of a single illumination pattern. Spatial-temporal modulation of illumination, i.e. sequentially projecting several patterns, can be used for reliable identification of light planes. To enable acquisition of dynamic scenes, the number of projected patterns used should be as small as possible. Some subtleties
-\begin{enumerate}
-    \item It is only necessary to encode a single axis, since a 3D point can be obtained by intersecting a line (pixel of camera image) with a light plane (a single code)
-    \item Encoding means locating points $x$ in the camera image whose corresponding point $y$ in the projector pattern is a priori known.
-    \item Intuitively, the projected pattern impose illusion of texture on the object, increasing the number of correspondences, which enables reconstruction. 
-\end{enumerate}
-  
+The goal of structured light coding is to find coding schemes (maps pattern intensity to indices of the projector light planes) that enables robust, reliable algorithms for finding correspondence.
 
-\paragraph{Horn \& Kiryati}
+
+\paragraph{Horn \& Kiryati} 
 
 This paper generalizes Gray code to n-ary code in order to reduce the number of patterns that needs to be projected, ($L^K$ instead of $2^K$ code words) \cite{hornOptimalStructuredLight1997}. The authors draw inspirations from communication theory, where the projector projects unique temporal codes, received at each image plane through a noisy channel and subsequently decoded. Let there be $K$ patterns and $L$ code words (distinct planes of light), we want to encode the indices of vertical light planes $x\in [L]$ using some encoding scheme $f:[L] \to \R^K$ such that the nearest neighbor decoding $\hat{x}(y) = \argmin_{x\in [L]} ( f(x)-y )$ of a normalized noisy observation $y\in\R^K$ minimizes the probability of depth estimation error. Given the forwarding model,
 \begin{align*}
@@ -37,6 +71,7 @@ implying $\ry|\rx=x\sim p_{\rn}(y - f(x))$. We want to minimize the probability 
 This optimization problem is hard. The paper suggest the use of space filling curves as the encoding function and established that Gray code is a special limiting case of the space filling curve. Note here we assume there is no \textit{mutual illumination}, i.e. there is no interval reflection and so the projected codes $f(x)$ is proportional to observation $y$. 
 
 
+\newpage
 
 \subsection{Image Priors} 
 
