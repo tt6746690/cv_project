@@ -70,6 +70,93 @@ implying $\ry|\rx=x\sim p_{\rn}(y - f(x))$. We want to minimize the probability 
 \end{align*}
 This optimization problem is hard. The paper suggest the use of space filling curves as the encoding function and established that Gray code is a special limiting case of the space filling curve. Note here we assume there is no \textit{mutual illumination}, i.e. there is no interval reflection and so the projected codes $f(x)$ is proportional to observation $y$. 
 
+\paragraph{Phase Shifting}
+
+Phase shifting is a particular coding method whereby the projector column coordinates are encoded as the (absolute) phase of a spatial sinusoidal pattern. Note we want to encode column coordinates because we only need to search along the horizontal epipolar lines. Let $N$ be number of columns to be encoded. When the scene is projected with a cosine pattern of period $T$ (measured in number of pixels) and therefore frequency $f=\frac{1}{T}$, an idealized image formation model for any pixel is 
+\begin{align}
+    I 
+        = I_0 + A\cos\left( \Phi \right)
+        = I_0 + A\cos\left( \phi \right)
+    \label{eq:phase_shift_image_formation_one_pixel}
+\end{align}
+where $I_0$ is the pixel intensity when no projection is used; $I$ is the pixel intensity measured; $A$ is amplitude (albedo/reflectance) of the signal; $\Phi = 2\pi f x = 2\pi n + \phi \in [0, 2\pi f N]$ for some number of period $n\in\N$ is the absolute phase, $\phi \in [0,2\pi]$ is the relative phase. When measured w.r.t. number of pixels, $x$ is the corresponding absolute phase and $\tilde{x}$ the corresponding relative phase, satisfying
+\begin{align}
+    x = Tn + \tilde{x}
+    \qquad\text{or}\qquad
+    x \equiv \tilde{x} \mod{T}
+\end{align}
+where $\tilde{x} = \frac{T \phi}{2\pi}$. In (\ref{eq:phase_shift_image_formation_one_pixel}), $I_0,A,\phi$ are unknown and so $\phi$ cannot be determined. To solve for $\phi$, phase shifting method projects $K$ sinusoidal patterns of same frequency, each shifted by $\varphi_k = \frac{2\pi (k-1)}{K}$ for $k=1,\cdots,K$. Thereby obtaining a system of $K$ equations in 3 unknowns. 
+\begin{align}
+    I_k = I_0 + A\cos\left(\phi + \varphi_k \right)
+    \qquad\text{for}\qquad
+    k = 1,\cdots,K
+    \label{eq:phase_shift_image_formation_one_pixel_shifted}
+\end{align}
+Although $K=3$ suffices, larger values of $K$ makes determination of relative phase $\phi$ more robust to noise. We determine $\phi$ using least squares
+\begin{align}
+    \text{minimize}_{\phi}\;\;\pb{
+        \epsilon(\phi,I_0,A) := 
+            \sum_{k=1}^{K} \pb{
+                I_k - \left(
+                    I_0 + A\cos\left( \phi + \varphi_k \right)
+                \right)
+            }^2
+    }
+    \label{eq:phase_shifting_least_squares}
+\end{align}
+Similar to appendix in \cite{morenoEmbeddedPhaseShifting2015} and results shown in \cite{pribanicEfficientMultiplePhase2010,morenoEmbeddedPhaseShifting2015}, we can show the following
+\begin{align*}
+    0
+        = \frac{\partial \epsilon}{\partial \phi}
+        &= 2A \sum_{k=1}^K I_i\sin \left( \phi + \varphi_k \right)
+        \propto \cos(\phi) \sum_{k=1}^K I_k \sin(\varphi_k) + \sin(\phi) \sum_{k=1}^{K} I_k \cos(\varphi_k) \\
+    \phi
+        &= \tan^{-1}\pb{
+            -
+            \frac{
+                \sum_{k=1}^K I_k \sin(\varphi_k)
+            }{
+                \sum_{k=1}^K I_k \cos(\varphi_k)
+            }
+        }
+\end{align*}
+\textit{phase unwrapping} aims to recover absolute phase $x$ from relative phase $\tilde{x}$, which is non-trivial unless $T\geq N$. One particular choice of phase unwrapping method relies results in number theory \cite{gushovAutomaticProcessingFringe1991}. The idea is to project patterns whose periods $T_1,\cdots,T_F$ are relative co-prime, each shifted by $K$ times such that relative phase $\tilde{x}_1,\cdots,\tilde{x}_F$ can be solved using (\ref{eq:phase_shifting_least_squares}), from which we can use the Chinese Reminder Theorem to solve the following system of congruences
+\begin{align}
+    x
+        &= \tilde{x}_1 \mod{T_1} 
+        \nonumber \\
+    &\vdots  
+        \nonumber \\
+    x
+        &= \tilde{x}_F \mod{T_F} 
+    \label{eq:phase_shifting_congruence_system}
+\end{align}
+Intuitively, projecting $F$ spatial sinusoids with period $T_1,\cdots,T_F$ with different frequency emulates the projection of a low frequency spatial sinusoid with period $T = T_1\times \cdots\times T_F$, shown in Figure (\ref{fig:phase_shifting_emulate_low_freq}).
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[height=1in,width=6in]{phase_shifting_chinese_reminder_lower_freq}
+    \end{center}
+    \caption{Two sinusoids with $T_1=17,T_2=31$ emulates a low frequency sinusoid with $T=527$}
+    \label{fig:phase_shifting_emulate_low_freq}
+\end{figure}
+As specified in \cite{guptaMicroPhaseShifting2012} and experimented in Figure (\ref{fig:phase_shifting_not_robust_to_noise}), phase unwrapping is unstable when the relatives phases $\tilde{x}_1,\cdots,\tilde{x}_F$ are noisy.
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[height=1in,width=6in]{phase_shifting_chinese_reminder_lower_freq_noisy}
+    \end{center}
+    \caption{When relative phase $\tilde{x}_1,\tilde{x}_2$ are corrupted with i.i.d. additive Gaussian noise $\sN(\boldsymbol{0},0.1 \cdot \textsf{range}(\tilde{x}) \cdot \bI)$, phase unwrapping is unable to recover the absolute phase $x$ robustly.}
+    \label{fig:phase_shifting_not_robust_to_noise}
+\end{figure}
+Simple application of medium filtering of the relative phase does not seem to help with phase unwrapping. Wavelet denoising with \texttt{wdenoise} seems to help to a limited extend, as shown in Figure (\ref{fig:phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser})
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[height=1in,width=6in]{phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser}
+    \end{center}
+    \caption{$\tilde{x}_1$ and wavelet denoised $\tilde{x}_1$ ($x_2,\tilde{x}_2$ not shown) helps with phase unwrapping to some extend}
+    \label{fig:phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser}
+\end{figure}
+
+
 
 \newpage
 
