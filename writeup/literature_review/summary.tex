@@ -120,12 +120,58 @@ Similar to appendix in \cite{morenoEmbeddedPhaseShifting2015} and results shown 
             }
         }
 \end{align*}
-\textit{phase unwrapping} aims to recover absolute phase $x$ from relative phase $\tilde{x}$, which is non-trivial unless $T\geq N$. One particular choice of phase unwrapping method relies results in number theory \cite{gushovAutomaticProcessingFringe1991}. The idea is to project patterns whose periods $T_1,\cdots,T_F$ are relative co-prime, each shifted by $K$ times such that relative phase $\tilde{x}_1,\cdots,\tilde{x}_F$ can be solved using (\ref{eq:phase_shifting_least_squares}), from which we can use the Chinese Reminder Theorem to solve the following system of congruences
+An alternative formulation as mentioned in \cite{guptaMicroPhaseShifting2012}, we can write (\ref{eq:phase_shift_image_formation_one_pixel_shifted}) as a linear system of equations
+\begin{align*}
+    I_k
+        &= I_0 + A\cos(\phi)\cos(\varphi_k) - A\sin(\phi)\sin(\varphi_k)
+        = \begin{bmatrix}
+            1 & \cos(\varphi_k) & -\sin(\varphi_k)
+        \end{bmatrix}
+        \begin{bmatrix}
+            I_0 \\ A\cos(\phi) \\ A\sin(\phi)
+        \end{bmatrix} \\
+    \underbrace{
+        \begin{bmatrix}
+            I_1 \\ \vdots \\ I_K
+        \end{bmatrix}
+    }_{\bI}
+        &= 
+        \underbrace{
+            \begin{bmatrix}
+                1 & \cos(\varphi_1) & -\sin(\varphi_1) \\
+                \vdots & \vdots & \vdots \\
+                1 & \cos(\varphi_K) & -\sin(\varphi_K) \\
+            \end{bmatrix}
+        }_{\bM}
+        \underbrace{
+            \begin{bmatrix}
+                I_0 \\ A\cos(\phi) \\ A\sin(\phi)
+            \end{bmatrix}
+        }_{\bu}
+\end{align*}
+and solve for $\bu$ using least squares,
+\begin{align}
+    \text{minimize}_{\bu}\;\;
+        \norm{\bI-\bM\bu}_2^2
+    \label{eq:phase_shifting_least_squares_u}
+\end{align}
+The relative phase is then given by
+\begin{align*}
+    \phi 
+        = \cos^{-1}\left( \frac{\bu_2}{A} \right)
+    \qquad\text{where}\qquad
+    A
+        = \sqrt{\bu_2^2 + \bu_3^2}
+    \quad\text{and}\quad
+    \bu
+        = M^{\dagger} \bI
+\end{align*}
+Note the optimization problem formulated in (\ref{eq:phase_shifting_least_squares},\ref{eq:phase_shifting_least_squares_u}) are not equivalent. \textit{phase unwrapping} aims to recover absolute phase $x$ from relative phase $\tilde{x}$, which is non-trivial unless $T\geq N$. One particular choice of phase unwrapping method relies results in number theory \cite{gushovAutomaticProcessingFringe1991}. The idea is to project patterns whose periods $T_1,\cdots,T_F$ are relative co-prime, each shifted by $K$ times such that relative phase $\tilde{x}_1,\cdots,\tilde{x}_F$ can be solved using (\ref{eq:phase_shifting_least_squares}) or (\ref{eq:phase_shifting_least_squares_u}), from which we can use the Chinese Reminder Theorem to solve the following system of congruences
 \begin{align}
     x
         &= \tilde{x}_1 \mod{T_1} 
         \nonumber \\
-    &\vdots  
+    &\vdots
         \nonumber \\
     x
         &= \tilde{x}_F \mod{T_F} 
