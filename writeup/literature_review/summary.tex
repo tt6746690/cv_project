@@ -2,7 +2,7 @@
 
 \begin{document}  
 
-\section{Clarifications} 
+\section{Details}
  
 \subsection{Structured Light Stereo}
 
@@ -70,9 +70,9 @@ implying $\ry|\rx=x\sim p_{\rn}(y - f(x))$. We want to minimize the probability 
 \end{align*}
 This optimization problem is hard. The paper suggest the use of space filling curves as the encoding function and established that Gray code is a special limiting case of the space filling curve. Note here we assume there is no \textit{mutual illumination}, i.e. there is no interval reflection and so the projected codes $f(x)$ is proportional to observation $y$. 
 
-\paragraph{Phase Shifting}
+\paragraph{Phase Shifting (The Setup)}
 
-Phase shifting is a particular coding method whereby the projector column coordinates are encoded as the (absolute) phase of a spatial sinusoidal pattern. Note we want to encode column coordinates because we only need to search along the horizontal epipolar lines. Let $N$ be number of columns to be encoded. When the scene is projected with a cosine pattern of period $T$ (measured in number of pixels) and therefore frequency $f=\frac{1}{T}$, an idealized image formation model for any pixel is 
+Phase shifting is a particular coding method whereby the projector column coordinates are encoded as the (absolute) phase of a spatial sinusoidal pattern. Note we want to encode column coordinates because we only need to search along the horizontal epipolar lines. Let $N$ be number of columns to be encoded. When the scene is projected with a cosine pattern of period $T$ (measured in number of pixels) and therefore frequency $f=\frac{1}{T}$, an idealized image formation model for any pixel is
 \begin{align}
     I 
         = I_0 + A\cos\left( \Phi \right)
@@ -166,7 +166,9 @@ The relative phase is then given by
     \bu
         = M^{\dagger} \bI
 \end{align*}
-Note the optimization problem formulated in (\ref{eq:phase_shifting_least_squares},\ref{eq:phase_shifting_least_squares_u}) are not equivalent. \textit{phase unwrapping} aims to recover absolute phase $x$ from relative phase $\tilde{x}$, which is non-trivial unless $T\geq N$. One particular choice of phase unwrapping method relies results in number theory \cite{gushovAutomaticProcessingFringe1991}. The idea is to project patterns whose periods $T_1,\cdots,T_F$ are relative co-prime, each shifted by $K$ times such that relative phase $\tilde{x}_1,\cdots,\tilde{x}_F$ can be solved using (\ref{eq:phase_shifting_least_squares}) or (\ref{eq:phase_shifting_least_squares_u}), from which we can use the Chinese Reminder Theorem to solve the following system of congruences
+Note the optimization problem formulated in (\ref{eq:phase_shifting_least_squares},\ref{eq:phase_shifting_least_squares_u}) are not equivalent. 
+
+\paragraph{Phase Shifting (Phase Unwrapping)} \textit{phase unwrapping} aims to recover absolute phase $x$ from relative phase $\tilde{x}$, which is non-trivial unless $T\geq N$. One particular choice of phase unwrapping method relies results in number theory \cite{gushovAutomaticProcessingFringe1991}. The idea is to project patterns whose periods $T_1,\cdots,T_F$ are relative co-prime, each shifted by $K$ times such that relative phase $\tilde{x}_1,\cdots,\tilde{x}_F$ can be solved using (\ref{eq:phase_shifting_least_squares}) or (\ref{eq:phase_shifting_least_squares_u}), from which we can use the Chinese Reminder Theorem to solve a system of congruences
 \begin{align}
     x
         &= \tilde{x}_1 \mod{T_1} 
@@ -177,31 +179,28 @@ Note the optimization problem formulated in (\ref{eq:phase_shifting_least_square
         &= \tilde{x}_F \mod{T_F} 
     \label{eq:phase_shifting_congruence_system}
 \end{align}
-Intuitively, projecting $F$ spatial sinusoids with period $T_1,\cdots,T_F$ with different frequency emulates the projection of a low frequency spatial sinusoid with period $T = T_1\times \cdots\times T_F$, shown in Figure (\ref{fig:phase_shifting_emulate_low_freq}).
+Intuitively, projecting $F$ spatial sinusoids with period $T_1,\cdots,T_F$ with different frequency emulates the projection of a low frequency spatial sinusoid with period $T = T_1\times \cdots\times T_F$, shown in Figure (\ref{fig:phase_shifting_emulate_low_freq}). As specified in \cite{guptaMicroPhaseShifting2012} and experimented in Figure (\ref{fig:phase_shifting_not_robust_to_noise}), phase unwrapping is unstable when the relatives phases $\tilde{x}_1,\cdots,\tilde{x}_F$ are noisy. Simple application of medium filtering of the relative phase does not seem to help with phase unwrapping. Wavelet denoising using \texttt{wdenoise} seems to help to a limited extend, as shown in Figure (\ref{fig:phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser})
 \begin{figure}[h!]
     \begin{center}
-        \includegraphics[height=1in,width=6in]{phase_shifting_chinese_reminder_lower_freq}
+        \includegraphics[height=1in,width=5in]{phase_shifting_chinese_reminder_lower_freq}
     \end{center}
     \caption{Two sinusoids with $T_1=17,T_2=31$ emulates a low frequency sinusoid with $T=527$}
     \label{fig:phase_shifting_emulate_low_freq}
 \end{figure}
-As specified in \cite{guptaMicroPhaseShifting2012} and experimented in Figure (\ref{fig:phase_shifting_not_robust_to_noise}), phase unwrapping is unstable when the relatives phases $\tilde{x}_1,\cdots,\tilde{x}_F$ are noisy.
 \begin{figure}[h!]
     \begin{center}
-        \includegraphics[height=1in,width=6in]{phase_shifting_chinese_reminder_lower_freq_noisy}
+        \includegraphics[height=1in,width=5in]{phase_shifting_chinese_reminder_lower_freq_noisy}
     \end{center}
     \caption{When relative phase $\tilde{x}_1,\tilde{x}_2$ are corrupted with i.i.d. additive Gaussian noise $\sN(\boldsymbol{0},0.1 \cdot \textsf{range}(\tilde{x}) \cdot \bI)$, phase unwrapping is unable to recover the absolute phase $x$ robustly.}
     \label{fig:phase_shifting_not_robust_to_noise}
 \end{figure}
-Simple application of medium filtering of the relative phase does not seem to help with phase unwrapping. Wavelet denoising with \texttt{wdenoise} seems to help to a limited extend, as shown in Figure (\ref{fig:phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser})
 \begin{figure}[h!]
     \begin{center}
-        \includegraphics[height=1in,width=6in]{phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser}
+        \includegraphics[height=1in,width=5in]{phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser}
     \end{center}
     \caption{$\tilde{x}_1$ and wavelet denoised $\tilde{x}_1$ ($x_2,\tilde{x}_2$ not shown) helps with phase unwrapping to some extend}
     \label{fig:phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser}
 \end{figure}
-
 
 
 \newpage
