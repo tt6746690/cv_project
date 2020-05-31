@@ -1,6 +1,44 @@
 
 # Meeting Notes
 
+
+
+## How to use the camera system
+
++ bitfile 
+
++ lightcrafter gui
+    + display mode: stored pattern sequence
+    + connection
+        + first connect usb to projector
+        + check ip address in network settings
+        + fill in ip to connection tab
+    + stored pattern sequence
+        + bit depth: 1
+        + pattern count: # images
+        + pattern type: normal 
+        + input trigger: external (positive)
+        + LED select: Green
+        + exposure: 2000
+
++ imagegui
+    + bit file: fixedFPN
+    + pattern file: 
+        + the code tensor
+        + for groundtruth stuff: the 5black
+    + exposure: 60
+    + masks: 1
+    + trigger num: 12
+
+
+
++ camera setup 
+    + physical size of the field
+    + object to image distance
++ textured objects
+    + 
+
+
 ## 2018.11.09
 
 + what was tried before

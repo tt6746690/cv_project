@@ -331,65 +331,72 @@ where $\prox_{\lambda f}: \R^n \to \R^n$ is the proximal operator of $\lambda f$
 \subsubsection{Some Common Proximal Operator}
 
 Evaluating the proximal operator involves solving a convex optimization problem. We will show how we can compute the proximal operators relevant to our methods. (See section 6 of \cite{parikhProximalAlgorithms2014}) 
-\begin{enumerate}
-    \item The proximal operator of an indicator function onto a convex set $\sC$ is simply the projection onto $\sC$. 
-    \[
-        \prox_{(1/\rho)\delta_{\sC}}(\bx^{k+1} + \bu^k) =  \textstyle\prod_{\sC}(\bx^{k+1}+\bu^k)
-    \]
-    When $\sC$ is affine, there is an analytic expression for the projection
-    \begin{align*}
-        \textstyle\prod_{\sC}(\bv) 
-            &= \bv - A^{\dagger}(A\bv-\bb)  \\
-            &= \bv - A^T(A^TA)^{-1}(A\bv-\bb) \tag{if $A\in\R^{m\times n}$ has $m<n$ and full rank}
-    \end{align*}
-    \item Let $f$ be $\ell$-2 norm of an affine function, assuming $A\in\R^{p\times n}$
-    \[
-        f(x) 
-            = \frac{1}{2} \norm{A\bx-\by}_2^2 
-            = \frac{1}{2}\bx^TA^TA\bx - \by^TA\bx + \frac{1}{2}\by^T\by
-    \]
-    Then proximal operator of $(1/\rho)f$ has a closed form expression
-    \[
-        \prox_{(1/\rho)f}(\bv) 
-            = (\rho I + A^TA)^{-1} (\rho \bv + A^T \by)
-    \]
-    which can be solved efficiently with conjugate gradient, as $(\rho I + A^TA) \succ 0$. If $\rho$ is fixed throughout, we can use Cholesky factorization to factor $(\rho I + A^TA)$ in $\sO(n^3)$. Any subsequent computation of the inverse with back-solve would only cost $\sO(n^2)$. When $p<<n$, we can exploit this by using the matrix inversion lemma, 
-    \[
-        (\rho I + A^TA)^{-1} 
-            = \frac{1}{\rho} I - \frac{1}{\rho} A^T \left( \rho I + AA^T \right)^{-1} A
-    \]
-    The dominant cost is computing $(AA^T)^{-1} \in \R^{p\times p}$. Each $x$ update now costs $\sO(np^2)$. If use Cholesky factorization to factor $(\rho I + AA^T)$ once, subsequent iteration can be carried out in $\sO(np)$ flops, which is essentially costs for matrix-vector multiply.
-    \item Let $f(\bx) = \norm{\bx}_1$, then the proximal operator of $\lambda f$ is
-    \[
-        \prox_{\lambda f}(\bv) 
-            = \sS_{\lambda}(\bv)
-    \]
-    where $\sS$ is element-wise soft shrinkage operator
-    \[
-        (\sS_{\lambda}(\bv))_i
-            = (1-\lambda/|\bv_i|)_{+}\bv_i
-        \quad\quad
-        \bx_{+} = \max(\bx,0)
-    \]
-    \item Let $f(\bx) = (1/2)\bx^T(\bx-\sD(\bx))$ for some denoiser $\sD$, the explicit regularizer in RED.\cite{romanoLittleEngineThat2016}. We use one fixed point iteration evaluate the approximate proximal operator for $\lambda f$. Specifically, we want to evaluate 
-    \[
-        \prox_{(\lambda/\rho)f} (\bv)
-            = \argmin_{\bx} \frac{\lambda}{2}\bx^T(\bx-\sD(\bx)) + \frac{\rho}{2} \norm{\bx-\bv}_2^2
-    \]
-    Setting the gradient to zero, we arrive at the fixed point iteration
-    \[
-        \bx^{(k)} \leftarrow \frac{1}{\rho+\lambda}(
-            \lambda \sD(\bx^{(k-1)}) + \rho \bv
-        )
-    \]
-    If we only iterate once, then 
-    \[
-        \prox_{(\lambda/\rho)f} (\bv)
-            = \frac{1}{\rho+\lambda}( \lambda \sD(\bx^{(0)}) + \rho \bv )
-    \]
-    for some initialization value $\bx^{(0)}$
-\end{enumerate}
 
+\paragraph{Projection Onto Convex Set} 
+The proximal operator of an indicator function onto a convex set $\sC$ is simply the projection onto $\sC$. 
+\[
+    \prox_{(1/\rho)\delta_{\sC}}(\bx^{k+1} + \bu^k) =  \textstyle\prod_{\sC}(\bx^{k+1}+\bu^k)
+\]
+When $\sC$ is affine, there is an analytic expression for the projection
+\begin{align*}
+    \textstyle\prod_{\sC}(\bv) 
+        &= \bv - A^{\dagger}(A\bv-\bb)  \\
+        &= \bv - A^T(A^TA)^{-1}(A\bv-\bb) \tag{if $A\in\R^{m\times n}$ has $m<n$ and full rank}
+\end{align*}
+
+\paragraph{Quadratic Function}
+
+Let $f$ be $\ell$-2 norm of an affine function, assuming $A\in\R^{p\times n}$
+\[
+    f(x) 
+        = \frac{1}{2} \norm{A\bx-\by}_2^2 
+        = \frac{1}{2}\bx^TA^TA\bx - \by^TA\bx + \frac{1}{2}\by^T\by
+\]
+Then proximal operator of $(1/\rho)f$ has a closed form expression
+\[
+    \prox_{(1/\rho)f}(\bv) 
+        = (\rho I + A^TA)^{-1} (\rho \bv + A^T \by)
+\]
+which can be solved efficiently with conjugate gradient, as $(\rho I + A^TA) \succ 0$. If $\rho$ is fixed throughout, we can use Cholesky factorization to factor $(\rho I + A^TA)$ in $\sO(n^3)$. Any subsequent computation of the inverse with back-solve would only cost $\sO(n^2)$. When $p<<n$, we can exploit this by using the matrix inversion lemma, 
+\[
+    (\rho I + A^TA)^{-1} 
+        = \frac{1}{\rho} I - \frac{1}{\rho} A^T \left( \rho I + AA^T \right)^{-1} A
+\]
+The dominant cost is computing $(AA^T)^{-1} \in \R^{p\times p}$. Each $x$ update now costs $\sO(np^2)$. If use Cholesky factorization to factor $(\rho I + AA^T)$ once, subsequent iteration can be carried out in $\sO(np)$ flops, which is essentially costs for matrix-vector multiply.
+
+\paragraph{$\ell$-1 Norm} 
+Let $f(\bx) = \norm{\bx}_1$, then the proximal operator of $\lambda f$ is
+\[
+    \prox_{\lambda f}(\bv) 
+        = \sS_{\lambda}(\bv)
+\]
+where $\sS$ is element-wise soft shrinkage operator
+\[
+    (\sS_{\lambda}(\bv))_i
+        = (1-\lambda/|\bv_i|)_{+}\bv_i
+    \quad\quad
+    \bx_{+} = \max(\bx,0)
+\]
+
+\paragraph{RED Explicit Regularizer}
+
+Let $f(\bx) = (1/2)\bx^T(\bx-\sD(\bx))$ for some denoiser $\sD$, the explicit regularizer in RED.\cite{romanoLittleEngineThat2016}. We use one fixed point iteration evaluate the approximate proximal operator for $\lambda f$. Specifically, we want to evaluate 
+\[
+    \prox_{(\lambda/\rho)f} (\bv)
+        = \argmin_{\bx} \frac{\lambda}{2}\bx^T(\bx-\sD(\bx)) + \frac{\rho}{2} \norm{\bx-\bv}_2^2
+\]
+Setting the gradient to zero, we arrive at the fixed point iteration
+\[
+    \bx^{(k)} \leftarrow \frac{1}{\rho+\lambda}(
+        \lambda \sD(\bx^{(k-1)}) + \rho \bv
+    )
+\]
+If we only iterate once, then 
+\[
+    \prox_{(\lambda/\rho)f} (\bv)
+        = \frac{1}{\rho+\lambda}( \lambda \sD(\bx^{(0)}) + \rho \bv )
+\]
+for some initialization value $\bx^{(0)}$
 
 
 
