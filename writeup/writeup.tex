@@ -62,7 +62,7 @@ We aim to improve upon low level image proecssing pipeline for the coded two-buc
 
 \subsection{Optimization Problem}
 
-Assuming an isotropic Gaussian noise model ($\by=\bA\bx + \be$ where $\be\sim \sN(0,\sigma^2 \bI)$), and prior $p_{\rx}(x) \propto \exp\pc{ (\lambda/\sigma^2) \rho(\bx) }$ where $\rho:\R^{SP}\to\R$ is some regularizer for $\bx$. Given noisy measurement $\by$, \textit{max a posterior} estimate $\hat{\bx}$ can be obtained by solving the following
+Assuming an isotropic Gaussian noise model ($\by=\bA\bx + \be$ where $\be\sim \sN(0,\sigma^2 \bI)$), and prior $p_{\rx}(x) \propto \exp\pc{- (\lambda/\sigma^2) \rho(\bx) }$ where $\rho:\R^{SP}\to\R$ is some regularizer for $\bx$. Given noisy measurement $\by$, \textit{max a posterior} estimate $\hat{\bx}$ can be obtained by solving the following
 \begin{align}
     \text{minimize}\;
         \frac{1}{2} \norm{\bA\bx-\by}_2^2 + \lambda \rho(\bx)

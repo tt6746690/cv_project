@@ -227,7 +227,7 @@ where $y$ is the dual variable, and $\rho>0$ is the penalty parameter. The metho
         \label{eq:method_of_multiplier_minimization} \\
     y^{k+1}
         &= y^k + \rho \nabla L_{\rho}(x^{k+1},z^{k+1},y)
-        = y^k + \rho \left( Ax^{k+1} + By^{k+1} - c \right)
+        = y^k + \rho \left( Ax^{k+1} + Bz^{k+1} - c \right)
         \label{eq:method_of_multiplier_dual_update}
 \end{align}
 When regular lagrangian is used and when objective is separable, the minimization step (\ref{eq:method_of_multiplier_minimization}) is also separable with respect to the primal variables $x,z$. The addition of Euclidean norm on the residual of primal equlity constraints makes the optimization coupled. ADMM is method of multiplier where a single Gauss-Seidel pass over the primal variable is used instead of jointly optimizing for $x,z$.
@@ -239,7 +239,7 @@ When regular lagrangian is used and when objective is separable, the minimizatio
         &= \argmin_{z} L_{\rho}(x^{k+1},z,y^k) 
         \nonumber \\
     y^{k+1}
-        &= y^k + \rho \left( Ax^{k+1} + By^{k+1} - c \right)
+        &= y^k + \rho \left( Ax^{k+1} + Bz^{k+1} - c \right)
         \label{eq:admm_iterates_dual_update}
 \end{align}
 We can gather the residual term $r=Ax+Bz-c$ and completing the squares and get
@@ -406,7 +406,7 @@ Numerous inverse problem in image processing are modeled using the following rel
 \[
     y = Ax + \epsilon   
 \]
-wherer $y\in\R^m$ is noisy measurement, $x\in\R^n$ are true values, $A \in \R^{m\times n}$ captures the forward relationship, $\epsilon\in\R^m$ is noise. The goal is to recover $x$ from noisy $y$ by making assumptions about the noise distributioon $\epsilon$ and exploiting structure in the latent variable $x$.
+wherer $y\in\R^m$ is noisy measurement, $x\in\R^n$ are unknown image, $A \in \R^{m\times n}$ captures the forward relationship, $\epsilon\in\R^m$ is noise. The goal is to estimate $x$ from noisy $y$ by making assumptions about the noise distributioon $\epsilon$ and exploiting structure in the latent variable $x$.
 
 
 \subsubsection{MAP inference under Gaussian Noise}
