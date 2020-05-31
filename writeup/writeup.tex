@@ -54,33 +54,25 @@
 We aim to improve upon low level image proecssing pipeline for the coded two-bucket camera. Specifically, we aim to jointly upsample, demultiplex, and denoise two-bucket images to produce full resolution images under different illumination conditions for downstream reconstruction tasks.
 
 \subfile{camera/summary}
- 
+
+
 
 \section{Methods}
 
-\subsection{A Linear Inverse Problem}
 
-We consider the problem of recovering full resolution images $\bX$ under $S$ illuminations from a two-bucket image $\bY$ as an linear inverse problem. Let $\bA \in \R^{2P\times SP}$ represent a linear map that illumination multiplexes and subsamples $\bX$,
-\[
-    \bA = \bB(\bW\otimes \bI_P)
-\]
-where $\bI_P\in\R^{P\times P}$ is identity. From (\ref{eq:subsampling_relation}) and (\ref{eq:image_formation}), there exists a linear relationship between $\bx$ and $\by$,
-\begin{equation}
-    \label{eq:linear_mapping}
-    \by = \bB \vec{\sI} = \bB \vec{\bX \bW^T} = \bB(\bW \otimes \bI_P) \vec{\bX} = \bA\bx
-\end{equation}
-Note (\ref{eq:linear_mapping}) is an underdetermined system. Given 2 images, we want to recover $S$ images - the larger the number of subframes, the harder the recovery becomes. This asks for stronger prior knowledge of the underlying distribution of $\bx$ to restrict search space for solutions as $S$ increases. Jointly upsample and demultiplex enforces a prior knowledge of image formation. Instead of treating upsampling (recover $2F$ images $\sI$ from $2$ images $\bY$) and demultiplexing (recover $S$ images $\bX$ from $2F$ images $\sI$) as distinct steps, we aim to recover $\bX$ directy from $\bY$, in a single step, by solving the following unconstrained optimization problem,
-\begin{equation}
+\subsection{Optimization Problem}
+
+Assuming an isotropic Gaussian noise model ($\by=\bA\bx + \be$ where $\be\sim \sN(0,\sigma^2 \bI)$), and prior $p_{\rx}(x) \propto \exp\pc{ (\lambda/\sigma^2) \rho(\bx) }$ where $\rho:\R^{SP}\to\R$ is some regularizer for $\bx$. Given noisy measurement $\by$, \textit{max a posterior} estimate $\hat{\bx}$ can be obtained by solving the following
+\begin{align}
+    \text{minimize}\;
+        \frac{1}{2} \norm{\bA\bx-\by}_2^2 + \lambda \rho(\bx)
     \label{eq:generic_inverse_problem}
-    \begin{aligned}
-        \minimize & \norm{\bA\bx - \by}_2^2 + \lambda\rho(\bx) \\
-    \end{aligned}
-\end{equation}
-where $\rho:\R^{SP}\to\R$ are regularizers for $\bx$, the optimization variable. The problem (\ref{eq:generic_inverse_problem}) has a bayesian interpretation. Specifically, the $\ell$-2 norm can be interpreted as a log-likelihood \textit{data term} that captures the following probablistic relationship between recovered image $\bx$ and observation $\by$, 
-\[
-    \by = \bA\bx + \be    
-\]
-where $\be$ is the noise random variable, usually assumed to be Gaussian. The regularizer can be then interpreted as \textit{prior} knowledge on the distribution of $\bx$. The data term is continuous and fully differentiable in all of $\R^n$. Therefore, tractability of (\ref{eq:generic_inverse_problem}) usually depends on how well behaved $\rho$ is. If $\rho$ is convex but possibly non-smooth, e.g. $\rho(\bx)=\norm{\bx}_1$, the problem can be efficiently solved with standard convex optimization methods like proximal gradients with guaranteed convergence and global optimality.\cite{beckFastIterativeShrinkageThresholding2009} More realistic priors, i.e. regularizers that more precisely capture the prior knowledge of image distributions, might potentially make (\ref{eq:generic_inverse_problem}) a much harder problem that compromises convergence and optimality properties.\cite{ulyanovDeepImagePrior2017}
+\end{align}
+
+\subsection{Solving Inverse Problem using RED}
+
+To integrate model-based optiimzation and recent advances in learning-based method, plug-and-play (PnP) prior enforces implicit prior by using state of art denoiser to solve the subproblem within iterative methods like ADMM and PGM \cite{venkatakrishnanPlugandPlayPriorsModel2013}. RED derived an explicit form for the prior $\rho$ that give rise to PnP method \cite{romanoLittleEngineThat2016}. Here we use RED to solve (\ref{eq:generic_inverse_problem}).
+
 
 $ $\\
 We first note that the illumination ratios are albedo quasi-invariant, and therefore smooth within object boundaries. Therefore, total variation regularization on illuination ratio images could be particularly effective. To avoid extra notations, we use $\bx,\by$ as the corresponding illumination ratios that we want to reconstruct. Additionally, we adapt algorithm in \cite{romanoLittleEngineThat2016} for imposing algorithm induced priors with state-of-the-art denoisers. In summary, we want to optimize the following constrained problem with a set of affine constraints,
@@ -151,102 +143,7 @@ As shown below, the scaled form ADMM for solving (\ref{eq:method_optimization_pr
 \end{align*}
 
  
-
-\subsection{Constrained Convex Optimization}
-
-Alternating Method of Multipliers (ADMM) is an efficient convex optimization algorithm for minimizing the sum of nonsmooth convex separable functions subject to a set of linear equality constraints. It combines the advantage of dual decomposition, where we can solve subproblems at each iteration, and that of method of multipliers, where optimization over augmented lagrangian relaxes strict convexity condition for the objective.\cite{boydDistributedOptimizationStatistical2011} Specifically, we are interested in solving the following constrained convex optimization problem
-\begin{equation}
-    \label{eq:constrained_cvx}
-    \begin{aligned}
-        \underset{\bx_1,\cdots,\bx_N}{\minimize}  & \sum_{i=1}^N f_i(\bx_i) \\
-        \subjectto & (\bx_1,\cdots,\bx_N) \in \sC \\
-    \end{aligned}
-\end{equation}
-where $\bx_i\in\R^{n_i}$, $f_i: \R^{n} \to (-\infty,\infty)$ are closed proper convex functions for $i=1,\cdots,N$, and $\sC$ is an affine set of the form
-\[
-    \sC = \{ \bx \in\R^{\sum_i n_i} \;\mid\; A \bx = \bb \}    
-\]
-which has an equivalent ADMM form \cite{boydDistributedOptimizationStatistical2011},
-\begin{equation}
-    \label{eq:constrained_cvx_admm_form}
-    \begin{aligned}
-        \underset{\bx,\bz}{\minimize}  & f(\bx) + \sI_{\sC}(\bz) \\
-        \subjectto & \bx - \bz = 0 \\
-    \end{aligned}
-\end{equation}
-where $f(\bx) = \sum_{i=1}^N f_i(\bx_i)$. The scaled form of ADMM for (\ref{eq:constrained_cvx_admm_form}) is 
-\begin{align*}
-    \bx_i^{k+1} 
-        &= \argmin_{\bx_i} \left( f_i(\bx_i) + \frac{\rho}{2} \norm{\bx_i - (\bz_i^k - \bu_i^k)}_2^2 \right) 
-        = \prox_{(1/\rho)f_i}(\bz_i^k - \bu_i^k) \\
-    \bz^{k+1}
-        &= \argmin_{\bz} \left( \sI_{\sC}(\bz) + \frac{\rho}{2} \norm{ \bz - (\bx^{k+1} + \bu^k) }_2^2 \right)
-        = \prox_{(1/\rho)\sI_{\sC}}(\bx^{k+1} + \bu^k) \\
-    \bu^{k+1} 
-        &= \bu^k + \bx^{k+1} - \bz^{k+1}
-\end{align*}
-$\bu^{k}$ is the scaled dual variable. $\rho>0$ is the augmented lagrangian parameter. $\prox_{\lambda f}: \R^n \to \R^n$ is the proximal operator of $\lambda f$, $\lambda >0$, 
-\[
-    \prox_{\lambda f}(\bv) = \argmin_{\bx} \left( f(\bx) + \frac{1}{2\lambda} \norm{\bx-\bv}_2^2 \right)    
-\]
-
-\subsection{Evaluating the Proximal Operator}
-
-Evaluating the proximal operator involves solving a convex optimization problem. We will show how we can compute the proximal operators relevant to our methods. (See section 6 of \cite{parikhProximalAlgorithms2014}) 
-\begin{enumerate}
-    \item The proximal operator of an indicator function onto a convex set $\sC$ is simply the projection onto $\sC$. 
-    \[
-        \prox_{(1/\rho)\sI_{\sC}}(\bx^{k+1} + \bu^k) =  \textstyle\prod_{\sC}(\bx^{k+1}+\bu^k)
-    \]
-    When $\sC$ is affine, there is an analytic expression for the projection
-    \begin{align*}
-        \textstyle\prod_{\sC}(\bv) 
-            &= \bv - A^{\dagger}(A\bv-\bb)  \\
-            &= \bv - A^T(A^TA)^{-1}(A\bv-\bb) \tag{if $A\in\R^{m\times n}$ has $m<n$ and full rank}
-    \end{align*}
-    \item Let $f$ be $\ell$-2 norm of an affine function, 
-    \[
-        f(x) = \norm{A\bx-\by}_2^2 = \bx^TA^TA\bx - 2\by^TA\bx + \by^T\by
-    \]
-    Then proximal operator of $(1/\rho)f$ has a closed form expression
-    \[
-        \prox_{(1/\rho)f}(\bv) 
-            = \prox_{(2/\rho)(1/2)f}
-            = (I + \frac{2}{\rho}A^TA)^{-1} (\bv + \frac{2}{\rho}A^T \by)
-    \]
-    which can be solved efficiently with conjugate gradient, as $(I + \frac{2}{\rho} A^TA) \succ 0$. If $\rho$ is fixed throughout, we can use Cholesky factorization to factor $(I + (2/\rho)A^TA)$ in $\sO(n^3)$. Any subsequent computation of the inverse would only cost $\sO(mn)$.
-    \item Let $f(\bx) = \norm{\bx}_1$, then the proximal operator of $(\lambda/\rho) f$ is
-    \[
-        \prox_{(\lambda/\rho)f}(\bv) 
-            = \sS_{\lambda/\rho}(\bv)
-    \]
-    where $\sS$ is element-wise soft shrinkage operator
-    \[
-        (\sS_{\kappa}(\bv))_i
-            = (1-\kappa/|\bv_i|)_{+}\bv_i
-        \quad\quad
-        \bx_{+} = \max(\bx,0)
-    \]
-    \item Let $f(\bx) = (1/2)\bx^T(\bx-\sD(\bx))$ for some denoiser $\sD$, the explicit regularizer in RED.\cite{romanoLittleEngineThat2016}. We use one fixed point iteration evaluate the approximate proximal operator for $\lambda f$. Specifically, we want to evaluate 
-    \[
-        \prox_{(\lambda/\rho)f} (\bv)
-            = \argmin_{\bx} \frac{\lambda}{2}\bx^T(\bx-\sD(\bx)) + \frac{\rho}{2} \norm{\bx-\bv}_2^2
-    \]
-    Setting the gradient to zero, we arrive at the fixed point iteration
-    \[
-        \bx^{(k)} \leftarrow \frac{1}{\rho+\lambda}(
-            \lambda \sD(\bx^{(k-1)}) + \rho \bv
-        )
-    \]
-    If we only iterate once, then 
-    \[
-        \prox_{(\lambda/\rho)f} (\bv)
-            = \frac{1}{\rho+\lambda}( \lambda \sD(\bx^{(0)}) + \rho \bv )
-    \]
-    for some initialization value $\bx^{(0)}$
-\end{enumerate}
-
-
+ 
 \subfile{details/summary}
 
 

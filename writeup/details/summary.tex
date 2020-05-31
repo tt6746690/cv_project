@@ -9,7 +9,7 @@
 Some relevant reiews are \cite{salviPatternCodificationStrategies2004},\cite{salviStateArtStructured2010} and \href{http://www.sci.utah.edu/~gerig/CS6320-S2013/Materials/CS6320-CV-S2012-StructuredLight-II.pdf}{slides}. A \textit{structured light stereometric system} is similar to a passive stereo system where one of the camera is replaced by a projector. A light source projects light a vertical plane of light that creates a narrow stripe on the scene. The intersection of an illumination plane of known spatial position (corresponds to a projector column) and a line of sight (corresponds to a camera pixel) determines a point. For dense reconstruction of the scene, many images must be taken. To speed up the scanning process, spatially modulated light projector has been suggested, in which multiple illumination planes or rays can be projected simultaneously as part of a single illumination pattern. Spatial-temporal modulation of illumination, i.e. sequentially projecting several patterns, can be used for reliable identification of light planes. To enable acquisition of dynamic scenes, the number of projected patterns used should be as small as possible. Intuitively, the projected pattern impose illusion of texture on the object, increasing the number of correspondences, which enables reconstruction. Structured light stereo is equivalent to (1) solving the correspondence problem and then (2) computing stereo using triangulation.
 
 
-\paragraph{The Correspondence Problem}
+\subsubsection{The Correspondence Problem}
 
 The correspondence problem can be stated simply
 \begin{center}
@@ -27,7 +27,7 @@ We first note that search space for the corresponding point can be restricted to
 For structured light stereo systems, the art of designing robust, fast, reliable coding schemes serves to solve the correspondence problem.
 
 
-\paragraph{Triangulation}
+\subsubsection{Triangulation}
 
 Given correspondence between projector and camera images, triangulation refers to the process of computing the distance of object relative to camera. Since a 3D point can be obtained by intersecting a ray (pixel of camera image) with a projector plane (a single code), it is necessary to encode a single axis in projected image to ensure unique reconstruction. 
 \begin{figure}[h!]
@@ -48,7 +48,7 @@ Given correspondence between projector and camera images, triangulation refers t
 The goal of structured light coding is to find coding schemes (maps pattern intensity to indices of the projector light planes) that enables robust, reliable algorithms for finding correspondence.
 
 
-\paragraph{Horn \& Kiryati} 
+\subsubsection{Horn \& Kiryati} 
 
 This paper generalizes Gray code to n-ary code in order to reduce the number of patterns that needs to be projected, ($L^K$ instead of $2^K$ code words) \cite{hornOptimalStructuredLight1997}. The authors draw inspirations from communication theory, where the projector projects unique temporal codes, received at each image plane through a noisy channel and subsequently decoded. Let there be $K$ patterns and $L$ code words (distinct planes of light), we want to encode the indices of vertical light planes $x\in [L]$ using some encoding scheme $f:[L] \to \R^K$ such that the nearest neighbor decoding $\hat{x}(y) = \argmin_{x\in [L]} ( f(x)-y )$ of a normalized noisy observation $y\in\R^K$ minimizes the probability of depth estimation error. Given the forwarding model,
 \begin{align*}
@@ -70,7 +70,7 @@ implying $\ry|\rx=x\sim p_{\rn}(y - f(x))$. We want to minimize the probability 
 \end{align*}
 This optimization problem is hard. The paper suggest the use of space filling curves as the encoding function and established that Gray code is a special limiting case of the space filling curve. Note here we assume there is no \textit{mutual illumination}, i.e. there is no interval reflection and so the projected codes $f(x)$ is proportional to observation $y$. 
 
-\paragraph{Phase Shifting (The Setup)}
+\subsubsection{Phase Shifting}
 
 Phase shifting is a particular coding method whereby the projector column coordinates are encoded as the (absolute) phase of a spatial sinusoidal pattern. Note we want to encode column coordinates because we only need to search along the horizontal epipolar lines. Let $N$ be number of columns to be encoded. When the scene is projected with a cosine pattern of period $T$ (measured in number of pixels) and therefore frequency $f=\frac{1}{T}$, an idealized image formation model for any pixel is
 \begin{align}
@@ -168,7 +168,8 @@ The relative phase is then given by
 \end{align*}
 Note the optimization problem formulated in (\ref{eq:phase_shifting_least_squares},\ref{eq:phase_shifting_least_squares_u}) are not equivalent. 
 
-\paragraph{Phase Shifting (Phase Unwrapping)} \textit{phase unwrapping} aims to recover absolute phase $x$ from relative phase $\tilde{x}$, which is non-trivial unless $T\geq N$. One particular choice of phase unwrapping method relies results in number theory \cite{gushovAutomaticProcessingFringe1991}. The idea is to project patterns whose periods $T_1,\cdots,T_F$ are relative co-prime, each shifted by $K$ times such that relative phase $\tilde{x}_1,\cdots,\tilde{x}_F$ can be solved using (\ref{eq:phase_shifting_least_squares}) or (\ref{eq:phase_shifting_least_squares_u}), from which we can use the Chinese Reminder Theorem to solve a system of congruences
+
+\paragraph{phase unwrapping} aims to recover absolute phase $x$ from relative phase $\tilde{x}$, which is non-trivial unless $T\geq N$. One particular choice of phase unwrapping method relies results in number theory \cite{gushovAutomaticProcessingFringe1991}. The idea is to project patterns whose periods $T_1,\cdots,T_F$ are relative co-prime, each shifted by $K$ times such that relative phase $\tilde{x}_1,\cdots,\tilde{x}_F$ can be solved using (\ref{eq:phase_shifting_least_squares}) or (\ref{eq:phase_shifting_least_squares_u}), from which we can use the Chinese Reminder Theorem to solve a system of congruences
 \begin{align}
     x
         &= \tilde{x}_1 \mod{T_1} 
@@ -202,10 +203,243 @@ Intuitively, projecting $F$ spatial sinusoids with period $T_1,\cdots,T_F$ with 
     \label{fig:phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser}
 \end{figure}
 
+\subsection{Alternating Direction Method of Multipliers}
+
+\subsubsection{Formulation}
+
+Consider the following equality constrained convex optimization problem 
+\begin{align}
+    \text{minimize}\;
+        &f(x) + g(z) \\
+    \text{subject to}\;
+        &Ax+Bz=c
+    \label{eq:admm_objective}
+\end{align}
+assuming $f,g$ are both convex. The augmented lagrangian $L_{\rho}$ makes the objective better behaved,
+\begin{align}
+    L_{\rho}(x,z,y)
+        &= f(x) + g(z) + y^T\left(Ax + Bz - c\right) + \frac{\rho}{2} \norm{Ax+Bz-c}_2^2
+\end{align}
+where $y$ is the dual variable, and $\rho>0$ is the penalty parameter. The method of multipliers is simply doing gradient ascent (using $\rho$ as stepsize) on the dual objective computed from the augmented lagrangian
+\begin{align}
+    (x^{k+1},z^{k+1})
+        &= \argmin_{x,z} L_{\rho}(x,z,y^{k}) 
+        \label{eq:method_of_multiplier_minimization} \\
+    y^{k+1}
+        &= y^k + \rho \nabla L_{\rho}(x^{k+1},z^{k+1},y)
+        = y^k + \rho \left( Ax^{k+1} + By^{k+1} - c \right)
+        \label{eq:method_of_multiplier_dual_update}
+\end{align}
+When regular lagrangian is used and when objective is separable, the minimization step (\ref{eq:method_of_multiplier_minimization}) is also separable with respect to the primal variables $x,z$. The addition of Euclidean norm on the residual of primal equlity constraints makes the optimization coupled. ADMM is method of multiplier where a single Gauss-Seidel pass over the primal variable is used instead of jointly optimizing for $x,z$.
+\begin{align}
+    x^{k+1}
+        &= \argmin_{x} L_{\rho}(x,z^k,y^k) 
+        \nonumber \\
+    z^{k+1}
+        &= \argmin_{z} L_{\rho}(x^{k+1},z,y^k) 
+        \nonumber \\
+    y^{k+1}
+        &= y^k + \rho \left( Ax^{k+1} + By^{k+1} - c \right)
+        \label{eq:admm_iterates_dual_update}
+\end{align}
+We can gather the residual term $r=Ax+Bz-c$ and completing the squares and get
+\begin{align}
+    L_{\rho}(x,z,y)
+        = f(x) + g(z) + \frac{\rho}{2} \norm{Ax + Bz - c + u}_2^2
+    \label{eq:admm_scaled_augmented_lagrangian}
+\end{align}
+where $u=\frac{1}{\rho}y$ is scaled dual variable. The scaled form ADMM is then
+\begin{align}
+    x^{k+1}
+        &= \argmin_x \pb{
+            f(x) + \frac{\rho}{2} \norm{Ax+Bz^k-c+u^k}_2^2 
+        } 
+        \nonumber \\
+    z^{k+1}
+        &= \argmin_z \pb{
+            g(z) + \frac{\rho}{2} \norm{Ax^{k+1}+Bz-c+u^k}_2^2
+        } 
+        \nonumber \\
+    u^{k+1}
+        &= u^k + Ax^{k+1} + Bz^{k+1} - c
+    \label{eq:admm_scaled_form}
+\end{align}
+
+\subsubsection{LASSO Problem}
+
+The lasso problem is 
+\begin{align}
+    \minimize\;
+        & \frac{1}{2} \norm{Ax-b}_2^2 + \lambda \norm{x}_1
+    \label{eq:lasso_unconstrained_problem}
+\end{align}
+We can apply variable splitting and obtain an equivalent constrained optimization problem
+\begin{align}
+    \minimize
+        & \frac{1}{2} \norm{Ax-b}_2^2 + \lambda \norm{x}_1 \\
+    \subjectto
+        & x - z = 0
+    \label{eq:lasso_unconstrained_problem}
+\end{align}
+Specialize (\ref{eq:admm_scaled_form}) to lasso to obtain iterates of the form
+\begin{align}
+    x^{k+1}
+        &= \left( A^TA + \rho I \right)^{-1} \left( A^Tb + \rho(z^{k} - u^k) \right) \\
+    z^{k+1}
+        &= \sS_{\lambda/\rho} \left( x^{k+1} + u^k \right) \\
+    u^{k+1}
+        &= u^k + x^{k+1} - z^{k+1}
+\end{align}
+which essentially performs lasso ($x$ update) repeatedly.
+
+
+
+\subsubsection{Affine Constrained Convex Optimization Problem}
+\begin{equation}
+    \begin{aligned}
+        \underset{\bx_1,\cdots,\bx_N}{\minimize}
+            &\pb{f(\bx) = \sum_{i=1}^N f_i(\bx_i)} \\
+        \subjectto
+            & (\bx_1,\cdots,\bx_N) \in \sC \\
+    \end{aligned}
+    \label{eq:constrained_cvx}
+\end{equation}
+where $\bx_i\in\R^{n_i}$, $f_i: \R^{n} \to (-\infty,\infty)$ are closed proper convex functions for $i=1,\cdots,N$. Here we assume $\sC = \{ \bx \in\R^{n_1\times \cdots\times n_N} \;\mid\; A \bx = \bb \}$ is an affine set. (\ref{eq:constrained_cvx}) has an equivalent form,
+\begin{equation}
+    \begin{aligned}
+        \underset{\bx,\bz}{\minimize}  & f(\bx) + \delta_{\sC}(\bz) \\
+        \subjectto & \bx - \bz = 0 \\
+    \end{aligned}
+    \label{eq:constrained_cvx_indicator_set}
+\end{equation}
+which can be solved using ADMM iterates of the form,
+\begin{align*}
+    \bx_i^{k+1} 
+        &= \argmin_{\bx_i} \left( f_i(\bx_i) + \frac{\rho}{2} \norm{\bx_i - (\bz_i^k - \bu_i^k)}_2^2 \right) 
+        = \prox_{(1/\rho)f_i}(\bz_i^k - \bu_i^k) \\
+    \bz^{k+1}
+        &= \argmin_{\bz} \left( \delta_{\sC}(\bz) + \frac{\rho}{2} \norm{ \bz - (\bx^{k+1} + \bu^k) }_2^2 \right)
+        = \prox_{(1/\rho)\delta_{\sC}}(\bx^{k+1} + \bu^k) \\
+    \bu^{k+1} 
+        &= \bu^k + \bx^{k+1} - \bz^{k+1}
+\end{align*}
+where $\prox_{\lambda f}: \R^n \to \R^n$ is the proximal operator of $\lambda f$, $\lambda >0$, 
+\[
+    \prox_{\lambda f}(\bv) = \argmin_{\bx} \left( f(\bx) + \frac{1}{2\lambda} \norm{\bx-\bv}_2^2 \right)    
+\]
+
+\subsubsection{Some Common Proximal Operator}
+
+Evaluating the proximal operator involves solving a convex optimization problem. We will show how we can compute the proximal operators relevant to our methods. (See section 6 of \cite{parikhProximalAlgorithms2014}) 
+\begin{enumerate}
+    \item The proximal operator of an indicator function onto a convex set $\sC$ is simply the projection onto $\sC$. 
+    \[
+        \prox_{(1/\rho)\delta_{\sC}}(\bx^{k+1} + \bu^k) =  \textstyle\prod_{\sC}(\bx^{k+1}+\bu^k)
+    \]
+    When $\sC$ is affine, there is an analytic expression for the projection
+    \begin{align*}
+        \textstyle\prod_{\sC}(\bv) 
+            &= \bv - A^{\dagger}(A\bv-\bb)  \\
+            &= \bv - A^T(A^TA)^{-1}(A\bv-\bb) \tag{if $A\in\R^{m\times n}$ has $m<n$ and full rank}
+    \end{align*}
+    \item Let $f$ be $\ell$-2 norm of an affine function, assuming $A\in\R^{p\times n}$
+    \[
+        f(x) 
+            = \frac{1}{2} \norm{A\bx-\by}_2^2 
+            = \frac{1}{2}\bx^TA^TA\bx - \by^TA\bx + \frac{1}{2}\by^T\by
+    \]
+    Then proximal operator of $(1/\rho)f$ has a closed form expression
+    \[
+        \prox_{(1/\rho)f}(\bv) 
+            = (\rho I + A^TA)^{-1} (\rho \bv + A^T \by)
+    \]
+    which can be solved efficiently with conjugate gradient, as $(\rho I + A^TA) \succ 0$. If $\rho$ is fixed throughout, we can use Cholesky factorization to factor $(\rho I + A^TA)$ in $\sO(n^3)$. Any subsequent computation of the inverse with back-solve would only cost $\sO(n^2)$. When $p<<n$, we can exploit this by using the matrix inversion lemma, 
+    \[
+        (\rho I + A^TA)^{-1} 
+            = \frac{1}{\rho} I - \frac{1}{\rho} A^T \left( \rho I + AA^T \right)^{-1} A
+    \]
+    The dominant cost is computing $(AA^T)^{-1} \in \R^{p\times p}$. Each $x$ update now costs $\sO(np^2)$. If use Cholesky factorization to factor $(\rho I + AA^T)$ once, subsequent iteration can be carried out in $\sO(np)$ flops, which is essentially costs for matrix-vector multiply.
+    \item Let $f(\bx) = \norm{\bx}_1$, then the proximal operator of $\lambda f$ is
+    \[
+        \prox_{\lambda f}(\bv) 
+            = \sS_{\lambda}(\bv)
+    \]
+    where $\sS$ is element-wise soft shrinkage operator
+    \[
+        (\sS_{\lambda}(\bv))_i
+            = (1-\lambda/|\bv_i|)_{+}\bv_i
+        \quad\quad
+        \bx_{+} = \max(\bx,0)
+    \]
+    \item Let $f(\bx) = (1/2)\bx^T(\bx-\sD(\bx))$ for some denoiser $\sD$, the explicit regularizer in RED.\cite{romanoLittleEngineThat2016}. We use one fixed point iteration evaluate the approximate proximal operator for $\lambda f$. Specifically, we want to evaluate 
+    \[
+        \prox_{(\lambda/\rho)f} (\bv)
+            = \argmin_{\bx} \frac{\lambda}{2}\bx^T(\bx-\sD(\bx)) + \frac{\rho}{2} \norm{\bx-\bv}_2^2
+    \]
+    Setting the gradient to zero, we arrive at the fixed point iteration
+    \[
+        \bx^{(k)} \leftarrow \frac{1}{\rho+\lambda}(
+            \lambda \sD(\bx^{(k-1)}) + \rho \bv
+        )
+    \]
+    If we only iterate once, then 
+    \[
+        \prox_{(\lambda/\rho)f} (\bv)
+            = \frac{1}{\rho+\lambda}( \lambda \sD(\bx^{(0)}) + \rho \bv )
+    \]
+    for some initialization value $\bx^{(0)}$
+\end{enumerate}
+
+
+
+
+\subsection{Linear Inverse Problem}
+
+Numerous inverse problem in image processing are modeled using the following relationship
+\[
+    y = Ax + \epsilon   
+\]
+wherer $y\in\R^m$ is noisy measurement, $x\in\R^n$ are true values, $A \in \R^{m\times n}$ captures the forward relationship, $\epsilon\in\R^m$ is noise. The goal is to recover $x$ from noisy $y$ by making assumptions about the noise distributioon $\epsilon$ and exploiting structure in the latent variable $x$.
+
+
+\subsubsection{MAP inference under Gaussian Noise}
+
+A typical approach to solve the linear inverse problem relies on computing max a posterior (MAP) estimator while assuming somer prior distirbution $p_{\rx}$. In particular given observation $y$, we want to estimate $\hat{x}$ where
+\begin{align}
+    \hat{x}
+        = \argmax_{x} p_{\rx|\ry}(x|y)
+    \label{eq:inverse_problem_map_problem}
+\end{align}
+Assuming isotropic Gaussian noise $\epsilon \sim \sN(0,\sigma^2 I)$, the conditional likelihood depends on the noise distribution, $\ry\mid \rx=x \sim \sN(Ax, \sigma^2 I)$. The log likelihood is then
+\begin{align*}
+    \log p_{\ry|\rx}(y|x)
+        = -\frac{m}{2} \log (2\pi) - \frac{1}{2\sigma^2} \norm{Ax - y}_2^2 
+\end{align*}
+Then the problem (\ref{eq:inverse_problem_map_problem}) reduces to
+\begin{align}
+    \hat{x}
+        = \argmax_{x} \pb{
+            \log p_{\ry|\rx}(y|x) + \log p_{\rx}(x) 
+        }
+        = \argmin_{x} \pb{
+            \frac{1}{2\sigma^2} \norm{Ax-y}_2^2 - \log p_{\rx}(x)
+        }
+\end{align}
+
+
+
+
+
+
 
 \newpage
 
 \subsection{Image Priors} 
+
+
+
+
+
 
 The choice of regularization has been an important research topic in image processing. Handcrafted priors have been successful in a number of different image recovery tasks. For example, we can choose to enforce task-specific priors: (1) the sparsity of $\bx$ with $\ell$-1 norm in image deblurring \cite{beckFastIterativeShrinkageThresholding2009} (2) total variation in image denoising \cite{buadesNonlocalImageMovie2008} (3) cross-channel correlation in color image demosaicing \cite{malvarHighqualityLinearInterpolation2004} (4) dark channel prior in image dehazing \cite{fattalSingleImageDehazing2008}, etc. More exhotically, randomly initialized neural network can inject inductive bias to the optimization and act as image priors. \cite{ulyanovDeepImagePrior2017}
 

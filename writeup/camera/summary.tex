@@ -58,7 +58,7 @@ The coded two-bucket (C2B) camera is a pixel-wise coded exposure camera that out
     \label{fig:image_formation_schema}
 \end{figure}
 
-\subsection{The Forward Image Model}
+\subsection{The Forward Model}
 
 \paragraph{Subsampling Mapping}
 Let $\bS \in \{1,2,\cdots,F\}^P$ be a vector specifying how the one-frame code tensor $\widetilde{\bC}$ is constructed, i.e. $\tilde{\bc}_1^{p} := \bc_{\bS_p}^p$, for all pixels $p$. We can view $\bS$ as a mask to construct a \textbf{S}ubsampling linear map that maps vectorized two-bucket image sequences $\sI$ to the vectorized illumination mosaics $\bY$. In particular, let $\bB' \in \R^{P\times PF}$ and $\bB \in \R^{2P \times 2PF}$ be defined as follows 
@@ -130,7 +130,7 @@ where $\bA \in \R^{2P\times SP}$ be a linear map that illumination multiplexes a
 \]
 and $\bI_P\in\R^{P\times P}$ is identity. 
 
-\subsection{Image Processing Pipeline}
+\subsection{The Inverse Problem}
 The reconstruction pipeline is as follows
 \begin{enumerate}
     \item Use $\widetilde{\bC}$ for bucket activities and capture the two-bucket image $\bY$
@@ -144,6 +144,11 @@ Step 2 and 3 are critical to downstream reconstuctions. When $S=3,S=4$ and $\bS$
     \item Recover full resolution images $\bX$ under $S$ illuminations from $\bY$ by solving a linear inverse problem
     \item use $\bX$ to solve for disparity and albedo
 \end{enumerate}
+Jointly upsample and demultiplex enforces a prior knowledge of image formation. Instead of treating upsampling (recover $2F$ images $\sI$ from $2$ images $\bY$) and demultiplexing (recover $S$ images $\bX$ from $2F$ images $\sI$) as distinct steps, we aim to recover $\bX$ directy from $\bY$, in a single step, by solving a linear inverse problem.
+
+
+
+
 
 
 \end{document}
