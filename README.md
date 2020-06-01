@@ -42,6 +42,7 @@ export KMP_DUPLICATE_LIB_OK=True
 + end-to-end optimization 
     + think about ways to regularize disparity etc.
     + relationship between ratio images and disparity/phase
+    + probabilistic formulation or alternating optimization 
 + do zncc on optimized code
 + think about fast algorithm for video decoding
 + matrix inversion lemma on quadratic update! to simply 

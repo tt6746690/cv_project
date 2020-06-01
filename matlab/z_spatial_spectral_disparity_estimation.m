@@ -65,13 +65,13 @@ for k = 1:numel(scenes)
 
     [orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy,'CircShiftInputImageBy',shift);
 
-    [orig_im_albedo,~,orig_im_phase] = SLTriangulation(orig_im,W,Bounds,4);
+    [orig_im_albedo,~,orig_im_phase] = DecodePhaseShiftWithDepthBound(orig_im,W,Bounds,4);
     orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
 
-    ims(((k-1)*h+1):k*h,:) = [orig_im_disparity FlattenChannels(orig_im)];
+    ims(((k-1)*h+1):k*h,:) = [mat2gray(orig_im_disparity) mat2gray(FlattenChannels(orig_im))];
 end
 
-imwrite(uint8(ims),sprintf("%s/find_correct_ordering.png",savedir));
+imwrite(uint8(255*ims),sprintf("%s/find_correct_ordering.png",savedir));
 
 %% See if subsmaple the patterns worked ...
 
@@ -95,6 +95,7 @@ mm = containers.Map;
 
 
 for k = 1:numel(scenes)
+    
 
     scene = scenes(k);
     shift = shifts(k); 
@@ -128,17 +129,17 @@ for k = 1:numel(scenes)
         ratio_mult_inputsum_im = RatioToIntensity(ratio_mult_inputsum_im,sum(input_im,3));
         [psnr_ratio_mult_inputsum,ssim_ratio_mult_inputsum] = ComputePSNRSSIM(orig_im(:,:,take_idx),ratio_mult_inputsum_im);
         
-        %% photometric stereo
+        %% structured light
 
         projector_phase_shift = transpose((take_idx-1)*2*pi/7);
 
-        [intensity_im_albedo,~,intensity_im_phase] = SLTriangulation(admm_intensity_im,W,Bounds,4,'Shifts',projector_phase_shift);
+        [intensity_im_albedo,~,intensity_im_phase] = DecodePhaseShiftWithDepthBound(admm_intensity_im,W,Bounds,4,'Shifts',projector_phase_shift);
         intensity_im_disparity = disparityFunc((intensity_im_phase*hproj/(2*pi)),Y);
         
-        [ratio_im_albedo,~,ratio_im_phase] = SLTriangulation(ratio_mult_inputsum_im,W,Bounds,4,'Shifts',projector_phase_shift);
+        [ratio_im_albedo,~,ratio_im_phase] = DecodePhaseShiftWithDepthBound(ratio_mult_inputsum_im,W,Bounds,4,'Shifts',projector_phase_shift);
         ratio_im_disparity = disparityFunc((ratio_im_phase*hproj/(2*pi)),Y);
 
-        [orig_im_albedo,~,orig_im_phase] = SLTriangulation(orig_im(:,:,take_idx),W,Bounds,4,'Shifts',projector_phase_shift);
+        [orig_im_albedo,~,orig_im_phase] = DecodePhaseShiftWithDepthBound(orig_im(:,:,take_idx),W,Bounds,4,'Shifts',projector_phase_shift);
         orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
 
 
@@ -300,10 +301,10 @@ end
 %     % % imshow([gt_im(:,:,1) gt_im(:,:,2) gt_im(:,:,3) gt_im(:,:,4)]/255);
 % 
 % 
-%     [orig_im_albedo,~,orig_im_phase] = SLTriangulation(orig_im,BucketMultiplexingMatrix(7),Bounds,4);
+%     [orig_im_albedo,~,orig_im_phase] = DecodePhaseShiftWithDepthBound(orig_im,BucketMultiplexingMatrix(7),Bounds,4);
 %     orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
 %     
-%     [subsampled_im_albedo,~,subsampled_im_phase] = SLTriangulation(subsampled_im,BucketMultiplexingMatrix(4),Bounds,4,'Shifts',transpose((0:4-1)*2*pi/S));
+%     [subsampled_im_albedo,~,subsampled_im_phase] = DecodePhaseShiftWithDepthBound(subsampled_im,BucketMultiplexingMatrix(4),Bounds,4,'Shifts',transpose((0:4-1)*2*pi/S));
 %     subsampled_im_disparity = disparityFunc((subsampled_im_phase*hproj/(2*pi)),Y);
 % 
 %     imagesc([orig_im_disparity subsampled_im_disparity]);

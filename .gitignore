@@ -17,6 +17,7 @@ data/*
 
 *.pyc
 __pycache__
+*.m~
 
 # external 
 Joint-Demosaic-and-Denoising-with-ADMM/

@@ -1,12 +1,12 @@
-function [albedo,wrapped_phase,phase] = SLTriangulation(im,W,depthbounds,spatialfrequency,varargin)
-%%  Structured light triangulation, solves for shape unknowns (albedo, phase)
-%       from demultiplexed images
+function [albedo,wrapped_phase,phase] = DecodePhaseShiftWithDepthBound(im,W,lb,ub,hproj,spatialfrequency,varargin)
+%%  Given images under shifted sinusoidal illuminations, 
+%       solves for shape unknowns (albedo, phase)
 %
 %   im     hxwxS        demultiplexed images under S projector illuminations
 %   W      2FxS         optimal bucket multiplexing matrix
-%   depthbounds \in [0,2pi]^(h*w)
-%       LB  hxw         pixel-wise phase lower bound
-%       UB  hxw         pixel-wise phase upper bound
+%   depthbounds     [0,hproj-1]^(h*w)
+%       lb  hxw         pixel-wise phase lower bound
+%       ub  hxw         pixel-wise phase upper bound
 %   spatialfrequency    number of vertically varying spatial sinusoids in projected patterns
 %
 %   Note the im should be ordered according to phase shifts in projecter patterns,
@@ -34,6 +34,9 @@ function [albedo,wrapped_phase,phase] = SLTriangulation(im,W,depthbounds,spatial
         v=v+1;
     end
 
+    lb = double(lb)*2*pi/hproj;
+    ub = double(ub)*2*pi/hproj;
+
     [h,w,S] = size(im);
 
     if ~exist('shifts','var')
@@ -56,6 +59,8 @@ function [albedo,wrapped_phase,phase] = SLTriangulation(im,W,depthbounds,spatial
 
     [wrapped_phase,albedo] = deal(reshape(phase,h,w),reshape(albedo,h,w));
 
-    % phase unwrapping via depth bound
-    phase = refinePhaseUsingDisparityBound(wrapped_phase,spatialfrequency,depthbounds.LB,depthbounds.UB);
+    % phase unwrapping via depth bound \to [0,2pi]
+    phase = refinePhaseUsingDisparityBound(wrapped_phase,spatialfrequency,lb,ub);
+    % \to [0,hproj-1] in pixel space
+    phase = phase*hproj/(2*pi);
 end

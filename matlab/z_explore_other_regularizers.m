@@ -114,13 +114,13 @@ fprintf("admm smooth      with    1st order TV      %.4f/%.4f\n",psnr_radmmsmoot
 %% photometric stereo
 projector_phase_shift = transpose((take_idx-1)*2*pi/7);
 
-[orig_im_albedo,~,orig_im_phase] = SLTriangulation(orig_im(:,:,take_idx),W,Bounds,4,'Shifts',projector_phase_shift);
+[orig_im_albedo,~,orig_im_phase] = DecodePhaseShiftWithDepthBound(orig_im(:,:,take_idx),W,Bounds,4,'Shifts',projector_phase_shift);
 orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
 
-[radmmsmooth_im_albedo,~,radmmsmooth_im_phase] = SLTriangulation(radmmsmooth_im,W,Bounds,4,'Shifts',projector_phase_shift);
+[radmmsmooth_im_albedo,~,radmmsmooth_im_phase] = DecodePhaseShiftWithDepthBound(radmmsmooth_im,W,Bounds,4,'Shifts',projector_phase_shift);
 radmmsmooth_im_disparity = disparityFunc((radmmsmooth_im_phase*hproj/(2*pi)),Y);
 
-[radmm_im_albedo,~,radmm_im_phase] = SLTriangulation(radmm_im,W,Bounds,4,'Shifts',projector_phase_shift);
+[radmm_im_albedo,~,radmm_im_phase] = DecodePhaseShiftWithDepthBound(radmm_im,W,Bounds,4,'Shifts',projector_phase_shift);
 radmm_im_disparity = disparityFunc((radmm_im_phase*hproj/(2*pi)),Y);
 
 
