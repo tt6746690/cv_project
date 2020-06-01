@@ -50,7 +50,7 @@ function [phase,zncc,I] = DecodeZNCC(X,P,lb,ub,varargin)
     
     [hproj,~] = size(P);
 
-    % prevents ceil(ub(i)) yielding invalid index to zncc
+    % \to [1,hproj]
     lb = lb + 1;
     ub = ub + 1;
 
