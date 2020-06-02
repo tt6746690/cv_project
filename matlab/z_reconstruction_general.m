@@ -19,7 +19,7 @@ ProjectorInfoFolder = 'mian/CalibrationCode';
 Bounds = load(sprintf('%s/%s.mat', ProjectorInfoFolder, 'Bounds'));
 Bounds.LB = Bounds.yErrorLB(cx,cy);
 Bounds.UB = Bounds.yErrorUB(cx,cy);
-expandby = 0; shiftby = 100;
+% expandby = 1000; shiftby = 0;
 Bounds.UB = min(shiftby + Bounds.yErrorLB(cx,cy) + expandby,hproj);
 Bounds.LB = max(shiftby + Bounds.yErrorUB(cx,cy) - expandby,0);
 
@@ -144,11 +144,11 @@ imwrite(uint8(FlattenChannels(mat2gray(relphases))*255),sprintf("%s/relphases.pn
     
     
 % denoise
-I = find(~isfinite(relphases));
-relphases(I) = eps;
-for i = 1:size(relphases,3)
-    relphases(:,:,i) = wdenoise2(relphases(:,:,i));
-end
+% I = find(~isfinite(relphases));
+% relphases(I) = eps;
+% for i = 1:size(relphases,3)
+%     relphases(:,:,i) = wdenoise2(relphases(:,:,i));
+% end
 
 imshow(FlattenChannels(relphases))
 imwrite(uint8(FlattenChannels(mat2gray(relphases))*255),sprintf("%s/relphases_denoised.png", ...
@@ -169,3 +169,12 @@ end
 im = reshape(X/prod(spatial_freqs(CF)),h,w)
 imagesc(im)
 
+
+%% get disparity using zncc
+
+PatternCoeff = 0.5 + 0.5*cos(spatial_freqs.*(0:hproj-1)'*2*pi/hproj);
+PatternCoeff = floor(PatternCoeff * 24) / 24;
+
+[phase,zncc,I] = DecodeZNCC(relphases,PatternCoeff,Bounds.LB,Bounds.UB);
+
+imshow(mat2gray(phase))
