@@ -85,3 +85,4 @@ function [phase,zncc,I] = DecodeZNCC(X,P,lb,ub,varargin)
 
     % cellfun(@(v) assignin('base',v,evalin('caller',v)),who);
 end
+

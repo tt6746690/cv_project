@@ -265,6 +265,7 @@ imwrite(uint8(ims),sprintf('%s/decode_zncc_npixelneighbor_S=%d_%s.png',savedir,S
 
 %% use orig_im or ratio_im (about the same)
 
+
 rotateby = 0.01;
 NPixelNeighbors = 3;
 
@@ -330,12 +331,29 @@ plot(xy(:,1),xy(:,2));
 imshow(ims/255);
 imwrite(uint8(ims),sprintf('%s/decode_zncc_quantization_S=%d_%s.png',savedir,S,scene));
 
-%% have grountruth
+%% have grountruth (asnccaccGC same as DecodeZNCC)
 
 
+expandby = 100; shiftby = -200;
+Bounds.LB = max(shiftby + Bounds.yErrorLB - expandby,0);
+Bounds.UB = min(shiftby + Bounds.yErrorUB + expandby,hproj);
+mesh(Bounds.UB); hold on; mesh(Bounds.LB);
 
 
+PatternCoeff = zeros(hproj,S);
+PatternCoeff(1:size(patternMatrix,1),1:end) = patternMatrix;
+% [orig_im,orig_ratio_im] = ReadOrigIm(sprintf("%s/%s",stackeddir,scene),h,w,S,'CropX',cx,'CropY',cy);
+orig_im = repmat(reshape(PatternCoeff(100:100+h-1,:),h,[],S),[1 w 1]);
 
+[phase,zncc,I] = DecodeZNCC(orig_im,PatternCoeff,Bounds.LB,Bounds.UB,'NPixelNeighbors',NPixelNeighbors);
+disparity = disparityFunc(phase,Y);
 
+imshow([FlattenChannels(orig_im) mat2gray(phase)])
 
+% PSNR = ComputePSNR(true_disparity,disparity);
+
+[idxnp,scores] = asnccaccGC(double(PatternCoeff), orig_im, Bounds.LB, Bounds.UB);
+disparity2 = disparityFunc(idxnp,Y);
+
+imshow([mat2gray(phase) mat2gray(idxnp) mat2gray(disparity) mat2gray(disparity2)])
 
