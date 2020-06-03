@@ -50,7 +50,7 @@ The goal of structured light coding is to find coding schemes (maps pattern inte
 
 \subsubsection{Horn \& Kiryati} 
 
-This paper generalizes Gray code to n-ary code in order to reduce the number of patterns that needs to be projected, ($L^K$ instead of $2^K$ code words) \cite{hornOptimalStructuredLight1997}. The authors draw inspirations from communication theory, where the projector projects unique temporal codes, received at each image plane through a noisy channel and subsequently decoded. Let there be $K$ patterns and $L$ code words (distinct planes of light), we want to encode the indices of vertical light planes $x\in [L]$ using some encoding scheme $f:[L] \to \R^K$ such that the nearest neighbor decoding $\hat{x}(y) = \argmin_{x\in [L]} ( f(x)-y )$ of a normalized noisy observation $y\in\R^K$ minimizes the probability of depth estimation error. Given the forwarding model,
+This paper generalizes Gray code to n-ary code in order to reduce the number of patterns that needs to be projected, ($L^K$ instead of $2^K$ code words) \cite{hornOptimalStructuredLight1997}. The authors draw inspirations from communication theory, where the projector projects unique temporal codes, received at each image plane through a noisy channel and subsequently decoded. Let there be $K$ patterns and $L$ code words (distinct planes of light), we want to encode the indices of vertical light planes $x\in [L]$ using some encoding scheme $f:[L] \to \R^K$ such that the nearest neighbor decoding $\hat{x}(y) = \argmin_{x\in [L]} ( f(x)-y )^2$ of a normalized noisy observation $y\in\R^K$ minimizes the probability of depth estimation error. Given the forwarding model,
 \begin{align*}
     \ry = f(\rx) + \rn
     \quad\quad\text{where}\quad\quad
@@ -105,11 +105,12 @@ Although $K=3$ suffices, larger values of $K$ makes determination of relative ph
     \label{eq:phase_shifting_least_squares}
 \end{align}
 Similar to appendix in \cite{morenoEmbeddedPhaseShifting2015} and results shown in \cite{pribanicEfficientMultiplePhase2010,morenoEmbeddedPhaseShifting2015}, we can show the following
-\begin{align*}
+\begin{align}
     0
         = \frac{\partial \epsilon}{\partial \phi}
         &= 2A \sum_{k=1}^K I_i\sin \left( \phi + \varphi_k \right)
-        \propto \cos(\phi) \sum_{k=1}^K I_k \sin(\varphi_k) + \sin(\phi) \sum_{k=1}^{K} I_k \cos(\varphi_k) \\
+        \propto \cos(\phi) \sum_{k=1}^K I_k \sin(\varphi_k) + \sin(\phi) \sum_{k=1}^{K} I_k \cos(\varphi_k) 
+        \nonumber \\
     \phi
         &= \tan^{-1}\pb{
             -
@@ -119,7 +120,51 @@ Similar to appendix in \cite{morenoEmbeddedPhaseShifting2015} and results shown 
                 \sum_{k=1}^K I_k \cos(\varphi_k)
             }
         }
-\end{align*}
+        \label{eq:phase_shifting_least_squares_solution}
+\end{align}
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=6in]{relphases_1_2_5_17_31}
+    \end{center}
+    \caption{Relative phase $\phi$ for spatial sinusoids with period 1, 2, 5, 17, 31 solved via (\ref{eq:phase_shifting_least_squares_solution})}
+    \label{fig:relative_phase_solution}
+\end{figure}
+
+\paragraph{phase unwrapping} aims to recover absolute phase $x$ from relative phase $\tilde{x}$, which is non-trivial unless $T\geq N$. One particular choice of phase unwrapping method relies results in number theory \cite{gushovAutomaticProcessingFringe1991}. The idea is to project patterns whose periods $T_1,\cdots,T_F$ are relative co-prime, each shifted by $K$ times such that relative phase $\tilde{x}_1,\cdots,\tilde{x}_F$ can be solved using (\ref{eq:phase_shifting_least_squares}) or (\ref{eq:phase_shifting_least_squares_u}), from which we can use the Chinese Reminder Theorem to solve a system of congruences
+\begin{align}
+    x
+        &= \tilde{x}_1 \mod{T_1} 
+        \nonumber \\
+    &\vdots
+        \nonumber \\
+    x
+        &= \tilde{x}_F \mod{T_F} 
+    \label{eq:phase_shifting_congruence_system}
+\end{align}
+Intuitively, projecting $F$ spatial sinusoids with period $T_1,\cdots,T_F$ with different frequency emulates the projection of a low frequency spatial sinusoid with period $T = T_1\times \cdots\times T_F$, shown in Figure (\ref{fig:phase_shifting_emulate_low_freq}). As specified in \cite{guptaMicroPhaseShifting2012} and experimented in Figure (\ref{fig:phase_shifting_not_robust_to_noise}), phase unwrapping is unstable when the relatives phases $\tilde{x}_1,\cdots,\tilde{x}_F$ are noisy. Simple application of medium filtering of the relative phase does not seem to help with phase unwrapping. Wavelet denoising using \texttt{wdenoise} seems to help to a limited extend, as shown in Figure (\ref{fig:phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser})
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[height=1in,width=5in]{phase_shifting_chinese_reminder_lower_freq}
+    \end{center}
+    \caption{Two sinusoids with $T_1=17,T_2=31$ emulates a low frequency sinusoid with $T=527$}
+    \label{fig:phase_shifting_emulate_low_freq}
+\end{figure}
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[height=1in,width=5in]{phase_shifting_chinese_reminder_lower_freq_noisy}
+    \end{center}
+    \caption{When relative phase $\tilde{x}_1,\tilde{x}_2$ are corrupted with i.i.d. additive Gaussian noise $\sN(\boldsymbol{0},0.1 \cdot \textsf{range}(\tilde{x}) \cdot \bI)$, phase unwrapping is unable to recover the absolute phase $x$ robustly.}
+    \label{fig:phase_shifting_not_robust_to_noise}
+\end{figure}
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[height=1in,width=5in]{phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser}
+    \end{center}
+    \caption{$\tilde{x}_1$ and wavelet denoised $\tilde{x}_1$ ($x_2,\tilde{x}_2$ not shown) helps with phase unwrapping to some extend}
+    \label{fig:phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser}
+\end{figure}
+
+\subsubsection{Micro Phase Shifting}
 An alternative formulation as mentioned in \cite{guptaMicroPhaseShifting2012}, we can write (\ref{eq:phase_shift_image_formation_one_pixel_shifted}) as a linear system of equations
 \begin{align*}
     I_k
@@ -168,40 +213,29 @@ The relative phase is then given by
 \end{align*}
 Note the optimization problem formulated in (\ref{eq:phase_shifting_least_squares},\ref{eq:phase_shifting_least_squares_u}) are not equivalent. 
 
+\subsubsection{ZNCC Decoding}
 
-\paragraph{phase unwrapping} aims to recover absolute phase $x$ from relative phase $\tilde{x}$, which is non-trivial unless $T\geq N$. One particular choice of phase unwrapping method relies results in number theory \cite{gushovAutomaticProcessingFringe1991}. The idea is to project patterns whose periods $T_1,\cdots,T_F$ are relative co-prime, each shifted by $K$ times such that relative phase $\tilde{x}_1,\cdots,\tilde{x}_F$ can be solved using (\ref{eq:phase_shifting_least_squares}) or (\ref{eq:phase_shifting_least_squares_u}), from which we can use the Chinese Reminder Theorem to solve a system of congruences
+Let $L$ be number of vertical light planes to be encoded, $f:[L]\to\R^K$ is some encoding scheme that encodes index $x$ to a code $f(x)$, $y$ is per pixel measurement. Similar to nearest neighbor decoder used in \cite{hornOptimalStructuredLight1997}
 \begin{align}
-    x
-        &= \tilde{x}_1 \mod{T_1} 
-        \nonumber \\
-    &\vdots
-        \nonumber \\
-    x
-        &= \tilde{x}_F \mod{T_F} 
-    \label{eq:phase_shifting_congruence_system}
+    \hat{x}(y)
+        = \argmin_{x\in [L]} \left( f(x) - y \right)^2
+    \label{eq:nearest_neighbor_decoder}
 \end{align}
-Intuitively, projecting $F$ spatial sinusoids with period $T_1,\cdots,T_F$ with different frequency emulates the projection of a low frequency spatial sinusoid with period $T = T_1\times \cdots\times T_F$, shown in Figure (\ref{fig:phase_shifting_emulate_low_freq}). As specified in \cite{guptaMicroPhaseShifting2012} and experimented in Figure (\ref{fig:phase_shifting_not_robust_to_noise}), phase unwrapping is unstable when the relatives phases $\tilde{x}_1,\cdots,\tilde{x}_F$ are noisy. Simple application of medium filtering of the relative phase does not seem to help with phase unwrapping. Wavelet denoising using \texttt{wdenoise} seems to help to a limited extend, as shown in Figure (\ref{fig:phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser})
+\cite{mirdehghanOptimalStructuredLight2018} defines a decoding function that is optimal in a sense in small noise regimen,
+\begin{align}
+    \hat{x}(y)
+        = \argmax_{x\in[L]} \textsf{ZNCC}\left( y, f(x) \right)
+    \label{eq:zncc_decoder}
+\end{align}
+Note the quality of decoding depends heavily on the noise level. Additionally, number of shifts is crucial for good reconstruction of absolute phase, see Figure~\ref{fig:disparity_vs_random_shifts}
 \begin{figure}[h!]
     \begin{center}
-        \includegraphics[height=1in,width=5in]{phase_shifting_chinese_reminder_lower_freq}
+        \includegraphics[width=7in]{disparity_vs_shifts_3_5_7_10_12_15_50_149_}
     \end{center}
-    \caption{Two sinusoids with $T_1=17,T_2=31$ emulates a low frequency sinusoid with $T=527$}
-    \label{fig:phase_shifting_emulate_low_freq}
+    \caption{Here we have spatial sinusoids with period 1,2,5,17,31, each shifted 30 times projected onto a static scene. Resulting in $5\cdot 30=150$ measurement, each stacked from at least 100 noisy images. We see ZNCC decoding taking 3,5,7,10,12,15,50,150 randomly chosen measurements respectively yield progressively better disparity reconstruction}
+    \label{fig:disparity_vs_random_shifts}
 \end{figure}
-\begin{figure}[h!]
-    \begin{center}
-        \includegraphics[height=1in,width=5in]{phase_shifting_chinese_reminder_lower_freq_noisy}
-    \end{center}
-    \caption{When relative phase $\tilde{x}_1,\tilde{x}_2$ are corrupted with i.i.d. additive Gaussian noise $\sN(\boldsymbol{0},0.1 \cdot \textsf{range}(\tilde{x}) \cdot \bI)$, phase unwrapping is unable to recover the absolute phase $x$ robustly.}
-    \label{fig:phase_shifting_not_robust_to_noise}
-\end{figure}
-\begin{figure}[h!]
-    \begin{center}
-        \includegraphics[height=1in,width=5in]{phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser}
-    \end{center}
-    \caption{$\tilde{x}_1$ and wavelet denoised $\tilde{x}_1$ ($x_2,\tilde{x}_2$ not shown) helps with phase unwrapping to some extend}
-    \label{fig:phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser}
-\end{figure}
+
 
 \subsection{Alternating Direction Method of Multipliers}
 

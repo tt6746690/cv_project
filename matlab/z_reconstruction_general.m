@@ -225,6 +225,25 @@ end
 % PatternCoeff = 0.5 + 0.5*cos(usedFreq*(0:hproj-1)'*2*pi/hproj + linspace(0,3*pi/2, 4));
 % PatternCoeff = floor(PatternCoeff * 24) / 24;
 
-[phase,zncc,I] = DecodeZNCC(stacked_ims,P,Bounds.LB,Bounds.UB);
+% Is = int8(linspace(1,149,19));
 
-imshow(mat2gray(phase))
+
+
+tbs = [];
+for nIs = [3 5 7 10 12 15 50 149]
+    Is = ceil(rand(nIs,1)*149);
+    [phase,zncc,I] = DecodeZNCC(stacked_ims(:,:,Is),P(:,Is),Bounds.LB,Bounds.UB);
+    tbs = [tbs phase];
+end
+
+imshow(mat2gray(tbs))
+imwrite(uint8(mat2gray(tbs)*255),sprintf("%s/diparity_vs_shifts.png", ...
+        savedir_cur));
+    
+
+
+
+
+
+
+
