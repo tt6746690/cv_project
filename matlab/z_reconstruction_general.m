@@ -109,10 +109,14 @@ imshow(im)
 imwrite(uint8(im*255),sprintf("%s/relphase_vs_K.png", ...
         savedir_cur));
     
+    
  
 %% get absolute phase / disparity using chinese reminder
 
 relphases = zeros(h,w,size(spatial_freqs,2));
+stacked_ims = [];
+freqs = []; % spatial freqs
+shifts = []; % shifts
 
 for i = 1:size(spatial_freqs,2)
 spatial_freq = spatial_freqs(i);
@@ -122,44 +126,40 @@ files = dir(sprintf("%s/*.png",imagedir));
 [fnames,ffolders] = deal({files.name},{files.folder});
 
 K = size(fnames,2);
-stacked_ims = zeros(h,w,K);
+stacked_ims_ = zeros(h,w,K);
 for k = 1:K
-    stacked_ims(:,:,k) = imread(sprintf('%s/%s',ffolders{k},fnames{k}));
+    stacked_ims_(:,:,k) = imread(sprintf('%s/%s',ffolders{k},fnames{k}));
 end
 
 if spatial_freq == 5
-    shifts = [0:15 17:K];
+    varphi = [0:15 17:K];
 else
-    shifts = 1:K;
+    varphi = 1:K;
 end
-phase_shifts = (shifts-1)*2*pi/K;
+phase_shifts = (varphi-1)*2*pi/K;
 
-relphase = PhaseShiftingSolveRelativePhase(stacked_ims,phase_shifts);
+relphase = PhaseShiftingSolveRelativePhase(stacked_ims_,phase_shifts);
 relphases(:,:,i) = relphase;
+
+freqs = [freqs repmat([spatial_freq],1,size(varphi,2))];
+shifts = [shifts varphi];
+stacked_ims = cat(3,stacked_ims,stacked_ims_);
 end
 
 imshow(FlattenChannels(relphases))
 imwrite(uint8(FlattenChannels(mat2gray(relphases))*255),sprintf("%s/relphases.png", ...
         savedir_cur));
     
-    
-% denoise
-% I = find(~isfinite(relphases));
-% relphases(I) = eps;
-% for i = 1:size(relphases,3)
-%     relphases(:,:,i) = wdenoise2(relphases(:,:,i));
-% end
-
-imshow(FlattenChannels(relphases))
-imwrite(uint8(FlattenChannels(mat2gray(relphases))*255),sprintf("%s/relphases_denoised.png", ...
-        savedir_cur));
-
 %%
- 
-P = 0.5 + 0.5*cos(spatial_freqs.*(0:hproj-1)'*2*pi/hproj);
-P = floor(P * 24) / 24;
-
-imagesc(P);
+%  
+% P = 0.5 + 0.5*cos(spatial_freqs.*(0:prod(spatial_freqs)-1)'*2*pi/prod(spatial_freqs));
+% P = cos(spatial_freqs.*(0:prod(spatial_freqs)-1)'*2*pi/prod(spatial_freqs));
+% P = floor(P * 24) / 24;
+xs = 1:prod(spatial_freqs);
+P = zeros(prod(spatial_freqs),5);
+for i = 1:5
+    P(:,i) = mod(xs,spatial_freqs(i));
+end
 
 absphases = zeros(size(P,1),1);
 for i = 1:size(P,1)
@@ -167,10 +167,18 @@ for i = 1:size(P,1)
     absphases(i) = absphase;
 end
 
+% convert relphases to pixel space
+relphases_pix = zeros(size(relphases));
+for i = 1:5
+    relphases_pix(:,:,i) = spatial_freqs(i)*(relphases(:,:,i))/(2*pi)
+end
+
 % nearest neighbor search 
 
-D = pdist2(P,reshape(relphases,[],5),'euclidean');
-[~,I] = min(D,[],1);
+% P([98 588],:)
+% D([751 3770],1)
+D = pdist2(P,reshape(relphases_pix,[],5),'euclidean');
+[M,I] = min(D,[],1);
 Phi = absphases(I);
 
 Phi = reshape(Phi,h,w);
@@ -193,10 +201,30 @@ imshow([mat2gray(I) mat2gray(Phi)]);
 
 
 %% get disparity using zncc
+% 
+% PatternCoeff = 0.5 + 0.5*cos(spatial_freqs.*(0:hproj-1)'*2*pi/hproj);
+% PatternCoeff = cos(spatial_freqs.*(0:hproj-1)'*2*pi/hproj);
+% PatternCoeff = floor(PatternCoeff * 24) / 24;
 
-PatternCoeff = 0.5 + 0.5*cos(spatial_freqs(CF).*(0:hproj-1)'*2*pi/hproj);
-PatternCoeff = floor(PatternCoeff * 24) / 24;
+P = zeros(hproj, 149);
 
-[phase,zncc,I] = DecodeZNCC(relphases,PatternCoeff,Bounds.LB,Bounds.UB);
+for i = 1:size(freqs,2)
+    freq = freqs(i);
+    shift = shifts(i);
+    if i > 30 && i <= 59
+        P(:,i) = 0.5 + 0.5*cos(freq*(0:hproj-1)'*2*pi/hproj + (shift-1)*2*pi/29 );
+    else
+        P(:,i) = 0.5 + 0.5*cos(freq*(0:hproj-1)'*2*pi/hproj + (shift-1)*2*pi/30 );
+    end 
+end
+
+% freqs = [freqs repmat([spatial_freq],1,size(varphi,2))];
+% shifts = [shifts varphi];
+% stacked_ims = cat(3,stacked_ims,stacked_ims_);
+
+% PatternCoeff = 0.5 + 0.5*cos(usedFreq*(0:hproj-1)'*2*pi/hproj + linspace(0,3*pi/2, 4));
+% PatternCoeff = floor(PatternCoeff * 24) / 24;
+
+[phase,zncc,I] = DecodeZNCC(stacked_ims,P,Bounds.LB,Bounds.UB);
 
 imshow(mat2gray(phase))

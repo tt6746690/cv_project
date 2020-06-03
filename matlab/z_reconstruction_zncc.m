@@ -131,8 +131,6 @@ end
 
 repmat(reshape(PatternCoeff,hproj,1,S),[1 w 1])
 
-imshow([])
-
 imwrite(uint8(ims),sprintf("%s/chart_all_permutation.png",savedir));
 imshow(ims/255);
 
