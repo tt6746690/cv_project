@@ -71,13 +71,14 @@ function [phase,zncc,I] = DecodeZNCC(X,P,lb,ub,varargin)
 
     X = normalize_(X);
     P = normalize_(P);
-
     zncc = X*P'; % h*w x hproj
+
+    % zncc = pdist2(X,P,'euclidean');
 
     for i = 1:size(zncc,1)
         zncc(i, 1 : floor(lb(i)) ) = -inf;
         zncc(i, ceil(ub(i)) : end) = -inf; 
-    end
+    end 
 
     [~,I] = max(zncc,[],2);
 

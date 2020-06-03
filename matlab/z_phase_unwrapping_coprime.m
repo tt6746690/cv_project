@@ -22,63 +22,80 @@ rx1 = mod(xs,T1);
 rx2 = mod(xs,T2);
 % add noise then denoise
 mu = 0;
-% sigma = range(rx1) * 0.1;
 sigma=0.5;
 rx1n = rx1 + normrnd(mu,sigma,1,size(xs,2));
 rx2n = rx2 + normrnd(mu,sigma,1,size(xs,2));
 rx1f = wdenoise(rx1n);
 rx2f = wdenoise(rx2n);
 
-G = [rx1;rx2]'-1; 
-% G = G(1:20:end,:);
-Gf = [rx1f;rx2f]'-1;
-base = [T1,T2];
+P = [rx1;rx2]'-1;    % hproj x S
+% Gf = [rx1f;rx2f]'-1;
+X = [rx1;rx2]'-1;    % h x S
+X = X(1:10:end,:);
 
-X = [];
-for i = 1:size(G,1)
-    g = G(i,:);
-    x = Chinese(g,base)
-    X = [X x];
+
+% builds table: from patterns
+%     Table[correspondence in pixel space] = absolute phase for that pixel
+absphases = [];
+for i = 1:size(P,1)
+    absphase = Chinese(P(i,:),[T1,T2]);
+    absphases = [absphases absphase];
 end
 
 
 % nearest neighbor search 
-
-D = pdist2(G,Gf,'euclidean');
+D = pdist2(P,X,'euclidean');
 [M,I] = min(D,[],1);
-XX = X(I);
-
-norm(XX-X)
+XX = absphases(I);
 
 
-%% 
+% DecodeZNCC 
+% normalize_ = @(x) normalize(normalize(x,2,'center','mean'),2,'norm',2);
+% X = normalize_(double(X));
+% P = normalize_(double(P));
+% zncc = X*P';
+% XX = max(zncc,[],2)';
 
-plot(XX); hold on; plot(X); legend
+% asnccaccGC.m
+% imgs2np = build_as_2d_np(double(X));
+% asnccgtnp = build_asncc_2d_np(double(P));
+% scores = imgs2np * asnccgtnp';
+% [~, XX] = max(scores,[],2);
+% XX = XX';
 
 
-%% 
 
-mesh(flipud([repmat(cos(2*pi*(1/T1)*rx1),width,1);
-             repmat(cos(2*pi*(1/T2)*rx2),width,1);
-             repmat(cos(2*pi*(1/T1)*rx1f),width,1);
-             repmat(cos(2*pi*(1/T2)*rx2f),width,1);
-             repmat(cos(2*pi*(1/T)*X),width,1);
-             repmat(cos(2*pi*(1/T)*XX),width,1)]))
+
+
+% XX = absphases(I);
+
+% norm(XX-X)
+
+
+% mesh(flipud([repmat(cos(2*pi*(1/T1)*rx1),width,1);
+%              repmat(cos(2*pi*(1/T2)*rx2),width,1);
+%              repmat(cos(2*pi*(1/T1)*rx1f),width,1);
+%              repmat(cos(2*pi*(1/T2)*rx2f),width,1);
+%              repmat(cos(2*pi*(1/T)*X),width,1);
+%              repmat(cos(2*pi*(1/T)*XX),width,1)]))
+% colormap('gray');
+% view(2);
+% grid off;
+% set(gca,'XTick',[], 'YTick', [], 'ZTick', []);
+% xlim([-10 size(xs,2)]);
+%
+         
+% imagesc(flipud([repmat(cos(2*pi*(1/T1)*rx1n(1:10:end)),width,1);
+%              repmat(cos(2*pi*(1/T2)*rx1f(1:10:end)),width,1);
+%              repmat(cos(2*pi*(1/T)*XX),width,1)]))
+%          
+imagesc( [rx1(1:10:end); rx2(1:10:end); XX] )
+         
+         
 colormap('gray');
 view(2);
-grid off;
-set(gca,'XTick',[], 'YTick', [], 'ZTick', []);
-xlim([-10 size(xs,2)]);
-%%
-         
-mesh(flipud([repmat(cos(2*pi*(1/T1)*rx1n),width,1);
-             repmat(cos(2*pi*(1/T2)*rx1f),width,1);
-             repmat(cos(2*pi*(1/T)*XX),width,1)]))
-         
-colormap('gray');
-view(2);
-grid off;
-set(gca,'XTick',[], 'YTick', [], 'ZTick', []);
+% grid off;
+% set(gca,'XTick',[], 'YTick', [], 'ZTick', []);
 xlim([-10 size(xs,2)]);
 % print(gcf,'../writeup/assets/phase_shifting_chinese_reminder_lower_freq_noisy_wdenoiser_nearest_neighbor.png','-dpng','-r500')
 

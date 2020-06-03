@@ -19,7 +19,7 @@ ProjectorInfoFolder = 'mian/CalibrationCode';
 Bounds = load(sprintf('%s/%s.mat', ProjectorInfoFolder, 'Bounds'));
 Bounds.LB = Bounds.yErrorLB(cx,cy);
 Bounds.UB = Bounds.yErrorUB(cx,cy);
-% expandby = 1000; shiftby = 0;
+expandby = 1000; shiftby = 0;
 Bounds.UB = min(shiftby + Bounds.yErrorLB(cx,cy) + expandby,hproj);
 Bounds.LB = max(shiftby + Bounds.yErrorUB(cx,cy) - expandby,0);
 
@@ -154,25 +154,47 @@ imshow(FlattenChannels(relphases))
 imwrite(uint8(FlattenChannels(mat2gray(relphases))*255),sprintf("%s/relphases_denoised.png", ...
         savedir_cur));
 
+%%
+ 
+P = 0.5 + 0.5*cos(spatial_freqs.*(0:hproj-1)'*2*pi/hproj);
+P = floor(P * 24) / 24;
 
-CF = [4 5]; % choose spatial frequency
-relphasesp = relphases(:,:,CF);
-relphasesp = reshape(relphasesp,[],size(spatial_freqs(CF),2));
+imagesc(P);
 
-X = [];
-for i = 1:size(relphasesp,1)
-    per_pixel_relphase = relphasesp(i,:);
-    x = Chinese(per_pixel_relphase, spatial_freqs(CF));
-    X = [X;x];
+absphases = zeros(size(P,1),1);
+for i = 1:size(P,1)
+    absphase = Chinese(P(i,:),spatial_freqs);
+    absphases(i) = absphase;
 end
 
-im = reshape(X/prod(spatial_freqs(CF)),h,w)
-imagesc(im)
+% nearest neighbor search 
+
+D = pdist2(P,reshape(relphases,[],5),'euclidean');
+[~,I] = min(D,[],1);
+Phi = absphases(I);
+
+Phi = reshape(Phi,h,w);
+I = reshape(I,h,w);
+imshow([mat2gray(I) mat2gray(Phi)]);
+
+% CF = [4 5]; % choose spatial frequency
+% relphasesp = relphases(:,:,CF);
+% relphasesp = reshape(relphasesp,[],size(spatial_freqs(CF),2));
+% 
+% X = [];
+% for i = 1:size(relphasesp,1)
+%     per_pixel_relphase = relphasesp(i,:);
+%     x = Chinese(per_pixel_relphase, spatial_freqs(CF));
+%     X = [X;x];
+% end
+% 
+% im = reshape(X/prod(spatial_freqs(CF)),h,w);
+% imagesc(im)
 
 
 %% get disparity using zncc
 
-PatternCoeff = 0.5 + 0.5*cos(spatial_freqs.*(0:hproj-1)'*2*pi/hproj);
+PatternCoeff = 0.5 + 0.5*cos(spatial_freqs(CF).*(0:hproj-1)'*2*pi/hproj);
 PatternCoeff = floor(PatternCoeff * 24) / 24;
 
 [phase,zncc,I] = DecodeZNCC(relphases,PatternCoeff,Bounds.LB,Bounds.UB);
