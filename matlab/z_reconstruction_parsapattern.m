@@ -107,8 +107,7 @@ for nimages = [4 10 30]
 end
 
 imshow(im)
-imwrite(uint8(im*255),sprintf("%s/relphase_vs_K.png", ...
-        savedir_cur));
+imwrite(uint8(im*255),sprintf("%s/relphase_vs_K.png",savedir_cur));
     
     
  
@@ -148,8 +147,9 @@ stacked_ims = cat(3,stacked_ims,stacked_ims_);
 end
 
 imshow(FlattenChannels(relphases))
-imwrite(uint8(FlattenChannels(mat2gray(relphases))*255),sprintf("%s/relphases.png", ...
-        savedir_cur));
+imwrite(uint8(FlattenChannels(mat2gray(relphases))*255),sprintf("%s/relphases.png",savedir));
+imwrite(uint8(FlattenChannels(mat2gray(relphases))*255),sprintf("%s/relphases.png",assetsdir));
+
     
 P = zeros(hproj, 149);
 for i = 1:size(freqs,2)
@@ -164,15 +164,16 @@ end
 
 
 tbs = [];
-for nIs = [3 5 7 10 12 15 50 149]
-    Is = ceil(rand(nIs,1)*149);
+for nIs = [5 7 9 11 13 50 149]
+    Is = datasample(RandStream('mlfg6331_64'),1:149,nIs,'Replace',false);
     [phase,zncc,I] = DecodeZNCC(stacked_ims(:,:,Is),P(:,Is),Bounds.LB,Bounds.UB);
     tbs = [tbs phase];
 end
 
 imshow(mat2gray(tbs))
-imwrite(uint8(tbs),sprintf("%s/diparity_vs_shifts.png", ...
-        savedir_cur));
+imwrite(uint8(255*tbs/hproj),sprintf("%s/sinusoids_disparity_vs_random_shifts.png",savedir));
+imwrite(uint8(255*tbs/hproj),sprintf("%s/sinusoids_disparity_vs_random_shifts.png",assetsdir));
+
 
 phase_gt = phase;
 disparity_gt = disparityFunc(phase,Y);

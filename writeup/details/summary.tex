@@ -124,7 +124,7 @@ Similar to appendix in \cite{morenoEmbeddedPhaseShifting2015} and results shown 
 \end{align}
 \begin{figure}[h!]
     \begin{center}
-        \includegraphics[width=6in]{relphases_1_2_5_17_31}
+        \includegraphics[width=6in]{relphases}
     \end{center}
     \caption{Relative phase $\phi$ for spatial sinusoids with period 1, 2, 5, 17, 31 solved via (\ref{eq:phase_shifting_least_squares_solution})}
     \label{fig:relative_phase_solution}
@@ -227,22 +227,22 @@ Let $L$ be number of vertical light planes to be encoded, $f:[L]\to\R^K$ is some
         = \argmax_{x\in[L]} \textsf{ZNCC}\left( y, f(x) \right)
     \label{eq:zncc_decoder}
 \end{align}
-Note the quality of decoding depends heavily on the noise level. Additionally, number of shifts is crucial for good reconstruction of absolute phase, see Figure~\ref{fig:disparity_vs_random_shifts}
+Note the quality of decoding depends heavily on the noise level. Additionally, number of shifts is crucial for good reconstruction of absolute phase, see Figure~\ref{fig:sinusoids_disparity_vs_random_shifts}
 \begin{figure}[h!]
     \begin{center}
-        \includegraphics[width=7in]{disparity_vs_shifts_3_5_7_10_12_15_50_149_}
+        \includegraphics[width=7in]{sinusoids_disparity_vs_random_shifts}
     \end{center}
-    \caption{Here we have spatial sinusoids with period 1,2,5,17,31, each shifted 30 times projected onto a static scene. Resulting in $5\cdot 30=150$ measurement, each stacked from 250 noisy images. We see ZNCC decoding taking 3,5,7,10,12,15,50,150 randomly chosen measurements respectively yield progressively better disparity reconstruction}
-    \label{fig:disparity_vs_random_shifts}
-\end{figure}
+    \caption{Here we have spatial sinusoids with period 1,2,5,17,31, each shifted 30 times projected onto a static scene. Resulting in $5\cdot 30=150$ measurement, each stacked from 250 noisy images. We see ZNCC decoding taking 5,7,9,11,13,50,149 randomly chosen measurements respectively yield progressively better disparity reconstruction}
+    \label{fig:sinusoids_disparity_vs_random_shifts}
+\end{figure} 
 \begin{figure}[h!]
     \begin{center}
         \includegraphics[width=7in]{zncc_decoding_phase}
         \includegraphics[width=7in]{zncc_decoding_disparity}
     \end{center}
-    \caption{ZNCC decoded phase and disparity for (from left to right) ground truth shown in Figure~\ref{fig:disparity_vs_random_shifts}, Hamiltonian, MPS, Optimized-MDE, Optimized-Top0, Optimized-Top1, Optimized-Top2. Apart from ground truth, reconstruction takes intensity of scene under 7 projector patterns, each stacked from 250 noisy measurements}
+    \caption{ZNCC decoded phase and disparity for (from left to right) ground truth shown in Figure~\ref{fig:sinusoids_disparity_vs_random_shifts}, Hamiltonian, MPS, Optimized-MDE, Optimized-Top0, Optimized-Top1, Optimized-Top2. Apart from ground truth, reconstruction takes intensity of scene under 7 projector patterns, each stacked from 250 noisy measurements}
     \label{fig:zncc_decoding_phase_disparity}
-\end{figure}
+\end{figure}  
 
 \subsubsection{Geometric Perspective \& Hamiltonian Code} 
  
