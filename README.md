@@ -54,3 +54,6 @@ export KMP_DUPLICATE_LIB_OK=True
 + do hdr, hyperspectral imaging with c2b as well, joint optimization etc.
 + denoiser
     + trained on c2b images, might not be that important as Gaussian seems to be an OK noise model.
++ consider geometric perspective paper and use it to design better coding schemes catered to the c2b camera
+    + noise no longer gaussian, noisy measurement not in an ellipsoid anymore, since noise no longer gaussian.
+    + can we optimize for geometry in measurement space to design optimal code, i.e. coding curve that satisfies the 3 desideratas

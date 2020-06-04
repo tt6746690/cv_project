@@ -241,6 +241,21 @@ imwrite(uint8(mat2gray(tbs)*255),sprintf("%s/diparity_vs_shifts.png", ...
         savedir_cur));
     
 
+    [phase,zncc,I] = DecodeZNCC(stacked_ims(:,:,Is),P(:,Is),Bounds.LB,Bounds.UB);
+    tbs = [tbs phase];
+end
+
+imshow(mat2gray(tbs))
+imwrite(uint8(mat2gray(tbs)*255),sprintf("%s/diparity_vs_shifts.png", ...
+        savedir_cur));
+    
+
+
+
+
+
+
+
 
 
 

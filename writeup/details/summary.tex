@@ -236,6 +236,31 @@ Note the quality of decoding depends heavily on the noise level. Additionally, n
     \label{fig:disparity_vs_random_shifts}
 \end{figure}
 
+\subsubsection{Geometric Perspective \& Hamiltonian Code}
+
+When trying to find optimal encoding scheme that minimizes bayesian decoding/correspondence error, a surrogate objective is the length of the coding curve. \cite{guptaGeometricPerspectiveStructured2018} argues that an optimal coding scheme should have a coding curve that is long, non-intersecting, and distance preserving (points far along the curve should also be far in euclidean distance). Sinusoidal codes has intersection with itself, i.e. multiple column indices are coded to the same location in measurement space implying there is $2\pi$ phase ambiguity when trying to compute its inverse decoding function. The distance preserving property is especially important in noisy regime, where non-distance preserving coding scheme would potentially yield large error as the decoding function maps (w.r.t. Euclidean distance) noisy measurement to indices far away from true value. For example, A La Carte code is not distance preserving as shown in Figure~\ref{fig:coding_curve_la_carte}. 
+\begin{figure}[h!] 
+    \begin{center}
+        \includegraphics[height=3cm]{coding_curve_la_carte}
+        \caption{A La Carte codes for $3$ patterns with varying max spatial frequency \cite{mirdehghanOptimalStructuredLight2018} is not distance preserving, i.e. points far along the curve are close in measurement space in the Euclidean sense. So we'd expect it to have sub-optimal performance when measurements are noisy}
+        \label{fig:coding_curve_la_carte}
+    \end{center}
+\end{figure}
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[height=5cm]{coding_curve_quantization_effect}
+        \caption{Projector quantization error translates to jitters in the coding curve for sinusoidal patterns}
+        \label{fig:coding_curve_quantization_effect}
+    \end{center}
+\end{figure}
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[height=5cm]{coding_curve_sinusoids_pairwise_coprime}
+        \caption{Sinusoids with pairwise co-prime periods (5, 11, 13) is non-intersecting and therefore emits unique decoder using the Chinese Reminder Theorem. However, certain points along the curve does not satisfy the distance preserving property, implying the code is not optimal when measurements are noisy. For sinusoidal codes, non-intersection and distance preserving is a conflicting objective so it seems.}
+        \label{fig:coding_curve_sinusoids_pairwise_coprime}
+    \end{center}
+\end{figure}
+
 
 \subsection{Alternating Direction Method of Multipliers}
 
