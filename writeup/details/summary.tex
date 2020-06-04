@@ -20,7 +20,7 @@ The correspondence problem can be stated simply
 We first note that search space for the corresponding point can be restricted to pixels lying on the epipolar line. Epipolar plane is plane formed from points $p,o_1,o_2$ and epipolar line is intersection of epipolar plane with the image plane.
 \begin{figure}[h!]
     \begin{center}
-        \includegraphics[width=5in]{epipolar_constraint_correspondence}
+        \includegraphics[width=4in]{epipolar_constraint_correspondence}
         \caption{non parallel (left) and parallel (right) camera setup. $pe$ and $p'e'$ are the epipolar lines}
     \end{center}
 \end{figure}
@@ -32,7 +32,7 @@ For structured light stereo systems, the art of designing robust, fast, reliable
 Given correspondence between projector and camera images, triangulation refers to the process of computing the distance of object relative to camera. Since a 3D point can be obtained by intersecting a ray (pixel of camera image) with a projector plane (a single code), it is necessary to encode a single axis in projected image to ensure unique reconstruction. 
 \begin{figure}[h!]
     \begin{center}
-        \includegraphics[width=3in]{parallel_camera}
+        \includegraphics[width=2in]{parallel_camera}
         \caption{parallel-calibrated binocular stereo}
     \end{center}
 \end{figure}
@@ -79,7 +79,7 @@ Phase shifting is a particular coding method whereby the projector column coordi
         = I_0 + A\cos\left( \phi \right)
     \label{eq:phase_shift_image_formation_one_pixel}
 \end{align}
-where $I_0$ is the pixel intensity when no projection is used; $I$ is the pixel intensity measured; $A$ is amplitude (albedo/reflectance) of the signal; $\Phi = 2\pi f x = 2\pi n + \phi \in [0, 2\pi f N]$ for some number of period $n\in\N$ is the absolute phase, $\phi \in [0,2\pi]$ is the relative phase. When measured w.r.t. number of pixels, $x$ is the corresponding absolute phase and $\tilde{x}$ the corresponding relative phase, satisfying
+where $I_0$ is the pixel intensity resulting from ambient illumination; $I$ is the pixel intensity measured; $A$ is amplitude (albedo/reflectance) of the signal corresponding to intensity of scene assuming unit intensity for projector patterns; $\Phi = 2\pi f x = 2\pi n + \phi \in [0, 2\pi f N]$ for some number of period $n\in\N$ is the absolute phase, $\phi \in [0,2\pi]$ is the relative phase. When measured w.r.t. number of pixels, $x$ is the corresponding absolute phase and $\tilde{x}$ the corresponding relative phase, satisfying
 \begin{align}
     x = Tn + \tilde{x}
     \qquad\text{or}\qquad
@@ -232,12 +232,20 @@ Note the quality of decoding depends heavily on the noise level. Additionally, n
     \begin{center}
         \includegraphics[width=7in]{disparity_vs_shifts_3_5_7_10_12_15_50_149_}
     \end{center}
-    \caption{Here we have spatial sinusoids with period 1,2,5,17,31, each shifted 30 times projected onto a static scene. Resulting in $5\cdot 30=150$ measurement, each stacked from at least 100 noisy images. We see ZNCC decoding taking 3,5,7,10,12,15,50,150 randomly chosen measurements respectively yield progressively better disparity reconstruction}
+    \caption{Here we have spatial sinusoids with period 1,2,5,17,31, each shifted 30 times projected onto a static scene. Resulting in $5\cdot 30=150$ measurement, each stacked from 250 noisy images. We see ZNCC decoding taking 3,5,7,10,12,15,50,150 randomly chosen measurements respectively yield progressively better disparity reconstruction}
     \label{fig:disparity_vs_random_shifts}
 \end{figure}
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=7in]{zncc_decoding_phase}
+        \includegraphics[width=7in]{zncc_decoding_disparity}
+    \end{center}
+    \caption{ZNCC decoded phase and disparity for (from left to right) ground truth shown in Figure~\ref{fig:disparity_vs_random_shifts}, Hamiltonian, MPS, Optimized-MDE, Optimized-Top0, Optimized-Top1, Optimized-Top2. Apart from ground truth, reconstruction takes intensity of scene under 7 projector patterns, each stacked from 250 noisy measurements}
+    \label{fig:zncc_decoding_phase_disparity}
+\end{figure}
 
-\subsubsection{Geometric Perspective \& Hamiltonian Code}
-
+\subsubsection{Geometric Perspective \& Hamiltonian Code} 
+ 
 When trying to find optimal encoding scheme that minimizes bayesian decoding/correspondence error, a surrogate objective is the length of the coding curve. \cite{guptaGeometricPerspectiveStructured2018} argues that an optimal coding scheme should have a coding curve that is long, non-intersecting, and distance preserving (points far along the curve should also be far in euclidean distance). Sinusoidal codes has intersection with itself, i.e. multiple column indices are coded to the same location in measurement space implying there is $2\pi$ phase ambiguity when trying to compute its inverse decoding function. The distance preserving property is especially important in noisy regime, where non-distance preserving coding scheme would potentially yield large error as the decoding function maps (w.r.t. Euclidean distance) noisy measurement to indices far away from true value. For example, A La Carte code is not distance preserving as shown in Figure~\ref{fig:coding_curve_la_carte}. 
 \begin{figure}[h!] 
     \begin{center}

@@ -57,3 +57,4 @@ export KMP_DUPLICATE_LIB_OK=True
 + consider geometric perspective paper and use it to design better coding schemes catered to the c2b camera
     + noise no longer gaussian, noisy measurement not in an ellipsoid anymore, since noise no longer gaussian.
     + can we optimize for geometry in measurement space to design optimal code, i.e. coding curve that satisfies the 3 desideratas
++ note noise characteristic of S images is dependent on the reconstruction used to create them

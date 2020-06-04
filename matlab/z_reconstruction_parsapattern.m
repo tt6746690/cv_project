@@ -10,7 +10,7 @@ ProjectPaths;
 savedir = "results/reconstruction_parsapattern"; mkdir(savedir);
 blacklevelpath = "data/blacklevel_all1/blacklevel.mat";
 blacklvl = load(blacklevelpath); blacklvl = blacklvl.blacklvl;
-hproj = 684;
+hproj = 608;
 disparityFunc = @(corres,pos) (corres - 2.7*pos);
 dispRange = [50, 160];
 [X,Y] = meshgrid(1:w,1:h);
@@ -22,6 +22,7 @@ Bounds.UB = Bounds.yErrorUB(cx,cy);
 expandby = 1000; shiftby = 0;
 Bounds.UB = min(shiftby + Bounds.yErrorLB(cx,cy) + expandby,hproj);
 Bounds.LB = max(shiftby + Bounds.yErrorUB(cx,cy) - expandby,0);
+assetsdir = '../writeup/assets';
 
 
 %% stack images for Sinusoids
@@ -111,7 +112,7 @@ imwrite(uint8(im*255),sprintf("%s/relphase_vs_K.png", ...
     
     
  
-%% get absolute phase / disparity using chinese reminder
+%% solve for disparity using zncc
 
 relphases = zeros(h,w,size(spatial_freqs,2));
 stacked_ims = [];
@@ -150,64 +151,7 @@ imshow(FlattenChannels(relphases))
 imwrite(uint8(FlattenChannels(mat2gray(relphases))*255),sprintf("%s/relphases.png", ...
         savedir_cur));
     
-%%
-%  
-% P = 0.5 + 0.5*cos(spatial_freqs.*(0:prod(spatial_freqs)-1)'*2*pi/prod(spatial_freqs));
-% P = cos(spatial_freqs.*(0:prod(spatial_freqs)-1)'*2*pi/prod(spatial_freqs));
-% P = floor(P * 24) / 24;
-xs = 1:prod(spatial_freqs);
-P = zeros(prod(spatial_freqs),5);
-for i = 1:5
-    P(:,i) = mod(xs,spatial_freqs(i));
-end
-
-absphases = zeros(size(P,1),1);
-for i = 1:size(P,1)
-    absphase = Chinese(P(i,:),spatial_freqs);
-    absphases(i) = absphase;
-end
-
-% convert relphases to pixel space
-relphases_pix = zeros(size(relphases));
-for i = 1:5
-    relphases_pix(:,:,i) = spatial_freqs(i)*(relphases(:,:,i))/(2*pi)
-end
-
-% nearest neighbor search 
-
-% P([98 588],:)
-% D([751 3770],1)
-D = pdist2(P,reshape(relphases_pix,[],5),'euclidean');
-[M,I] = min(D,[],1);
-Phi = absphases(I);
-
-Phi = reshape(Phi,h,w);
-I = reshape(I,h,w);
-imshow([mat2gray(I) mat2gray(Phi)]);
-
-% CF = [4 5]; % choose spatial frequency
-% relphasesp = relphases(:,:,CF);
-% relphasesp = reshape(relphasesp,[],size(spatial_freqs(CF),2));
-% 
-% X = [];
-% for i = 1:size(relphasesp,1)
-%     per_pixel_relphase = relphasesp(i,:);
-%     x = Chinese(per_pixel_relphase, spatial_freqs(CF));
-%     X = [X;x];
-% end
-% 
-% im = reshape(X/prod(spatial_freqs(CF)),h,w);
-% imagesc(im)
-
-
-%% get disparity using zncc
-% 
-% PatternCoeff = 0.5 + 0.5*cos(spatial_freqs.*(0:hproj-1)'*2*pi/hproj);
-% PatternCoeff = cos(spatial_freqs.*(0:hproj-1)'*2*pi/hproj);
-% PatternCoeff = floor(PatternCoeff * 24) / 24;
-
 P = zeros(hproj, 149);
-
 for i = 1:size(freqs,2)
     freq = freqs(i);
     shift = shifts(i);
@@ -218,16 +162,6 @@ for i = 1:size(freqs,2)
     end 
 end
 
-% freqs = [freqs repmat([spatial_freq],1,size(varphi,2))];
-% shifts = [shifts varphi];
-% stacked_ims = cat(3,stacked_ims,stacked_ims_);
-
-% PatternCoeff = 0.5 + 0.5*cos(usedFreq*(0:hproj-1)'*2*pi/hproj + linspace(0,3*pi/2, 4));
-% PatternCoeff = floor(PatternCoeff * 24) / 24;
-
-% Is = int8(linspace(1,149,19));
-
-
 
 tbs = [];
 for nIs = [3 5 7 10 12 15 50 149]
@@ -237,28 +171,107 @@ for nIs = [3 5 7 10 12 15 50 149]
 end
 
 imshow(mat2gray(tbs))
-imwrite(uint8(mat2gray(tbs)*255),sprintf("%s/diparity_vs_shifts.png", ...
+imwrite(uint8(tbs),sprintf("%s/diparity_vs_shifts.png", ...
         savedir_cur));
-    
 
-    [phase,zncc,I] = DecodeZNCC(stacked_ims(:,:,Is),P(:,Is),Bounds.LB,Bounds.UB);
-    tbs = [tbs phase];
+phase_gt = phase;
+disparity_gt = disparityFunc(phase,Y);
+imwrite(uint8(disparity_gt),sprintf('%s/disparity_gt.png', savedir));
+imwrite(uint8(255*phase_gt/hproj),sprintf('%s/phase_gt.png', savedir));
+
+
+%% stack images for Hamiltonian/MPS/Optimized-MDE/Optimized-Top0/Optimized-Top1/Optimized-Top2
+%  7 patterns
+
+S = 7;
+coding_schemes = {'Hamiltonian','MPS','Optimized-MDE','Optimized-Top0','Optimized-Top1','Optimized-Top2'};
+
+for ii = 1:size(coding_schemes,2)
+coding_scheme = coding_schemes{ii}
+savedir_cur = sprintf("%s/%s",savedir,coding_scheme); mkdir(savedir_cur);
+for s = 1:S
+
+imagedir = sprintf('./data/ParsaPatterns/%s/P%d/',coding_scheme,s);
+files = dir(sprintf("%s/bucket1*.png",imagedir));
+[fnames,ffolders] = deal({files.name},{files.folder});
+
+% 250 noisy images 
+n_im = size(fnames,2);
+ims = zeros(h,w,n_im);
+for i = 1:n_im
+    impath = sprintf('%s/%s',ffolders{i},fnames{i});
+    im = double(BlackLevelRead(impath,blacklvl,1));
+    im = im(cx,cy);
+    ims(:,:,i) = im;
 end
 
-imshow(mat2gray(tbs))
-imwrite(uint8(mat2gray(tbs)*255),sprintf("%s/diparity_vs_shifts.png", ...
-        savedir_cur));
-    
+stackedim = mean(ims,3);
+im = [mat2gray(ims(:,:,1)) mat2gray(stackedim)];
+imshow(im);
 
+imwrite(uint8(stackedim),sprintf("%s/P%d.png",savedir_cur,s));
+end
+end
 
+%% zncc decoding for Hamiltonian/MPS/Optimized-MDE/Optimized-Top0/Optimized-Top1/Optimized-Top2
 
+savedir_phase = sprintf("%s/ZNCCDecodingPhase",savedir); mkdir(savedir_phase);
+savedir_disparity = sprintf("%s/ZNCCDecodingDisparity",savedir); mkdir(savedir_disparity);
 
+coding_schemes = {'Hamiltonian','MPS','Optimized-MDE','Optimized-Top0','Optimized-Top1','Optimized-Top2'};
+disparitys = [];
+phases = [];
+psnrs_disparity = [];
+psnrs_phase = [];
 
+use_mat2gray = false;
+% if use_mat2gray
+%     disparity_gt_ = mat2gray(disparity_gt);
+%     phase_gt_ = mat2gray(phase_gt);
+% else
+%     disparity_gt_ = disparity_gt;
+%     phase_gt_ = phase_gt;
+% end
+%     
 
+for ii = 1:size(coding_schemes,2)
+coding_scheme = coding_schemes{ii}
+if strcmp(coding_scheme,'Hamiltonian')
+    PatternMatrix = load('./data/ParsaPatterns/Hamiltonian/Pi_Ham_608_7_1.mat');
+    P = PatternMatrix.Pi';
+else
+    PatternMatrix = load('./data/ParsaPatterns/MPS/PatternMat.mat');
+    P = PatternMatrix.patternMatrix;
+end
+imagedir=sprintf('results/reconstruction_parsapattern/%s',coding_scheme);
+files = dir(sprintf("%s/*.png",imagedir));
+[fnames,ffolders] = deal({files.name},{files.folder});
+K = size(fnames,2);
+I = zeros(h,w,K);
+for k = 1:K
+    I(:,:,k) = imread(sprintf('%s/%s',ffolders{k},fnames{k}));
+end
+[phase,~,~] = DecodeZNCC(I,P,Bounds.LB,Bounds.UB);
+disparity = disparityFunc(phase,Y);
+imwrite(uint8(255*phase/hproj), sprintf('%s/ZNCCDecodingPhase/%s.png',savedir,coding_scheme));
+imwrite(uint8(disparity), sprintf('%s/ZNCCDecodingDisparity/%s.png',savedir,coding_scheme));
 
+psnrs_disparity = [psnrs_disparity ComputePSNR(disparity_gt,disparity)];
+psnrs_phase = [psnrs_phase ComputePSNR(phase_gt,phase)];
+phases = [phases phase];
+disparitys = [disparitys disparity];
+end
 
+figure('Renderer', 'painters', 'Position', [10 10 300*2 300])
+subplot(1,2,1);
+bar(categorical(coding_schemes),psnrs_disparity);
+subplot(1,2,2);
+bar(categorical(coding_schemes),psnrs_phase);
 
+ims = [disparity_gt_ disparitys];
+imwrite(uint8(ims), sprintf('%s/zncc_decoding_disparity.png',savedir));
+imwrite(uint8(ims), sprintf('%s/zncc_decoding_disparity.png',assetsdir));
 
-
-
-
+ims = 255*[phase_gt_ phases]/hproj;
+imwrite(uint8(ims), sprintf('%s/zncc_decoding_phase.png',savedir));
+imwrite(uint8(ims), sprintf('%s/zncc_decoding_phase.png',assetsdir));
