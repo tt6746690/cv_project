@@ -12,11 +12,12 @@ function [orig_im,orig_ratio_im] = ReadOrigIm(impath,h,w,S,varargin)
     %       - orig_ratio_im     \in [0,255]
     %
     circshiftby = 0;
+    source = 'ParsaPattern';
     
     % Map of parameter names to variable names
     params_to_variables = containers.Map( ...
-        {'CropX','CropY','CircShiftInputImageBy'}, ...
-        {'cx','cy','circshiftby'});
+        {'CropX','CropY','CircShiftInputImageBy','Source'}, ...
+        {'cx','cy','circshiftby','source'});
     v = 1;
     while v <= numel(varargin)
         param_name = varargin{v};
@@ -34,6 +35,7 @@ function [orig_im,orig_ratio_im] = ReadOrigIm(impath,h,w,S,varargin)
     orig_im = zeros(h,w,S);
     orig_ratio_im = zeros(h,w,S);
     
+
     for s = 1:S
         im = double(imread(sprintf("%s_%d.png",impath,s-1)));
         if ~all([exist('cx','var') exist('cy','var')])

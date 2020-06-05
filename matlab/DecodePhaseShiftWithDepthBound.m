@@ -1,8 +1,8 @@
-function [albedo,wrapped_phase,phase] = DecodePhaseShiftWithDepthBound(im,W,lb,ub,hproj,spatialfrequency,varargin)
+function [albedo,wrapped_phase,phase] = DecodePhaseShiftWithDepthBound(X,W,lb,ub,hproj,spatialfrequency,varargin)
 %%  Given images under shifted sinusoidal illuminations, 
 %       solves for shape unknowns (albedo, phase)
 %
-%   im     hxwxS        demultiplexed images under S projector illuminations
+%   X     hxwxS        demultiplexed images under S projector illuminations
 %   W      2FxS         optimal bucket multiplexing matrix
 %   depthbounds     [0,hproj-1]^(h*w)
 %       lb  hxw         pixel-wise phase lower bound
@@ -37,18 +37,18 @@ function [albedo,wrapped_phase,phase] = DecodePhaseShiftWithDepthBound(im,W,lb,u
     lb = double(lb)*2*pi/hproj;
     ub = double(ub)*2*pi/hproj;
 
-    [h,w,S] = size(im);
+    [h,w,S] = size(X);
 
     if ~exist('shifts','var')
         shifts = transpose((0:S-1)*2*pi/S);
     end
 
     L = [ones(S,1) cos(shifts) -sin(shifts)];
-    b = (W*L)';
+    b = L';
     % multiplexed images
-    A = reshape(im,[],S)*W';
-    % shape unknowns
-    U = A/b;
+    A = reshape(X,[],S);
+    % shape unknowns u = A^-1 * b
+    U = A/(L');
     % albedo
     albedo = sqrt(sum(U(:,2:3).^2,2));
     % phase \in [0,pi]

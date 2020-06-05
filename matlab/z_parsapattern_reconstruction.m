@@ -100,13 +100,13 @@ end
 
 phase_shifts = (shifts-1)*2*pi/K;
 
-im = []
+im = [];
 for nimages = [4 10 30]
     is = int8(linspace(1,K,nimages));
     im = [im PhaseShiftingSolveRelativePhase(ims(:,:,is), phase_shifts(is))];
 end
 
-imshow(im)
+imshow(im);
 imwrite(uint8(im*255),sprintf("%s/relphase_vs_K.png",savedir_cur));
     
     
@@ -116,6 +116,7 @@ imwrite(uint8(im*255),sprintf("%s/relphase_vs_K.png",savedir_cur));
 % uniform disparity to background ... tune the constant
 disparityFunc = @(corres,Y) corres-2.35*Y;
 
+spatial_freqs = [1 2 5 17 31];
 relphases = zeros(h,w,size(spatial_freqs,2));
 stacked_ims = [];
 freqs = []; % spatial freqs
@@ -166,6 +167,10 @@ end
 disparity_gt = disparityFunc(phase_gt,Y);
 imwrite(uint8(disparity_gt),sprintf('%s/disparity_gt.png', savedir));
 imwrite(uint8(255*phase_gt/hproj),sprintf('%s/phase_gt.png', savedir));
+
+GroundTruth.disparity = disparity_gt;
+GroundTruth.phase = phase_gt;
+save(sprintf('%s/GroundTruthPhaseDisparity.mat', savedir),'GroundTruth');
 
 % diparity vs. shifts for zncc decoding of sinusoids
 
@@ -333,8 +338,6 @@ xlabel('b'); ylabel('a');
 a = as(i)
 b = bs(j)
 CorrectPhase = @(phase) a*phase + b;
-
-%% 
 
 disparityFunc = @(corres,Y) corres-2.35*Y;
 CorrectPhase = @(phase) 0.89*phase - 0.5;

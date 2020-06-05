@@ -318,12 +318,12 @@ We can gather the residual term $r=Ax+Bz-c$ and completing the squares and get
 where $u=\frac{1}{\rho}y$ is scaled dual variable. The scaled form ADMM is then
 \begin{align}
     x^{k+1}
-        &= \argmin_x \pb{
+        &= \argmin_x \pc{
             f(x) + \frac{\rho}{2} \norm{Ax+Bz^k-c+u^k}_2^2 
         } 
         \nonumber \\
     z^{k+1}
-        &= \argmin_z \pb{
+        &= \argmin_z \pc{
             g(z) + \frac{\rho}{2} \norm{Ax^{k+1}+Bz-c+u^k}_2^2
         } 
         \nonumber \\
@@ -337,23 +337,29 @@ where $u=\frac{1}{\rho}y$ is scaled dual variable. The scaled form ADMM is then
 The lasso problem is 
 \begin{align}
     \minimize\;
-        & \frac{1}{2} \norm{Ax-b}_2^2 + \lambda \norm{x}_1
+        & \frac{1}{2} \norm{Ax-y}_2^2 + \lambda \norm{x}_1
     \label{eq:lasso_unconstrained_problem}
 \end{align}
 We can apply variable splitting and obtain an equivalent constrained optimization problem
 \begin{align}
     \minimize
-        & \frac{1}{2} \norm{Ax-b}_2^2 + \lambda \norm{x}_1 \\
+        & \frac{1}{2} \norm{Ax-y}_2^2 + \lambda \norm{z}_1 \\
     \subjectto
         & x - z = 0
-    \label{eq:lasso_unconstrained_problem}
+    \label{eq:lasso_unconstrained_problem_splitting}
 \end{align}
 Specialize (\ref{eq:admm_scaled_form}) to lasso to obtain iterates of the form
-\begin{align}
+\begin{align} 
     x^{k+1}
-        &= \left( A^TA + \rho I \right)^{-1} \left( A^Tb + \rho(z^{k} - u^k) \right) \\
+        &= \argmin_x \pc{
+            \frac{1}{2}\norm{Ax-y}_2^2 + \frac{\rho}{2} \norm{x - z^k + u^k}_2^2
+        }
+        = \left( A^TA + \rho I \right)^{-1} \left( A^Ty + \rho(z^{k} - u^k) \right) \\
     z^{k+1}
-        &= \sS_{\lambda/\rho} \left( x^{k+1} + u^k \right) \\
+        &= \argmin_z \pc{
+            \lambda \norm{z}_1 + \frac{\rho}{2} \norm{x^{k+1} - z + u^k }_2^2
+        }
+        = \sS_{\lambda/\rho} \left( x^{k+1} + u^k \right) \\
     u^{k+1}
         &= u^k + x^{k+1} - z^{k+1}
 \end{align}
@@ -491,7 +497,7 @@ Assuming isotropic Gaussian noise $\epsilon \sim \sN(0,\sigma^2 I)$, the conditi
 \end{align*}
 Then the problem (\ref{eq:inverse_problem_map_problem}) reduces to
 \begin{align}
-    \hat{x}
+    \hat{x}(y)
         = \argmax_{x} \pb{
             \log p_{\ry|\rx}(y|x) + \log p_{\rx}(x) 
         }
@@ -501,8 +507,34 @@ Then the problem (\ref{eq:inverse_problem_map_problem}) reduces to
 \end{align}
 
 
+\subsubsection{Plug-and-Play Prior}
 
-
+PnP prior is a method that exploits denoisers as implicit regularizers for the inverse problem. 
+\begin{align}
+    \text{minimize}_x \;\;
+        \frac{1}{2} \norm{Ax-y}_2^2 + \lambda R(x)
+\end{align}
+where $R(\cdot)$ is some arbitrary prior for the model. Similar to the lasso probelm \ref{eq:lasso_unconstrained_problem}, PnP methods uses variable splitting but instead considers $z$-update as a denoising subproblem where the prior $R(\cdot)$ is implicitly imposed by the denoiser,
+\begin{align} 
+    x^{k+1}
+        &= \argmin_x \pc{
+            \frac{1}{2}\norm{Ax-y}_2^2 + \frac{\rho}{2} \norm{x - z^k + u^k}_2^2
+        }
+        = \left( A^TA + \rho I \right)^{-1} \left( A^Ty + \rho(z^{k} - u^k) \right) \\
+    z^{k+1}
+        &= \argmin_z \pc{
+            \lambda R(z) + \frac{\rho}{2} \norm{x^{k+1} - z + u^k }_2^2
+        }
+        = \sD_{\lambda/\rho}( x^{k+1} + u^k ) \\
+    u^{k+1}
+        &= u^k + x^{k+1} - z^{k+1}
+\end{align}
+where denoiser $\sD_{\lambda/\rho}(v)$ denoises $v = x + u$ by making the assumption that $v$ is a noisy measurement of $z$, i.e. $v = z+e$ where $e\sim \sN(0,\sigma^2)$ and $\sigma^2 = \frac{\lambda}{\rho}$, i.e. $\sD_{\sigma^2}(v)$ solves the following denoising subproblem
+\begin{align}
+    \text{minimize}_z \;\;
+        \frac{1}{2 \sigma^2 } \norm{ v-z }_2^2 + R(z)
+\end{align}
+For any non-trivial $A$, the noise model for primal variable $z$ is not necessarily Gaussian. 
 
 
 
