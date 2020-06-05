@@ -1,25 +1,18 @@
-function [Xhat,history] = ADMM(y,A,InitEstFunc,params,orig_im)
-    %   Run ADMM to solve minimize 
-    %       E(x) = ||Ax-y||_2^2 + λ * 0.5*x'*(x-denoise(x))
+function [Xhat,history] = ADMM(Y,A,InitEstFunc,params,orig_im)
+    %   Run ADMM to solve 
+    %       xhat(Y) = \argmin_x 0.5*||Ax-y||_2^2 + λ*0.5*x'*(x-denoise(x)) where y = vec(Y)
     %   with the augmented lagrangian of form 
-    %       L_{ρ}(x,v) = ||Ax-y||_2^2 + λ * 0.5*x'*(x-denoise(x)) + 
-    %                        μ^T(x-v) + (ρ/2) ||x-z||_2^2
+    %       L_{ρ}(x,z) = 0.5*||Ax-y||_2^2 + λ*0.5*<z,z-denoise(z)> + <u,(x-z)> + (ρ/2)*||x-z||_2^2
     %   
     % Inputs:
     %   y                        input image
     %   A                        multiplexing and spatial subsampling operator
     %   InitEstFunc              initial guess of `y` based on `x`
-    %   params.
-    %       lambda               relative scaling of data term and regularization term
-    %       rho                  augmented lagrangian parameter
-    %       outer_iters          number of ADMM iterations
-    %       inner_denoiser_iters number of fixed iterations in v-minimization step
-    %       denoiser_type        denoiser used in v-minimization step
-    %       effective_sigma      input noise level to denoiser
+    %   params                   parameters related to optimization
     % 
     % Outputs:
-    %   im_out                   imputed image
-    %   history                  psnr/ssim/costfunc
+    %   Xhat                     imputed image
+    %   history                  psnr/ssim
  
     verbose                 = params.verbose;
     lambda                  = params.lambda;
@@ -36,7 +29,7 @@ function [Xhat,history] = ADMM(y,A,InitEstFunc,params,orig_im)
         mkdir(save_iterates);
     end
 
-    x_est = InitEstFunc(y);
+    x_est = InitEstFunc(Y);
     z_est = x_est;
     u_est = zeros(size(x_est));
 
@@ -67,10 +60,10 @@ function [Xhat,history] = ADMM(y,A,InitEstFunc,params,orig_im)
 
         if x_update_fast
             x_est = z_est-u_est;
-            x_est = x_est(:) + A'*( (y(:) - A*x_est(:))./(zeta+rho) );
+            x_est = x_est(:) + A'*( (Y(:) - A*x_est(:))./(zeta+rho) );
             x_est = ToIm( Clip(x_est,0,255) );
         else
-            x_est = ToIm(A'*y(:))+rho*(z_est-u_est);
+            x_est = ToIm(A'*Y(:))+rho*(z_est-u_est);
             x_est = R\(R'\(x_est(:)));
             x_est = ToIm( Clip(x_est,0,255) );
         end

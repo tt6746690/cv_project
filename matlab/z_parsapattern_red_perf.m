@@ -3,11 +3,13 @@
 clc; clear; close all;
 ProjectPaths;
 
+
 %% Parameters
 
 [cx,cy] = deal(1:160,10:247);
 [h,w] = deal(numel(cx),numel(cy));
-savedir = "results/reconstruction_parsapattern"; mkdir(savedir);
+savedir = "results/reconstruction_parsapattern";
+if ~exist(savedir,'dir'); mkdir(savedir); end
 blacklevelpath = "data/blacklevel_all1/blacklevel.mat";
 blacklvl = load(blacklevelpath); blacklvl = blacklvl.blacklvl;
 hproj = 608;
@@ -24,12 +26,6 @@ Bounds.LB = max(shiftby + Bounds.yErrorUB(cx,cy) - expandby,0);
 assetsdir = '../writeup/assets';
 disparityFunc = @(corres) double(corres)-2.35*Y;
 CorrectPhase = @(phase) 0.89*phase - 0.5;
-light_mode = true;
-
-
-
-%% groundtruth 
-
 Load = load(sprintf('%s/GroundTruthPhaseDisparity.mat', savedir));
 gt = Load.GroundTruth;
 
@@ -63,6 +59,43 @@ title(sprintf('Phase PSNR vs. Shifts (spatial freqency = %d)',spatial_freq));
 legend;
 hold off;
 saveas(gcf,sprintf('%s/phase_psnr_stackedim_vs_shifts.png',savedir));
+
+
+%% faster denoising step using parfor
+
+Ss = [7 30];
+denoiser_types = {'mf','tnrd'};
+
+for i = 1:size(denoiser_types,2)
+for si = 1:size(Ss,2)
+S = Ss(si);
+x_est = rand(h,w,S);
+denoiser_type = denoiser_types{i};
+
+tic;
+Denoiser(x_est,3,denoiser_type,'MaxNumWorkers',1);
+elapsed1 = toc;
+fprintf('(S=%2d) serial-%s %3.3f s\n',S,denoiser_type,elapsed1);
+
+tic;
+Denoiser(x_est,3,denoiser_type,'MaxNumWorkers',100);
+elapsed2 = toc;
+fprintf('(S=%2d) parall-%s %3.3f s\n',S,denoiser_type,elapsed2);
+
+end
+end
+
+
+% Using 8 cores: about 3~4x speedup by using parfor
+%
+% (S= 7) serial-mf 0.106 s
+% (S= 7) parall-mf 0.025 s
+% (S=30) serial-mf 0.049 s
+% (S=30) parall-mf 0.019 s
+% (S= 7) serial-tnrd 4.056 s
+% (S= 7) parall-tnrd 1.216 s
+% (S=30) serial-tnrd 4.165 s
+% (S=30) parall-tnrd 1.172 s
 
 %% performance of x-update step 
 
@@ -177,6 +210,8 @@ ComputePSNR(gt.phase,phase)
 
 plot(1:params.outer_iters, history.psnrs)
 imshow(FlattenChannels(im_out)/255)
+
+
 
 
 %% 

@@ -31,7 +31,7 @@ function params = GetDemosaicDemultiplexParams(varargin)
     params.outer_iters = 50;
 
     % denoiser type {'mf','tnrd','bm3d'}
-    params.denoiser_type = "mf";
+    params.denoiser_type = "tnrd";
 
     % number of denoising applications
     params.inner_denoiser_iters = 1;
