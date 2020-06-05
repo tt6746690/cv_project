@@ -14,7 +14,7 @@ hproj = 608;
 dispRange = [50, 160];
 [X,Y] = meshgrid(1:w,1:h);
 % bounds 
-ProjectorInfoFolder = 'mian/CalibrationCode';
+ProjectorInfoFolder = '../external/mian/CalibrationCode';
 Bounds = load(sprintf('%s/%s.mat', ProjectorInfoFolder, 'Bounds'));
 Bounds.LB = Bounds.yErrorLB(cx,cy);
 Bounds.UB = Bounds.yErrorUB(cx,cy);
@@ -151,6 +151,7 @@ end
 
 %% phase PSNR on X reconstructed using ADMM
 
+spatial_freq = 1;
 S = 7;
 F = S-1;
 mask_type = "toeplitz";
@@ -162,7 +163,7 @@ ATop = @(Y) reshape(A'*Y(:),h,w,S);
 InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S, ...
     'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
 SaveIterateDirectory = sprintf('%s/Recon_Sinusoids_S=7_ADMM',savedir);
-params = GetDemosaicDemultiplexParams('SaveIterateDirectory',SaveIterateDirectory);
+params = GetDemosaicDemultiplexParams('SaveIterateDirectory','');
 
 
 [X,P] = ParsaPatternSinusoidsGetStackedIm(hproj,spatial_freq);

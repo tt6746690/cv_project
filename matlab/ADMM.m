@@ -103,7 +103,7 @@ function [Xhat,history] = ADMM(y,A,InitEstFunc,params,orig_im)
             if verbose && (mod(k,floor(outer_iters/10)) == 0 || k == outer_iters)
                 fprintf('ADMM-%s (k=%3d) sigma:%.1f\t PSNR/SSIM: %2.2f/%.4f\n',...
                     upper(denoiser_type),k,effective_sigma,psnr,ssim);
-                imshow(mat2gray(FlattenChannels(orig_im,x_est,z_est,u_est)));
+                % imshow(mat2gray(FlattenChannels(orig_im,x_est,z_est,u_est)));
             end
             
             if ~strcmp(save_iterates,'')

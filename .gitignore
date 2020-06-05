@@ -33,10 +33,10 @@ PlugPlay_v1/
 Provable_Plug_and_Play/
 bm3d_src/
 MicroPS-Code/
+mian/
 
 # RED specific
 matlab/results/
-matlab/mian/
 
 .ipynb_checkpoints
  
