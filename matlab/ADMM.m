@@ -1,4 +1,4 @@
-function [im_out,psnr_out,ssim_out,history,iter_ims] = ADMM(y,A,InitEstFunc,params,orig_im)
+function [Xhat,history] = ADMM(y,A,InitEstFunc,params,orig_im)
     %   Run ADMM to solve minimize 
     %       E(x) = ||Ax-y||_2^2 + λ * 0.5*x'*(x-denoise(x))
     %   with the augmented lagrangian of form 
@@ -21,24 +21,24 @@ function [im_out,psnr_out,ssim_out,history,iter_ims] = ADMM(y,A,InitEstFunc,para
     %   im_out                   imputed image
     %   history                  psnr/ssim/costfunc
  
-    QUIET = 0;
-    PRINT_MOD = floor(params.outer_iters/10);
-    if ~QUIET
-        fprintf('%7s\t%10s\t%12s\n', 'iter', 'PSNR/SSIM', 'objective');
+    verbose                 = params.verbose;
+    lambda                  = params.lambda;
+    rho                     = params.rho;
+    outer_iters             = params.outer_iters;
+    inner_denoiser_iters    = params.inner_denoiser_iters;
+    denoiser_type           = params.denoiser_type;
+    effective_sigma         = params.effective_sigma;
+    z_update_method         = params.z_update_method;
+    save_iterates           = params.save_iterates;
+    compute_psnr_ssim       = params.compute_psnr_ssim;
+    
+    if ~strcmp(save_iterates,'') && ~exist(save_iterates,'dir')
+        mkdir(save_iterates);
     end
 
-    lambda = params.lambda;
-    rho = params.rho;
-    outer_iters = params.outer_iters;
-    inner_denoiser_iters = params.inner_denoiser_iters;
-    denoiser_type = params.denoiser_type;
-    effective_sigma = params.effective_sigma;
-    z_update_method = params.z_update_method;
-    
     x_est = InitEstFunc(y);
     z_est = x_est;
     u_est = zeros(size(x_est));
-    save_iter = 1;
 
     [h,w,S] = size(x_est);
     ToIm = @(x) reshape(x,h,w,[]);
@@ -50,13 +50,12 @@ function [im_out,psnr_out,ssim_out,history,iter_ims] = ADMM(y,A,InitEstFunc,para
     else
         [R,flag] = chol(A'*A + rho*speye(size(A,2)));
         if flag ~= 0
-            warning("A'A+(rho/2)*I should be symmetric positive definite");
+            warning("A'A + rho*I should be symmetric positive definite");
         end 
     end 
- 
-
-    iter_ims = zeros(5*h,S*w,outer_iters);
-    history.psnrs = []; history.ssims = []; history.costfuncs = [];
+    
+    history.psnrs = [];
+    history.ssims = [];
     
     for k = 1:outer_iters
 
@@ -92,26 +91,28 @@ function [im_out,psnr_out,ssim_out,history,iter_ims] = ADMM(y,A,InitEstFunc,para
         end
     
         % scaled dual u update
+        
         u_est = u_est + x_est - z_est;
-    
-        if ~QUIET && (mod(k,PRINT_MOD) == 0 || k == outer_iters)
-            f_est = Denoiser(x_est,effective_sigma,denoiser_type);
-            costfunc = norm(reshape(ToIm(A*x_est(:))-y,[],1)) + lambda*x_est(:)'*(x_est(:)-f_est(:));
-            im_out = x_est(1:size(orig_im,1), 1:size(orig_im,2),:);
-            [psnr,ssim] = ComputePSNRSSIM(orig_im, im_out);
-
-            fprintf('%7i %.5f/%.5f %12.5f \n',k,psnr,ssim,costfunc);
+        
+        % print/save
+        
+        if compute_psnr_ssim
+            [psnr,ssim] = ComputePSNRSSIM(orig_im, x_est);
             history.psnrs = [history.psnrs psnr];
             history.ssims = [history.ssims ssim];
-            history.costfuncs = [history.costfuncs, costfunc];
-            save_iter = save_iter + 1;
+            if verbose && (mod(k,floor(outer_iters/10)) == 0 || k == outer_iters)
+                fprintf('ADMM-%s (k=%3d) sigma:%.1f\t PSNR/SSIM: %2.2f/%.4f\n',...
+                    upper(denoiser_type),k,effective_sigma,psnr,ssim);
+                imshow(mat2gray(FlattenChannels(orig_im,x_est,z_est,u_est)));
+            end
             
-            imshow(mat2gray(FlattenChannels(orig_im,x_est,z_est,u_est)));
-            % imshow(2*FlattenChannels(orig_im,x_old,x_est,z_old,z_est,u_old,u_est)/255);
+            if ~strcmp(save_iterates,'')
+                imwrite(uint8(FlattenChannels(x_est)),...
+                    sprintf('%s/Iter=%03d_PSNR=%2.2f_SSIM=%.4f.png',...
+                        save_iterates,k,psnr,ssim));
+            end
         end
     end
     
-    im_out = x_est(1:size(orig_im,1), 1:size(orig_im,2),:);
-    im_out = Clip(x_est,0,255);
-    [psnr_out,ssim_out] = ComputePSNRSSIM(orig_im, im_out);
+    Xhat = Clip(x_est,0,255);
 end

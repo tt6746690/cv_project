@@ -4,7 +4,7 @@ function f_est = Denoiser(x_est,effective_sigma,denoiser_type)
     %
 
     switch denoiser_type
-    case "medfilter"
+    case "mf"
         fsize = [3 3];
         if size(x_est,3) ~= 1
             f_est = zeros(size(x_est));
@@ -15,7 +15,16 @@ function f_est = Denoiser(x_est,effective_sigma,denoiser_type)
             f_est = medfilt2(x_est,fsize);
         end
     case "bm3d"
-        [~, f_est] = BM3D(1,x_est,effective_sigma);
+        if size(x_est,3) ~= 1
+            f_est = zeros(size(x_est));
+            for i = 1:size(x_est,3)
+                [~, f_est_] = BM3D(1,x_est(:,:,i),effective_sigma);
+                f_est(:,:,i) = f_est_;
+            end
+        else
+            [~, f_est] = BM3D(1,x_est,effective_sigma);
+        end
+        f_est = f_est*effective_sigma/5;
     case "tnrd"
         if size(x_est,3) ~= 1
             f_est = zeros(size(x_est));

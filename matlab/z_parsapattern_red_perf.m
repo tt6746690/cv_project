@@ -157,23 +157,24 @@ mask_type = "toeplitz";
 M = SubsamplingMask(mask_type,h,w,F);
 W = BucketMultiplexingMatrix(S);
 [A,~,~] = SubsampleMultiplexOperator(S,M);
-ForwardFunc = @(in_im) reshape(A*in_im(:),h,w,2);
-BackwardFunc = @(in_im) reshape(A'*in_im(:),h,w,S);
+Aop  = @(X) reshape(A*X(:),h,w,2);
+ATop = @(Y) reshape(A'*Y(:),h,w,S);
 InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S, ...
     'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
-params = GetDemosaicDemultiplexParams(false)
+SaveIterateDirectory = sprintf('%s/Recon_Sinusoids_S=7_ADMM',savedir);
+params = GetDemosaicDemultiplexParams('SaveIterateDirectory',SaveIterateDirectory);
 
 
 [X,P] = ParsaPatternSinusoidsGetStackedIm(hproj,spatial_freq);
 is = ceil(linspace(1,30*(S-1)/S,S));
 X = X(:,:,is); P = P(:,is);
 
-Y = ForwardFunc(X);
-[im_out,psnr_out,ssim_out,history,iter_ims] = ADMM(Y,A,InitEstFunc,params,X);
+Y = Aop(X);
+[im_out,history] = ADMM(Y,A,InitEstFunc,params,X);
 [phase,~,~] = DecodeZNCC(im_out,P,Bounds.LB,Bounds.UB);
 ComputePSNR(gt.phase,phase)
 
-plot(1:10:100, history.psnrs)
+plot(1:params.outer_iters, history.psnrs)
 imshow(FlattenChannels(im_out)/255)
 
 
