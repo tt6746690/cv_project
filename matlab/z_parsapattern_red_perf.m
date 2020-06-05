@@ -39,9 +39,9 @@ savedir_cur = sprintf('%s/InverseRecontruction',savedir); mkdir(savedir_cur);
 
 % sinusoids 
 spatial_freq = 1;
-[I,P] = ParsaPatternSinusoidsGetStackedIm(imagedir,hproj,spatial_freq);
+[I,P] = ParsaPatternSinusoidsGetStackedIm(hproj,spatial_freq);
 
-psnrs;
+
 psnrs.zncc = [];
 psnrs.mps = [];
 Ss = 2:30; Ss = [2:7 12 16 20 24];
@@ -80,8 +80,8 @@ BackwardFunc = @(in_im) reshape(A'*in_im(:),h,w,S);
 InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S, ...
     'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
 
-v = rand(S*h*w,1);
-y = rand(2*h*w,1);
+v = rand(S*h*w,1)*100;
+y = rand(2*h*w,1)*100;
 rho = 100;
 
 [R,flag] = chol(A'*A + rho*speye(size(A,2),size(A,2)));
@@ -103,7 +103,6 @@ if isdiag(A*A') ~= 1
     warning("A*A' with optimal multiplexing matrix W is diagonal");
 end
 
-zeta = full(diag(inv(A*A')));
 AAT = A*A';
 PP = speye(S*h*w)/rho - A'*inv( speye(2*h*w)*rho + AAT )*A/rho;
 
@@ -119,6 +118,8 @@ x = A'*y + rho*v;
 y_inversion_lemma2 = PP*x;
 e = toc;
 fprintf('matrix inversion inc factorization  %f\n',e);
+
+zeta = full(diag(A*A'));
 
 tic;
 y_desci = v + A'*((y-A*v)./(rho + zeta));
@@ -160,22 +161,25 @@ ForwardFunc = @(in_im) reshape(A*in_im(:),h,w,2);
 BackwardFunc = @(in_im) reshape(A'*in_im(:),h,w,S);
 InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S, ...
     'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
-params = GetDemosaicDemultiplexParams(light_mode)
+params = GetDemosaicDemultiplexParams(false)
 
 
-[X,P] = ParsaPatternSinusoidsGetStackedIm(imagedir,hproj,spatial_freq);
+[X,P] = ParsaPatternSinusoidsGetStackedIm(hproj,spatial_freq);
 is = ceil(linspace(1,30*(S-1)/S,S));
 X = X(:,:,is); P = P(:,is);
 
 Y = ForwardFunc(X);
 [im_out,psnr_out,ssim_out,history,iter_ims] = ADMM(Y,A,InitEstFunc,params,X);
+[phase,~,~] = DecodeZNCC(im_out,P,Bounds.LB,Bounds.UB);
+ComputePSNR(gt.phase,phase)
 
-
+plot(1:10:100, history.psnrs)
+imshow(FlattenChannels(im_out)/255)
 
 
 %% 
 
-function [I,P] = ParsaPatternSinusoidsGetStackedIm(imagedir,hproj,spatial_freq)
+function [I,P] = ParsaPatternSinusoidsGetStackedIm(hproj,spatial_freq)
     imagedir=sprintf('results/reconstruction_parsapattern/Sinusoids/Freq%02d',spatial_freq);
     files = dir(sprintf("%s/*.png",imagedir));
     [fnames,ffolders] = deal({files.name},{files.folder});

@@ -19,9 +19,7 @@ function [im_out,psnr_out,ssim_out,history,iter_ims] = ADMM(y,A,InitEstFunc,para
     % 
     % Outputs:
     %   im_out                   imputed image
-    %   psnr_out                 psnr of `im_out` to `orig_im`
-    %   ssim_out                 ssim of `im_out` to `orig_im`
-    %   statistics               psnrs at each iterations
+    %   history                  psnr/ssim/costfunc
  
     QUIET = 0;
     PRINT_MOD = floor(params.outer_iters/10);
@@ -35,7 +33,7 @@ function [im_out,psnr_out,ssim_out,history,iter_ims] = ADMM(y,A,InitEstFunc,para
     inner_denoiser_iters = params.inner_denoiser_iters;
     denoiser_type = params.denoiser_type;
     effective_sigma = params.effective_sigma;
-    v_update_method = params.v_update_method;
+    z_update_method = params.z_update_method;
     
     x_est = InitEstFunc(y);
     z_est = x_est;
@@ -46,27 +44,42 @@ function [im_out,psnr_out,ssim_out,history,iter_ims] = ADMM(y,A,InitEstFunc,para
     ToIm = @(x) reshape(x,h,w,[]);
     
     % precomputation for x-update
-    if isdiag(A*A') ~= 1
-        warning("A*A' with optimal multiplexing matrix W is diagonal");
-    end
-    zeta = full(diag(inv(A*A')));
+    x_update_fast = isdiag(A*A');
+    if x_update_fast
+        zeta = full(diag(A*A'));
+    else
+        [R,flag] = chol(A'*A + rho*speye(size(A,2)));
+        if flag ~= 0
+            warning("A'A+(rho/2)*I should be symmetric positive definite");
+        end 
+    end 
+ 
 
-    % iter_ims = zeros(5*h,S*w,outer_iters);
+    iter_ims = zeros(5*h,S*w,outer_iters);
     history.psnrs = []; history.ssims = []; history.costfuncs = [];
     
     for k = 1:outer_iters
 
         x_old = x_est;
-        v_old = z_est;
+        z_old = z_est;
         u_old = u_est;
-    
+
         % primal x update
-        x_est = z_est-u_est;
-        x_est = x_est + A'*( (y(:) - A*x_est(:))./(rho+zeta) );
-        x_est = ToIm( Clip(x_est,0,255) );
-        
-        % primal v update
-        switch v_update_method
+
+        if x_update_fast
+            x_est = z_est-u_est;
+            x_est = x_est(:) + A'*( (y(:) - A*x_est(:))./(zeta+rho) );
+            x_est = ToIm( Clip(x_est,0,255) );
+        else
+            x_est = ToIm(A'*y(:))+rho*(z_est-u_est);
+            x_est = R\(R'\(x_est(:)));
+            x_est = ToIm( Clip(x_est,0,255) );
+        end
+
+
+        % primal z update
+
+        switch z_update_method
         case "fixed_point"
             for j = 1:1:inner_denoiser_iters
                 denoised_z_est = Denoiser(z_est,effective_sigma,denoiser_type);
@@ -92,8 +105,9 @@ function [im_out,psnr_out,ssim_out,history,iter_ims] = ADMM(y,A,InitEstFunc,para
             history.ssims = [history.ssims ssim];
             history.costfuncs = [history.costfuncs, costfunc];
             save_iter = save_iter + 1;
-
-            imshow(2*FlattenChannels(orig_im,x_old,x_est,v_old,z_est,u_old,u_est)/255);
+            
+            imshow(mat2gray(FlattenChannels(orig_im,x_est,z_est,u_est)));
+            % imshow(2*FlattenChannels(orig_im,x_old,x_est,z_old,z_est,u_old,u_est)/255);
         end
     end
     

@@ -13,26 +13,22 @@ function params = GetDemosaicDemultiplexParams(light_mode)
         params.denoiser_type = "medfilter";
     else
         params.outer_iters = 100;
-        params.denoiser_type = "tnrd";
+        params.denoiser_type = "medfilter";
     end
 
     % number of inner iterations
     params.inner_iters = 200;
-    
-    % level of noise assumed in the regularization-denoiser
-    params.effective_sigma = 3;
-
-    % admm parameter
-    params.beta = 1e-3;
-    params.rho  = 1e-3;
 
     % number of denoising applications
     params.inner_denoiser_iters = 1;
+    
+    % level of noise assumed in the regularization-denoiser
+    params.effective_sigma = 5;
 
-    % relaxation parameter of ADMM
-    params.alpha = 1;
+    % admm parameter
+    params.rho  = 1e-3;
 
-    % v-update step method {fixed_point,denoiser}
-    params.v_update_method = "fixed_point";
+    % z-update step method {fixed_point,denoiser}
+    params.z_update_method = "fixed_point";
 
 end
