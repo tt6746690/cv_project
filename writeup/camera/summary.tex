@@ -137,7 +137,7 @@ The reconstruction pipeline is as follows
     \item Use $\widetilde{\bC}$ for bucket activities and capture the two-bucket image $\bY$
     \item upsample the images to full resolution images $\sI$
     \item demultiplex $\sI$ to obtain $S$ full resolution images $\bX$ as a least squares solution to a (\ref{eq:image_formation})
-    \item use $\bX$ to solve for disparity and albedo
+    \item use $\bX$ to solve for phase and albedo using ZNCC decoding \cite{mirdehghanOptimalStructuredLight2018}
 \end{enumerate}
 Step 2 and 3 are critical to downstream reconstuctions. When $S=3,S=4$ and $\bS$ being analogous to bayer mask, we can upsample the images using standard demosaicing algorithms. However, it is not immediately obvious to extend demosaicing methods to support arbitrary $\bS$, or more specifically, for scenarios where the spatial subsampling scheme is not bayer and when number of frames is not 3. 
 
