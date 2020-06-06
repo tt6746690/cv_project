@@ -17,31 +17,29 @@ The correspondence problem can be stated simply
         For each point in the left image, find the corresponding point in the right image
     }
 \end{center}
-We first note that search space for the corresponding point can be restricted to pixels lying on the epipolar line. Epipolar plane is plane formed from points $p,o_1,o_2$ and epipolar line is intersection of epipolar plane with the image plane.
+We first note that search space for the corresponding point can be restricted to pixels lying on the epipolar line. Epipolar plane is plane formed from points $p,o_1,o_2$ and epipolar line is intersection of epipolar plane with the image plane. For structured light stereo systems, the art of designing robust, fast, reliable coding schemes serves to solve the correspondence problem.
 \begin{figure}[h!]
     \begin{center}
         \includegraphics[width=4in]{epipolar_constraint_correspondence}
         \caption{non parallel (left) and parallel (right) camera setup. $pe$ and $p'e'$ are the epipolar lines}
     \end{center}
 \end{figure}
-For structured light stereo systems, the art of designing robust, fast, reliable coding schemes serves to solve the correspondence problem.
 
 
 \subsubsection{Triangulation}
 
-Given correspondence between projector and camera images, triangulation refers to the process of computing the distance of object relative to camera. Since a 3D point can be obtained by intersecting a ray (pixel of camera image) with a projector plane (a single code), it is necessary to encode a single axis in projected image to ensure unique reconstruction. 
+Given correspondence between projector and camera images, triangulation refers to the process of computing the distance of object relative to camera. Since a 3D point can be obtained by intersecting a ray (pixel of camera image) with a projector plane (a single code), it is necessary to encode a single axis in projected image to ensure unique reconstruction. \textit{disparity} is the displacement between points of a conjugate pair $p_l,p_r$ (points in different images of projection of same point in the scene) when the two images are superimposed. In the context of parallel calibrated cameras, disparity is inversely proportional to depth, when baseline $b$ and focal length $f$ are known
+\begin{align*}
+    \frac{b}{z} = \frac{b + x_l - x_r}{z-f}
+    \quad\text{implies}\quad
+    z = \frac{bf}{x_l-x_r}
+\end{align*}
 \begin{figure}[h!]
     \begin{center}
         \includegraphics[width=2in]{parallel_camera}
         \caption{parallel-calibrated binocular stereo}
     \end{center}
 \end{figure}
-\noindent \textit{disparity} is the displacement between points of a conjugate pair $p_l,p_r$ (points in different images of projection of same point in the scene) when the two images are superimposed. In the context of parallel calibrated cameras, disparity is inversely proportional to depth, when baseline $b$ and focal length $f$ are known
-\begin{align*}
-    \frac{b}{z} = \frac{b + x_l - x_r}{z-f}
-    \quad\text{implies}\quad
-    z = \frac{bf}{x_l-x_r}
-\end{align*}
 
 \subsection{Structured Light Coding}
 
@@ -61,13 +59,12 @@ This paper generalizes Gray code to n-ary code in order to reduce the number of 
         \sim p_{\rn}
 \end{align*}
 implying $\ry|\rx=x\sim p_{\rn}(y - f(x))$. We want to minimize the probability of depth estimation error, which roughly proportional to difference between true index $x$ of the plane of light and the estimated index $\hat{x}$,
-\begin{align*}
-    \text{minimize}_{f}\;\; \pb{
-        \E_{\rx,\ry} \left[ (x-\hat{x}(y))^2 \right]
-        = \sum_{x=1}^L p_{\rx}(x) \int p_{\ry|\rx}(y|x) (x - \hat{x}(y))^2 dy
-        \propto \sum_{x=1}^L \int (x-\hat{x}(y))^2 p_{\rn}(y-f(x)) dy
-    }
-\end{align*}
+\begin{align}
+    \text{minimize}_{f}\;\;
+        \E_{\rx,\ry} \left[ (x-\hat{x}(y))^2\right]
+        &= \sum_{x=1}^L p_{\rx}(x) \int p_{\ry|\rx}(y|x) (x - \hat{x}(y))^2 dy \\
+        &\propto \sum_{x=1}^L \int (x-\hat{x}(y))^2 p_{\rn}(y-f(x)) dy
+\end{align}
 This optimization problem is hard. The paper suggest the use of space filling curves as the encoding function and established that Gray code is a special limiting case of the space filling curve. Note here we assume there is no \textit{mutual illumination}, i.e. there is no interval reflection and so the projected codes $f(x)$ is proportional to observation $y$. 
 
 \subsubsection{Phase Shifting}
@@ -318,14 +315,14 @@ We can gather the residual term $r=Ax+Bz-c$ and completing the squares and get
 where $u=\frac{1}{\rho}y$ is scaled dual variable. The scaled form ADMM is then
 \begin{align}
     x^{k+1}
-        &= \argmin_x \pc{
+        &= \argmin_x \left(
             f(x) + \frac{\rho}{2} \norm{Ax+Bz^k-c+u^k}_2^2 
-        } 
+        \right)
         \nonumber \\
     z^{k+1}
-        &= \argmin_z \pc{
+        &= \argmin_z \left(
             g(z) + \frac{\rho}{2} \norm{Ax^{k+1}+Bz-c+u^k}_2^2
-        } 
+        \right)
         \nonumber \\
     u^{k+1}
         &= u^k + Ax^{k+1} + Bz^{k+1} - c
@@ -351,14 +348,14 @@ We can apply variable splitting and obtain an equivalent constrained optimizatio
 Specialize (\ref{eq:admm_scaled_form}) to ridge regression to obtain iterates of the form
 \begin{align} 
     x^{k+1}
-        &= \argmin_x \pc{
+        &= \argmin_x \left(
             \frac{1}{2}\norm{Ax-y}_2^2 + \frac{\rho}{2} \norm{x - z^k + u^k}_2^2
-        }
+        \right)
         = \left( A^TA + \rho I \right)^{-1} \left( A^Ty + \rho(z^{k} - u^k) \right) \\
     z^{k+1}
-        &= \argmin_z \pc{
+        &= \argmin_z \left(
             \lambda \norm{z}_1 + \frac{\rho}{2} \norm{x^{k+1} - z + u^k }_2^2
-        }
+        \right)
         = \sS_{\lambda/\rho} \left( x^{k+1} + u^k \right) \\
     u^{k+1}
         &= u^k + x^{k+1} - z^{k+1}
@@ -454,21 +451,23 @@ where $\sS$ is element-wise soft shrinkage operator
 \paragraph{RED Explicit Regularizer}
 
 Let $f(\bx) = (1/2)\bx^T(\bx-\sD(\bx))$ for some denoiser $\sD$, the explicit regularizer in RED.\cite{romanoLittleEngineThat2016}. We use one fixed point iteration evaluate the approximate proximal operator for $\lambda f$. Specifically, we want to evaluate 
-\[
+\begin{align}
     \prox_{(\lambda/\rho)f} (\bv)
         = \argmin_{\bx} \frac{\lambda}{2}\bx^T(\bx-\sD(\bx)) + \frac{\rho}{2} \norm{\bx-\bv}_2^2
-\]
+\end{align}
 Setting the gradient to zero, we arrive at the fixed point iteration
-\[
+\begin{align}
     \bx^{(k)} \leftarrow \frac{1}{\rho+\lambda}(
         \lambda \sD(\bx^{(k-1)}) + \rho \bv
     )
-\]
+    \label{eq:red_explicit_regularizer_update_fixed_point}
+\end{align}
 If we only iterate once, then 
-\[
+\begin{align}
     \prox_{(\lambda/\rho)f} (\bv)
         = \frac{1}{\rho+\lambda}( \lambda \sD(\bx^{(0)}) + \rho \bv )
-\]
+    \label{eq:red_explicit_regularizer_update_fixed_point_once}
+\end{align}
 for some initialization value $\bx^{(0)}$
 
 
@@ -476,13 +475,14 @@ for some initialization value $\bx^{(0)}$
 \subsection{Linear Inverse Problem}
 
 Numerous inverse problem in image processing are modeled using the following relationship
-\[
+\begin{align}
     y = Ax + \epsilon   
-\]
-wherer $y\in\R^m$ is noisy measurement, $x\in\R^n$ are unknown image, $A \in \R^{m\times n}$ captures the forward relationship, $\epsilon\in\R^m$ is noise. The goal is to estimate $x$ from noisy $y$ by making assumptions about the noise distributioon $\epsilon$ and exploiting structure in the latent variable $x$.
+    \label{eq:linear_inverse_problem}
+\end{align}
+wherer $y\in\R^m$ is noisy measurement, $x\in\R^n$ are unknown image, $A \in \R^{m\times n}$ captures the forward relationship, $\epsilon\in\R^m$ is noise. The goal is to estimate $x$ from noisy $y$ by making assumptions about the noise distributioon $\epsilon$ and exploiting structure in the latent variable $x$. For example, denoising, super-resolution, demosaicking, deblurring, deconvolution can all be formulated as solving the problem of the form (\ref{eq:linear_inverse_problem})
 
 
-\subsubsection{MAP inference under Gaussian Noise}
+\subsubsection{MAP Inference Under Gaussian Noise}
 
 A typical approach to solve the linear inverse problem relies on computing max a posterior (MAP) estimator while assuming somer prior distirbution $p_{\rx}$. In particular given observation $y$, we want to estimate $\hat{x}$ where
 \begin{align}
@@ -491,73 +491,75 @@ A typical approach to solve the linear inverse problem relies on computing max a
     \label{eq:inverse_problem_map_problem}
 \end{align}
 Assuming isotropic Gaussian noise $\epsilon \sim \sN(0,\sigma^2 I)$, the conditional likelihood depends on the noise distribution, $\ry\mid \rx=x \sim \sN(Ax, \sigma^2 I)$. The log likelihood is then
-\begin{align*}
+\begin{align}
     \log p_{\ry|\rx}(y|x)
         = -\frac{m}{2} \log (2\pi) - \frac{1}{2\sigma^2} \norm{Ax - y}_2^2 
-\end{align*}
+\end{align}
 Then the problem (\ref{eq:inverse_problem_map_problem}) reduces to
 \begin{align}
     \hat{x}(y)
-        = \argmax_{x} \pb{
+        = \argmax_{x} \left(
             \log p_{\ry|\rx}(y|x) + \log p_{\rx}(x) 
-        }
-        = \argmin_{x} \pb{
+        \right)
+        = \argmin_{x} \left(
             \frac{1}{2\sigma^2} \norm{Ax-y}_2^2 - \log p_{\rx}(x)
-        }
+        \right)
+        \label{eq:linear_inverse_map_problem}
 \end{align}
+The choice of regularization has been an important research topic in image processing. Numerous task-specific prior have been successful in a number of image recovery problems: (1) the sparsity of $\bx$ with $\ell$-1 norm in image deblurring \cite{beckFastIterativeShrinkageThresholding2009} (2) total variation in image denoising \cite{buadesNonlocalImageMovie2008} (3) cross-channel correlation in color image demosaicing \cite{malvarHighqualityLinearInterpolation2004}. To solve (\ref{eq:linear_inverse_map_problem}) over a class of tractable priors, algorithms that exploits variable splitting and imploys proximal algorithms have shown to be very efficient \cite{afonsoFastImageRecovery2010, figueiredoRestorationPoissonianImages2010, heideFlexISPFlexibleCamera2014,heideProxImaLEfficientImage2016}. There are works to learn proximal operator from data \cite{meinhardtLearningProximalOperators2017,changOneNetworkSolve2017}, uses a CNN denoiser \cite{zhangGaussianDenoiserResidual2017}.
+
 
 
 \subsubsection{Plug-and-Play Prior}
 
-PnP prior is a method that exploits denoisers as implicit regularizers for the inverse problem. 
+PnP prior is a method that exploits denoisers as implicit regularizers for the inverse problem that has shown good performance on a range of inverse problems in imaging \cite{chanPlugandPlayADMMImage2016},\cite{chanAlgorithmInducedPriorImage2016}. Fixed point convergence can be proved for a class of bounded denoisers \cite{chanPlugandPlayADMMImage2016}. Most recently, \cite{ryuPlugandPlayMethodsProvably2019} established convergence given that the denoising network satisfy certain Lipschitz condition.
+
+Given problem 
 \begin{align}
     \text{minimize}_x \;\;
         \frac{1}{2} \norm{Ax-y}_2^2 + \lambda R(x)
 \end{align}
-where $R(\cdot)$ is some arbitrary prior for the model. Similar to the lasso probelm \ref{eq:lasso_unconstrained_problem}, PnP methods uses variable splitting but instead considers $z$-update as a denoising subproblem where the prior $R(\cdot)$ is implicitly imposed by the denoiser,
+where $R(\cdot)$ is some arbitrary prior for the model, which can be functionally be interpreted as the regularizer for the denoising subproblem (\ref{eq:pnp_denoising_subproblem}). Similar to the lasso probelm (\ref{eq:lasso_unconstrained_problem}), PnP methods uses variable splitting but instead considers $z$-update as a denoising subproblem where the prior $R(\cdot)$ is implicitly imposed by the denoiser,
 \begin{align} 
     x^{k+1}
-        &= \argmin_x \pc{
+        &= \argmin_x \left(
             \frac{1}{2}\norm{Ax-y}_2^2 + \frac{\rho}{2} \norm{x - z^k + u^k}_2^2
-        }
+        \right)
         = \left( A^TA + \rho I \right)^{-1} \left( A^Ty + \rho(z^{k} - u^k) \right) \\
     z^{k+1}
-        &= \argmin_z \pc{
+        &= \argmin_z \left(
             \lambda R(z) + \frac{\rho}{2} \norm{x^{k+1} - z + u^k }_2^2
-        }
+        \right)
         = \sD_{\lambda/\rho}( x^{k+1} + u^k ) \\
     u^{k+1}
         &= u^k + x^{k+1} - z^{k+1}
+    \label{eq:pnp_admm_update_equations}
 \end{align}
 where denoiser $\sD_{\lambda/\rho}(v)$ denoises $v = x + u$ by making the assumption that $v$ is a noisy measurement of $z$, i.e. $v = z+e$ where $e\sim \sN(0,\sigma^2)$ and $\sigma^2 = \frac{\lambda}{\rho}$, i.e. $\sD_{\sigma^2}(v)$ solves the following denoising subproblem
 \begin{align}
-    \text{minimize}_z \;\;
+    \sD_{\sigma^2}(v)
+        = \argmin_z
         \frac{1}{2 \sigma^2 } \norm{ v-z }_2^2 + R(z)
+        \label{eq:pnp_denoising_subproblem}
 \end{align}
 For any non-trivial $A$, the noise model for primal variable $z$ is not necessarily Gaussian. 
 
+\subsubsection{Regularization By Denoising}
 
+Regularization by denoising (RED) came up with an explicit form for the regularizer $R(x) = \frac{1}{2} x^T (x-\sD(x))$ \cite{romanoLittleEngineThat2016,reehorstRegularizationDenoisingClarifications2018}. With some assumptions on the denoiser, the objective function emits computable gradients ($\nabla R(x) = x-\sD(x)$) and is therefore amenable to arbitrary first order optimization methods. A similar ADMM updates can be obtained
+\begin{align} 
+    x^{k+1}
+        &= \left( A^TA + \rho I \right)^{-1} \left( A^Ty + \rho(z^{k} - u^k) \right) \\
+    z^{k+1}
+        &= \frac{1}{\rho + \lambda} \left(
+            \lambda \sD(z^{k}) + \rho ( x^{k+1} + u^k  )
+        \right) \\
+    u^{k+1}
+        &= u^k + x^{k+1} - z^{k+1}
+    \label{eq:red_admm_update_equations}
+\end{align}
+where $z$-update is simply a single fixed point iteration given by (\ref{eq:red_explicit_regularizer_update_fixed_point_once}). In practice, PnP and RED yield similar performance but RED is more robust to the choice of hyper-parameters. Possible denoisers include  block-matching and 3D filtering (BM3D) \cite{dabovImageDenoisingSparse2007} and trainable nonlienar reaction diffusion (TNRD) \cite{chenTrainableNonlinearReaction2017}. 
 
-\newpage
-
-\subsection{Image Priors} 
-
-
-
-
-
-
-The choice of regularization has been an important research topic in image processing. Handcrafted priors have been successful in a number of different image recovery tasks. For example, we can choose to enforce task-specific priors: (1) the sparsity of $\bx$ with $\ell$-1 norm in image deblurring \cite{beckFastIterativeShrinkageThresholding2009} (2) total variation in image denoising \cite{buadesNonlocalImageMovie2008} (3) cross-channel correlation in color image demosaicing \cite{malvarHighqualityLinearInterpolation2004} (4) dark channel prior in image dehazing \cite{fattalSingleImageDehazing2008}, etc. More exhotically, randomly initialized neural network can inject inductive bias to the optimization and act as image priors. \cite{ulyanovDeepImagePrior2017}
-
-$ $\\
-In addition to hand-crafted priors, there has been interest in algorithm induced priors. Alternating direction method of multipliers (ADMM) is a common convex optimization method for inverse problem where the objective function is separable with respect to the \textit{data term} and the \textit{regularizer}. Each primal update involves an evaluation of a proximal operator, which can be interpreted as performing denoising on some iterate. \cite{venkatakrishnanPlugandPlayPriorsModel2013,heideFlexISPFlexibleCamera2014,chanAlgorithmInducedPriorImage2016} proposed plug-and-play priors where the choice of regularization is implicitly specified by the denoiser used. \cite{romanoLittleEngineThat2016} proposed an explicit laplacian-based expression for the regularizer and generalizes the method to a number of different iterative optimization algorithms.
-
-$ $\\
-The convergence of plug-and-play ADMM is studied by a number of papers. \cite{chanPlugandPlayADMMImage2016} showed fixed point convergence of plug-and-play ADMM. \cite{romanoLittleEngineThat2016} showed convergence of the algorithm under some mild conditions of the denoiser, which are satisfied by some state of the art denoisers like \textit{Block-matching and 3D filtering
- (BM3D)} \cite{dabovImageDenoisingSparse2007} and \textit{Trainable Nonlienar Reaction Diffusion (TNRD)} \cite{chenTrainableNonlinearReaction2017}. Most recently, \cite{ryuPlugandPlayMethodsProvably2019} established convergence given that the denoising network satisfy certain Lipschitz condition.
-
-$ $\\ 
-Some proposed to learn proximal operator from data. \cite{meinhardtLearningProximalOperators2017} used a CNN denoiser \cite{zhangGaussianDenoiserResidual2017}. Instead of substituting the proximal operator with a denoiser, \cite{changOneNetworkSolve2017} learns a projection mapping to the space of natural images by training a single neural network and showed impressive results on a number of different linear inverse problems.
 
 
 

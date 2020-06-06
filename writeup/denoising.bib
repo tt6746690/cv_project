@@ -1,0 +1,214 @@
+
+@article{chenTrainableNonlinearReaction2017,
+	title = {Trainable Nonlinear Reaction Diffusion: A Flexible Framework for Fast and Effective Image Restoration},
+	volume = {39},
+	issn = {0162-8828, 2160-9292},
+	url = {http://arxiv.org/abs/1508.02848},
+	doi = {10.1109/TPAMI.2016.2596743},
+	shorttitle = {Trainable Nonlinear Reaction Diffusion},
+	abstract = {Image restoration is a long-standing problem in low-level computer vision with many interesting applications. We describe a flexible learning framework based on the concept of nonlinear reaction diffusion models for various image restoration problems. By embodying recent improvements in nonlinear diffusion models, we propose a dynamic nonlinear reaction diffusion model with time-dependent parameters ({\textbackslash}ie, linear filters and influence functions). In contrast to previous nonlinear diffusion models, all the parameters, including the filters and the influence functions, are simultaneously learned from training data through a loss based approach. We call this approach {TNRD} -- Trainable Nonlinear Reaction Diffusion. The {TNRD} approach is applicable for a variety of image restoration tasks by incorporating appropriate reaction force. We demonstrate its capabilities with three representative applications, Gaussian image denoising, single image super resolution and {JPEG} deblocking. Experiments show that our trained nonlinear diffusion models largely benefit from the training of the parameters and finally lead to the best reported performance on common test datasets for the tested applications. Our trained models preserve the structural simplicity of diffusion models and take only a small number of diffusion steps, thus are highly efficient. Moreover, they are also well-suited for parallel computation on {GPUs}, which makes the inference procedure extremely fast.},
+	pages = {1256--1272},
+	number = {6},
+	journaltitle = {{IEEE} Transactions on Pattern Analysis and Machine Intelligence},
+	shortjournal = {{IEEE} Trans. Pattern Anal. Mach. Intell.},
+	author = {Chen, Yunjin and Pock, Thomas},
+	urldate = {2019-07-22},
+	date = {2017-06-01},
+	eprinttype = {arxiv},
+	eprint = {1508.02848},
+	file = {Chen_Pock_2017_Trainable Nonlinear Reaction Diffusion - A Flexible Framework for Fast and Effective Image Restoration.pdf:/Users/wpq/Dropbox (MIT)/zotero/Chen_Pock_2017_Trainable Nonlinear Reaction Diffusion - A Flexible Framework for Fast and Effective Image Restoration.pdf:application/pdf}
+}
+
+@article{liuProgressiveImageDenoising2014,
+	title = {Progressive Image Denoising Through Hybrid Graph Laplacian Regularization: A Unified Framework},
+	volume = {23},
+	issn = {1057-7149},
+	doi = {10.1109/TIP.2014.2303638},
+	shorttitle = {Progressive Image Denoising Through Hybrid Graph Laplacian Regularization},
+	abstract = {Recovering images from corrupted observations is necessary for many real-world applications. In this paper, we propose a unified framework to perform progressive image recovery based on hybrid graph Laplacian regularized regression. We first construct a multiscale representation of the target image by Laplacian pyramid, then progressively recover the degraded image in the scale space from coarse to fine so that the sharp edges and texture can be eventually recovered. On one hand, within each scale, a graph Laplacian regularization model represented by implicit kernel is learned, which simultaneously minimizes the least square error on the measured samples and preserves the geometrical structure of the image data space. In this procedure, the intrinsic manifold structure is explicitly considered using both measured and unmeasured samples, and the nonlocal self-similarity property is utilized as a fruitful resource for abstracting a priori knowledge of the images. On the other hand, between two successive scales, the proposed model is extended to a projected high-dimensional feature space through explicit kernel mapping to describe the interscale correlation, in which the local structure regularity is learned and propagated from coarser to finer scales. In this way, the proposed algorithm gradually recovers more and more image details and edges, which could not been recovered in previous scale. We test our algorithm on one typical image recovery task: impulse noise removal. Experimental results on benchmark test images demonstrate that the proposed method achieves better performance than state-of-the-art algorithms.},
+	pages = {1491--1503},
+	number = {4},
+	journaltitle = {{IEEE} Transactions on Image Processing},
+	author = {Liu, X. and Zhai, D. and Zhao, D. and Zhai, G. and Gao, W.},
+	date = {2014-04},
+	keywords = {Correlation, corrupted observations, Data models, explicit kernel mapping, geometrical structure, graph Laplacian, graph theory, hybrid graph, image data space, image denoising, Image denoising, Image edge detection, image representation, implicit kernel, impulse noise, impulse noise removal, intrinsic manifold structure, Kernel, kernel theory, Laplace equations, Laplace transforms, Laplacian pyramid, Laplacian regularized regression, least square error, least squares approximations, local smoothness, multiscale image representation, Noise, Noise measurement, non-local self-similarity, nonlocal self-similarity property, progressive image denoising, progressive image recovery, projected high-dimensional feature space, real-world applications, regression analysis, scale space, sharp edges, unified framework},
+	file = {Liu et al_2014_Progressive Image Denoising Through Hybrid Graph Laplacian Regularization - A Unified Framework.pdf:/Users/wpq/Dropbox (MIT)/zotero/Liu et al_2014_Progressive Image Denoising Through Hybrid Graph Laplacian Regularization - A Unified Framework.pdf:application/pdf}
+}
+
+@article{buadesReviewImageDenoising2005,
+	title = {A Review of Image Denoising Algorithms, with a New One},
+	volume = {4},
+	issn = {1540-3459},
+	url = {https://epubs.siam.org/doi/abs/10.1137/040616024},
+	doi = {10.1137/040616024},
+	abstract = {The search for efficient image denoising methods is still a valid challenge at the crossing of functional analysis and statistics. In spite of the sophistication of the recently proposed methods, most algorithms have not yet attained a desirable level of applicability. All show an outstanding performance when the image model corresponds to the algorithm assumptions but fail in general and create artifacts or remove image fine structures. The main focus of this paper is, first, to define a general mathematical and experimental methodology to compare and classify classical image denoising algorithms and, second, to propose a nonlocal means ({NL}-means) algorithm addressing the preservation of structure in a digital image. The mathematical analysis is based on the analysis of the "method noise," defined as the difference between a digital image and its denoised version. The {NL}-means algorithm is proven to be asymptotically optimal under a generic statistical image model. The denoising performance of all considered methods are compared in four ways; mathematical: asymptotic order of magnitude of the method noise under regularity assumptions; perceptual-mathematical: the algorithms artifacts and their explanation as a violation of the image model; quantitative experimental: by tables of L2  distances of the denoised version to the original image. The most powerful evaluation method seems, however, to be the visualization of the method noise on natural images. The more this method noise looks like a real white noise, the better the method.},
+	pages = {490--530},
+	number = {2},
+	journaltitle = {Multiscale Modeling \& Simulation},
+	shortjournal = {Multiscale Model. Simul.},
+	author = {Buades, A. and Coll, B. and Morel, J.},
+	urldate = {2019-07-19},
+	date = {2005-01-01},
+	keywords = {review},
+	file = {Buades et al_2005_A Review of Image Denoising Algorithms, with a New One.pdf:/Users/wpq/Dropbox (MIT)/zotero/Buades et al_2005_A Review of Image Denoising Algorithms, with a New One.pdf:application/pdf}
+}
+
+@article{buadesNonlocalImageMovie2008,
+	title = {Nonlocal Image and Movie Denoising},
+	volume = {76},
+	issn = {1573-1405},
+	url = {https://doi.org/10.1007/s11263-007-0052-1},
+	doi = {10.1007/s11263-007-0052-1},
+	abstract = {Neighborhood filters are nonlocal image and movie filters which reduce the noise by averaging similar pixels. The first object of the paper is to present a unified theory of these filters and reliable criteria to compare them to other filter classes. A {CCD} noise model will be presented justifying the involvement of neighborhood filters. A classification of neighborhood filters will be proposed, including classical image and movie denoising methods and discussing further a recently introduced neighborhood filter, {NL}-means. In order to compare denoising methods three principles will be discussed. The first principle, “method noise”, specifies that only noise must be removed from an image. A second principle will be introduced, “noise to noise”, according to which a denoising method must transform a white noise into a white noise. Contrarily to “method noise”, this principle, which characterizes artifact-free methods, eliminates any subjectivity and can be checked by mathematical arguments and Fourier analysis. “Noise to noise” will be proven to rule out most denoising methods, with the exception of neighborhood filters. This is why a third and new comparison principle, the “statistical optimality”, is needed and will be introduced to compare the performance of all neighborhood filters. The three principles will be applied to compare ten different image and movie denoising methods. It will be first shown that only wavelet thresholding methods and {NL}-means give an acceptable method noise. Second, that neighborhood filters are the only ones to satisfy the “noise to noise” principle. Third, that among them {NL}-means is closest to statistical optimality. A particular attention will be paid to the application of the statistical optimality criterion for movie denoising methods. It will be pointed out that current movie denoising methods are motion compensated neighborhood filters. This amounts to say that they are neighborhood filters and that the ideal neighborhood of a pixel is its trajectory. Unfortunately the aperture problem makes it impossible to estimate ground true trajectories. It will be demonstrated that computing trajectories and restricting the neighborhood to them is harmful for denoising purposes and that space-time {NL}-means preserves more movie details.},
+	pages = {123--139},
+	number = {2},
+	journaltitle = {International Journal of Computer Vision},
+	shortjournal = {Int J Comput Vis},
+	author = {Buades, Antoni and Coll, Bartomeu and Morel, Jean-Michel},
+	urldate = {2019-07-19},
+	date = {2008-02-01},
+	langid = {english},
+	keywords = {Image denoising, denoising, Motion estimation, Movie denoising},
+	file = {Buades et al_2008_Nonlocal Image and Movie Denoising.pdf:/Users/wpq/Dropbox (MIT)/zotero/Buades et al_2008_Nonlocal Image and Movie Denoising.pdf:application/pdf}
+}
+
+@inproceedings{tomasiBilateralFilteringGray1998,
+	title = {Bilateral filtering for gray and color images},
+	doi = {10.1109/ICCV.1998.710815},
+	abstract = {Bilateral filtering smooths images while preserving edges, by means of a nonlinear combination of nearby image values. The method is noniterative, local, and simple. It combines gray levels or colors based on both their geometric closeness and their photometric similarity, and prefers near values to distant values in both domain and range. In contrast with filters that operate on the three bands of a color image separately, a bilateral filter can enforce the perceptual metric underlying the {CIE}-Lab color space, and smooth colors and preserve edges in a way that is tuned to human perception. Also, in contrast with standard filtering, bilateral filtering produces no phantom colors along edges in color images, and reduces phantom colors where they appear in the original image.},
+	eventtitle = {Sixth International Conference on Computer Vision ({IEEE} Cat. No.98CH36271)},
+	pages = {839--846},
+	booktitle = {Sixth International Conference on Computer Vision ({IEEE} Cat. No.98CH36271)},
+	author = {Tomasi, C. and Manduchi, R.},
+	date = {1998-01},
+	keywords = {denoising, Color, Pixel, bilateral filtering, color images, colour vision, Computer science, computer vision, edges preservation, Filtering, geometric closeness, gray images, Humans, image processing, Imaging phantoms, Low pass filters, perceptual metric, phantom colors, photometric similarity, Photometry, Shape measurement, Smoothing methods},
+	file = {Tomasi_Manduchi_1998_Bilateral filtering for gray and color images.pdf:/Users/wpq/Dropbox (MIT)/zotero/Tomasi_Manduchi_1998_Bilateral filtering for gray and color images.pdf:application/pdf}
+}
+
+@article{rudinNonlinearTotalVariation1992,
+	title = {Nonlinear total variation based noise removal algorithms},
+	volume = {60},
+	issn = {0167-2789},
+	url = {http://www.sciencedirect.com/science/article/pii/016727899290242F},
+	doi = {10.1016/0167-2789(92)90242-F},
+	abstract = {A constrained optimization type of numerical algorithm for removing noise from images is presented. The total variation of the image is minimized subject to constraints involving the statistics of the noise. The constraints are imposed using Lanrange multipliers. The solution is obtained using the gradient-projection method. This amounts to solving a time dependent partial differential equation on a manifold determined by the constraints. As t → ∞ the solution converges to a steady state which is the denoised image. The numerical algorithm is simple and relatively fast. The results appear to be state-of-the-art for very noisy images. The method is noninvasive, yielding sharp edges in the image. The technique could be interpreted as a first step of moving each level set of the image normal to itself with velocity equal to the curvature of the level set divided by the magnitude of the gradient of the image, and a second step which projects the image back onto the constraint set.},
+	pages = {259--268},
+	number = {1},
+	journaltitle = {Physica D: Nonlinear Phenomena},
+	shortjournal = {Physica D: Nonlinear Phenomena},
+	author = {Rudin, Leonid I. and Osher, Stanley and Fatemi, Emad},
+	urldate = {2019-07-19},
+	date = {1992-11-01},
+	keywords = {denoising, tbr},
+	file = {Rudin et al_1992_Nonlinear total variation based noise removal algorithms.pdf:/Users/wpq/Dropbox (MIT)/zotero/Rudin et al_1992_Nonlinear total variation based noise removal algorithms.pdf:application/pdf}
+}
+
+@article{dabovImageDenoisingSparse2007,
+	title = {Image Denoising by Sparse 3-D Transform-Domain Collaborative Filtering},
+	volume = {16},
+	issn = {1057-7149},
+	doi = {10.1109/TIP.2007.901238},
+	abstract = {We propose a novel image denoising strategy based on an enhanced sparse representation in transform domain. The enhancement of the sparsity is achieved by grouping similar 2D image fragments (e.g., blocks) into 3D data arrays which we call "groups." Collaborative Altering is a special procedure developed to deal with these 3D groups. We realize it using the three successive steps: 3D transformation of a group, shrinkage of the transform spectrum, and inverse 3D transformation. The result is a 3D estimate that consists of the jointly filtered grouped image blocks. By attenuating the noise, the collaborative filtering reveals even the finest details shared by grouped blocks and, at the same time, it preserves the essential unique features of each individual block. The filtered blocks are then returned to their original positions. Because these blocks are overlapping, for each pixel, we obtain many different estimates which need to be combined. Aggregation is a particular averaging procedure which is exploited to take advantage of this redundancy. A significant improvement is obtained by a specially developed collaborative Wiener filtering. An algorithm based on this novel denoising strategy and its efficient implementation are presented in full detail; an extension to color-image denoising is also developed. The experimental results demonstrate that this computationally scalable algorithm achieves state-of-the-art denoising performance in terms of both peak signal-to-noise ratio and subjective visual quality.},
+	pages = {2080--2095},
+	number = {8},
+	journaltitle = {{IEEE} Transactions on Image Processing},
+	author = {Dabov, K. and Foi, A. and Katkovnik, V. and Egiazarian, K.},
+	date = {2007-08},
+	file = {Dabov et al_2007_Image Denoising by Sparse 3-D Transform-Domain Collaborative Filtering.pdf:/Users/wpq/Dropbox (MIT)/zotero/Dabov et al_2007_Image Denoising by Sparse 3-D Transform-Domain Collaborative Filtering.pdf:application/pdf}
+}
+
+@inproceedings{guBriefReviewImage2018,
+	title = {A brief review of image denoising algorithms and beyond},
+	abstract = {The recent advances in hardware and imaging systems made the digital cameras ubiquitous.Although the development of hardware has steadily improved the quality of images for the last several decades, image degradation is unavoidable due to the many factors affecting the image acquisition process and the subsequent postprocessing. Image denoising, which aims to reconstruct a high quality image from its degraded observation, is a classical yet still very active topic in the area of lowlevel computer vision. It represents an important building block in real applications such as digital photography, medical image analysis, remote sensing, surveillance and digital entertainment. Also, image denoising constitutes an ideal test bed for evaluating image prior modeling methods. In this paper, we briefly review recent progresses in image denoising. We firstly present an overview of prior modeling approaches used in image denoising task. Then, we review conventional sparse representation based denoising algorithms, low-rank based denoising algorithms and recently proposed deep neural networks based approaches. At last, we discuss some emerging topics and open problems about image denoising.},
+	author = {Gu, Shuhang and Timofte, Radu},
+	date = {2018},
+	file = {Gu_Timofte_2018_A brief review of image denoising algorithms and beyond.pdf:/Users/wpq/Dropbox (MIT)/zotero/Gu_Timofte_2018_A brief review of image denoising algorithms and beyond.pdf:application/pdf}
+}
+
+@article{guoConvolutionalBlindDenoising2018,
+	title = {Toward Convolutional Blind Denoising of Real Photographs},
+	url = {http://arxiv.org/abs/1807.04686},
+	abstract = {While deep convolutional neural networks ({CNNs}) have achieved impressive success in image denoising with additive white Gaussian noise ({AWGN}), their performance remains limited on real-world noisy photographs. The main reason is that their learned models are easy to overfit on the simplified {AWGN} model which deviates severely from the complicated real-world noise model. In order to improve the generalization ability of deep {CNN} denoisers, we suggest training a convolutional blind denoising network ({CBDNet}) with more realistic noise model and real-world noisy-clean image pairs. On the one hand, both signal-dependent noise and in-camera signal processing pipeline is considered to synthesize realistic noisy images. On the other hand, real-world noisy photographs and their nearly noise-free counterparts are also included to train our {CBDNet}. To further provide an interactive strategy to rectify denoising result conveniently, a noise estimation subnetwork with asymmetric learning to suppress under-estimation of noise level is embedded into {CBDNet}. Extensive experimental results on three datasets of real-world noisy photographs clearly demonstrate the superior performance of {CBDNet} over state-of-the-arts in terms of quantitative metrics and visual quality. The code has been made available at https://github.com/{GuoShi}28/{CBDNet}.},
+	journaltitle = {{arXiv}:1807.04686 [cs]},
+	author = {Guo, Shi and Yan, Zifei and Zhang, Kai and Zuo, Wangmeng and Zhang, Lei},
+	urldate = {2019-07-22},
+	date = {2018-07-12},
+	eprinttype = {arxiv},
+	eprint = {1807.04686},
+	file = {Guo et al_2018_Toward Convolutional Blind Denoising of Real Photographs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Guo et al_2018_Toward Convolutional Blind Denoising of Real Photographs.pdf:application/pdf}
+}
+
+@article{lehtinenNoise2NoiseLearningImage2018,
+	title = {Noise2Noise: Learning Image Restoration without Clean Data},
+	url = {http://arxiv.org/abs/1803.04189},
+	shorttitle = {Noise2Noise},
+	abstract = {We apply basic statistical reasoning to signal reconstruction by machine learning -- learning to map corrupted observations to clean signals -- with a simple and powerful conclusion: it is possible to learn to restore images by only looking at corrupted examples, at performance at and sometimes exceeding training using clean data, without explicit image priors or likelihood models of the corruption. In practice, we show that a single model learns photographic noise removal, denoising synthetic Monte Carlo images, and reconstruction of undersampled {MRI} scans -- all corrupted by different processes -- based on noisy data only.},
+	journaltitle = {{arXiv}:1803.04189 [cs, stat]},
+	author = {Lehtinen, Jaakko and Munkberg, Jacob and Hasselgren, Jon and Laine, Samuli and Karras, Tero and Aittala, Miika and Aila, Timo},
+	urldate = {2019-07-22},
+	date = {2018-03-12},
+	eprinttype = {arxiv},
+	eprint = {1803.04189},
+	file = {Lehtinen et al_2018_Noise2Noise - Learning Image Restoration without Clean Data.pdf:/Users/wpq/Dropbox (MIT)/zotero/Lehtinen et al_2018_Noise2Noise - Learning Image Restoration without Clean Data.pdf:application/pdf}
+}
+
+@inproceedings{schmidtShrinkageFieldsEffective2014,
+	title = {Shrinkage Fields for Effective Image Restoration},
+	doi = {10.1109/CVPR.2014.349},
+	abstract = {Many state-of-the-art image restoration approaches do not scale well to larger images, such as megapixel images common in the consumer segment. Computationally expensive optimization is often the culprit. While efficient alternatives exist, they have not reached the same level of image quality. The goal of this paper is to develop an effective approach to image restoration that offers both computational efficiency and high restoration quality. To that end we propose shrinkage fields, a random field-based architecture that combines the image model and the optimization algorithm in a single unit. The underlying shrinkage operation bears connections to wavelet approaches, but is used here in a random field context. Computational efficiency is achieved by construction through the use of convolution and {DFT} as the core components, high restoration quality is attained through loss-based training of all model parameters and the use of a cascade architecture. Unlike heavily engineered solutions, our learning approach can be adapted easily to different trade-offs between efficiency and image quality. We demonstrate state-of-the-art restoration results with high levels of computational efficiency, and significant speedup potential through inherent parallelism.},
+	eventtitle = {2014 {IEEE} Conference on Computer Vision and Pattern Recognition},
+	pages = {2774--2781},
+	booktitle = {2014 {IEEE} Conference on Computer Vision and Pattern Recognition},
+	author = {Schmidt, U. and Roth, S.},
+	date = {2014-06},
+	file = {Schmidt_Roth_2014_Shrinkage Fields for Effective Image Restoration.pdf:/Users/wpq/Dropbox (MIT)/zotero/Schmidt_Roth_2014_Shrinkage Fields for Effective Image Restoration.pdf:application/pdf}
+}
+
+@article{zhangGaussianDenoiserResidual2017,
+	title = {Beyond a Gaussian Denoiser: Residual Learning of Deep {CNN} for Image Denoising},
+	volume = {26},
+	issn = {1057-7149},
+	doi = {10.1109/TIP.2017.2662206},
+	shorttitle = {Beyond a Gaussian Denoiser},
+	abstract = {The discriminative model learning for image denoising has been recently attracting considerable attentions due to its favorable denoising performance. In this paper, we take one step forward by investigating the construction of feed-forward denoising convolutional neural networks ({DnCNNs}) to embrace the progress in very deep architecture, learning algorithm, and regularization method into image denoising. Specifically, residual learning and batch normalization are utilized to speed up the training process as well as boost the denoising performance. Different from the existing discriminative denoising models which usually train a specific model for additive white Gaussian noise at a certain noise level, our {DnCNN} model is able to handle Gaussian denoising with unknown noise level (i.e., blind Gaussian denoising). With the residual learning strategy, {DnCNN} implicitly removes the latent clean image in the hidden layers. This property motivates us to train a single {DnCNN} model to tackle with several general image denoising tasks, such as Gaussian denoising, single image super-resolution, and {JPEG} image deblocking. Our extensive experiments demonstrate that our {DnCNN} model can not only exhibit high effectiveness in several general image denoising tasks, but also be efficiently implemented by benefiting from {GPU} computing.},
+	pages = {3142--3155},
+	number = {7},
+	journaltitle = {{IEEE} Transactions on Image Processing},
+	author = {Zhang, K. and Zuo, W. and Chen, Y. and Meng, D. and Zhang, L.},
+	date = {2017-07},
+	file = {Zhang et al_2017_Beyond a Gaussian Denoiser - Residual Learning of Deep CNN for Image Denoising.pdf:/Users/wpq/Dropbox (MIT)/zotero/Zhang et al_2017_Beyond a Gaussian Denoiser - Residual Learning of Deep CNN for Image Denoising.pdf:application/pdf}
+}
+
+@inproceedings{guWeightedNuclearNorm2014,
+	title = {Weighted Nuclear Norm Minimization with Application to Image Denoising},
+	doi = {10.1109/CVPR.2014.366},
+	abstract = {As a convex relaxation of the low rank matrix factorization problem, the nuclear norm minimization has been attracting significant research interest in recent years. The standard nuclear norm minimization regularizes each singular value equally to pursue the convexity of the objective function. However, this greatly restricts its capability and flexibility in dealing with many practical problems (e.g., denoising), where the singular values have clear physical meanings and should be treated differently. In this paper we study the weighted nuclear norm minimization ({WNNM}) problem, where the singular values are assigned different weights. The solutions of the {WNNM} problem are analyzed under different weighting conditions. We then apply the proposed {WNNM} algorithm to image denoising by exploiting the image nonlocal self-similarity. Experimental results clearly show that the proposed {WNNM} algorithm outperforms many state-of-the-art denoising algorithms such as {BM}3D in terms of both quantitative measure and visual perception quality.},
+	eventtitle = {2014 {IEEE} Conference on Computer Vision and Pattern Recognition},
+	pages = {2862--2869},
+	booktitle = {2014 {IEEE} Conference on Computer Vision and Pattern Recognition},
+	author = {Gu, Shuhang and Zhang, Lei and Zuo, Wangmeng and Feng, Xiangchu},
+	date = {2014-06},
+	note = {{ISSN}: 1063-6919},
+	file = {IEEE Xplore Full Text PDF:/Users/wpq/Zotero/storage/3RNDH6D5/Gu et al. - 2014 - Weighted Nuclear Norm Minimization with Applicatio.pdf:application/pdf}
+}
+
+@article{zhangFFDNetFastFlexible2018,
+	title = {{FFDNet}: Toward a Fast and Flexible Solution for {CNN} based Image Denoising},
+	volume = {27},
+	issn = {1057-7149, 1941-0042},
+	url = {http://arxiv.org/abs/1710.04026},
+	doi = {10.1109/TIP.2018.2839891},
+	shorttitle = {{FFDNet}},
+	abstract = {Due to the fast inference and good performance, discriminative learning methods have been widely studied in image denoising. However, these methods mostly learn a specific model for each noise level, and require multiple models for denoising images with different noise levels. They also lack flexibility to deal with spatially variant noise, limiting their applications in practical denoising. To address these issues, we present a fast and flexible denoising convolutional neural network, namely {FFDNet}, with a tunable noise level map as the input. The proposed {FFDNet} works on downsampled sub-images, achieving a good trade-off between inference speed and denoising performance. In contrast to the existing discriminative denoisers, {FFDNet} enjoys several desirable properties, including (i) the ability to handle a wide range of noise levels (i.e., [0, 75]) effectively with a single network, (ii) the ability to remove spatially variant noise by specifying a non-uniform noise level map, and (iii) faster speed than benchmark {BM}3D even on {CPU} without sacrificing denoising performance. Extensive experiments on synthetic and real noisy images are conducted to evaluate {FFDNet} in comparison with state-of-the-art denoisers. The results show that {FFDNet} is effective and efficient, making it highly attractive for practical denoising applications.},
+	pages = {4608--4622},
+	number = {9},
+	journaltitle = {{IEEE} Transactions on Image Processing},
+	shortjournal = {{IEEE} Trans. on Image Process.},
+	author = {Zhang, Kai and Zuo, Wangmeng and Zhang, Lei},
+	urldate = {2020-05-28},
+	date = {2018-09},
+	eprinttype = {arxiv},
+	eprint = {1710.04026},
+	keywords = {tbr},
+	file = {arXiv Fulltext PDF:/Users/wpq/Zotero/storage/PT4XXII2/Zhang et al. - 2018 - FFDNet Toward a Fast and Flexible Solution for CN.pdf:application/pdf}
+}

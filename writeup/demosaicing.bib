@@ -1,0 +1,174 @@
+
+@article{syuLearningDeepConvolutional2018,
+	title = {Learning Deep Convolutional Networks for Demosaicing},
+	url = {http://arxiv.org/abs/1802.03769},
+	abstract = {This paper presents a comprehensive study of applying the convolutional neural network ({CNN}) to solving the demosaicing problem. The paper presents two {CNN} models that learn end-to-end mappings between the mosaic samples and the original image patches with full information. In the case the Bayer color filter array ({CFA}) is used, an evaluation with ten competitive methods on popular benchmarks confirms that the data-driven, automatically learned features by the {CNN} models are very effective. Experiments show that the proposed {CNN} models can perform equally well in both the {sRGB} space and the linear space. It is also demonstrated that the {CNN} model can perform joint denoising and demosaicing. The {CNN} model is very flexible and can be easily adopted for demosaicing with any {CFA} design. We train {CNN} models for demosaicing with three different {CFAs} and obtain better results than existing methods. With the great flexibility to be coupled with any {CFA}, we present the first data-driven joint optimization of the {CFA} design and the demosaicing method using {CNN}. Experiments show that the combination of the automatically discovered {CFA} pattern and the automatically devised demosaicing method significantly outperforms the current best demosaicing results. Visual comparisons confirm that the proposed methods reduce more visual artifacts than existing methods. Finally, we show that the {CNN} model is also effective for the more general demosaicing problem with spatially varying exposure and color and can be used for taking images of higher dynamic ranges with a single shot. The proposed models and the thorough experiments together demonstrate that {CNN} is an effective and versatile tool for solving the demosaicing problem.},
+	journaltitle = {{arXiv}:1802.03769 [cs]},
+	author = {Syu, Nai-Sheng and Chen, Yu-Sheng and Chuang, Yung-Yu},
+	urldate = {2019-07-19},
+	date = {2018-02-11},
+	eprinttype = {arxiv},
+	eprint = {1802.03769},
+	keywords = {Computer Science - Computer Vision and Pattern Recognition, Demosaicing, tbr},
+	file = {Syu et al_2018_Learning Deep Convolutional Networks for Demosaicing.pdf:/Users/wpq/Dropbox (MIT)/zotero/Syu et al_2018_Learning Deep Convolutional Networks for Demosaicing.pdf:application/pdf}
+}
+
+@article{zhouDeepResidualNetwork2018,
+	title = {Deep Residual Network for Joint Demosaicing and Super-Resolution},
+	url = {http://arxiv.org/abs/1802.06573},
+	abstract = {In digital photography, two image restoration tasks have been studied extensively and resolved independently: demosaicing and super-resolution. Both these tasks are related to resolution limitations of the camera. Performing super-resolution on a demosaiced images simply exacerbates the artifacts introduced by demosaicing. In this paper, we show that such accumulation of errors can be easily averted by jointly performing demosaicing and super-resolution. To this end, we propose a deep residual network for learning an end-to-end mapping between Bayer images and high-resolution images. By training on high-quality samples, our deep residual demosaicing and super-resolution network is able to recover high-quality super-resolved images from low-resolution Bayer mosaics in a single step without producing the artifacts common to such processing when the two operations are done separately. We perform extensive experiments to show that our deep residual network achieves demosaiced and super-resolved images that are superior to the state-of-the-art both qualitatively and in terms of {PSNR} and {SSIM} metrics.},
+	journaltitle = {{arXiv}:1802.06573 [cs]},
+	author = {Zhou, Ruofan and Achanta, Radhakrishna and Süsstrunk, Sabine},
+	urldate = {2019-07-19},
+	date = {2018-02-19},
+	eprinttype = {arxiv},
+	eprint = {1802.06573},
+	keywords = {Computer Science - Computer Vision and Pattern Recognition, Demosaicing, tbr},
+	file = {Zhou et al_2018_Deep Residual Network for Joint Demosaicing and Super-Resolution.pdf:/Users/wpq/Dropbox (MIT)/zotero/Zhou et al_2018_Deep Residual Network for Joint Demosaicing and Super-Resolution.pdf:application/pdf}
+}
+
+@article{klatzerLearningJointDemosaicing2016,
+	title = {Learning joint demosaicing and denoising based on sequential energy minimization},
+	doi = {10.1109/ICCPHOT.2016.7492871},
+	abstract = {Demosaicing is an important first step for color image acquisition. For practical reasons, demosaicing algorithms have to be both efficient and yield high quality results in the presence of noise. The demosaicing problem poses several challenges, e.g. zippering and false color artifacts as well as edge blur. In this work, we introduce a novel learning based method that can overcome these challenges. We formulate demosaicing as an image restoration problem and propose to learn efficient regularization inspired by a variational energy minimization framework that can be trained for different sensor layouts. Our algorithm performs joint demosaicing and denoising in close relation to the real physical mosaicing process on a camera sensor. This is achieved by learning a sequence of energy minimization problems composed of a set of {RGB} filters and corresponding activation functions. We evaluate our algorithm on the Microsoft Demosaicing data set in terms of peak signal to noise ratio ({PSNR}) and structured similarity index ({SSIM}). Our algorithm is highly efficient both in image quality and run time. We achieve an improvement of up to 2.6 {dB} over recent state-of-the-art algorithms.},
+	pages = {1--11},
+	journaltitle = {2016 {IEEE} International Conference on Computational Photography ({ICCP})},
+	author = {Klatzer, Teresa and Hammernik, Kerstin and Knöbelreiter, Patrick and Pock, Thomas},
+	date = {2016},
+	keywords = {Activation function, Algorithm, Circuit restoration, Color image, Composite artifact colors, Convolution, Decibel, Demosaicing, Display resolution, Edge enhancement, Energy minimization, Image quality, Image restoration, Image sensor, Matrix regularization, Microsoft Outlook for Mac, Noise reduction, Peak signal-to-noise ratio, Run time (program lifecycle phase), Scene statistics, Structural similarity, tbr, Variational principle},
+	file = {Klatzer et al_2016_Learning joint demosaicing and denoising based on sequential energy minimization.pdf:/Users/wpq/Dropbox (MIT)/zotero/Klatzer et al_2016_Learning joint demosaicing and denoising based on sequential energy minimization.pdf:application/pdf}
+}
+
+@article{gharbiDeepJointDemosaicking2016,
+	title = {Deep Joint Demosaicking and Denoising},
+	volume = {35},
+	issn = {0730-0301},
+	url = {http://doi.acm.org/10.1145/2980179.2982399},
+	doi = {10.1145/2980179.2982399},
+	abstract = {Demosaicking and denoising are the key first stages of the digital imaging pipeline but they are also a severely ill-posed problem that infers three color values per pixel from a single noisy measurement. Earlier methods rely on hand-crafted filters or priors and still exhibit disturbing visual artifacts in hard cases such as moiré or thin edges. We introduce a new data-driven approach for these challenges: we train a deep neural network on a large corpus of images instead of using hand-tuned filters. While deep learning has shown great success, its naive application using existing training datasets does not give satisfactory results for our problem because these datasets lack hard cases. To create a better training set, we present metrics to identify difficult patches and techniques for mining community photographs for such patches. Our experiments show that this network and training procedure outperform state-of-the-art both on noisy and noise-free data. Furthermore, our algorithm is an order of magnitude faster than the previous best performing techniques.},
+	pages = {191:1--191:12},
+	number = {6},
+	journaltitle = {{ACM} Trans. Graph.},
+	author = {Gharbi, Michaël and Chaurasia, Gaurav and Paris, Sylvain and Durand, Frédo},
+	urldate = {2019-07-19},
+	date = {2016-11},
+	keywords = {convolutional neural networks, data driven methods, deep learning, Demosaicing, demosaicking, denoising, read},
+	file = {Gharbi et al_2016_Deep Joint Demosaicking and Denoising.pdf:/Users/wpq/Dropbox (MIT)/zotero/Gharbi et al_2016_Deep Joint Demosaicking and Denoising.pdf:application/pdf}
+}
+
+@article{chakrabartiRethinkingColorCameras2014,
+	title = {Rethinking color cameras},
+	doi = {10.1109/ICCPHOT.2014.6831801},
+	abstract = {Digital color cameras make sub-sampled measurements of color at alternating pixel locations, and then “demosaick” these measurements to create full color images by up-sampling. This allows traditional cameras with restricted processing hardware to produce color images from a single shot, but it requires blocking a majority of the incident light and is prone to aliasing artifacts. In this paper, we introduce a computational approach to color photography, where the sampling pattern and reconstruction process are co-designed to enhance sharpness and photographic speed. The pattern is made predominantly panchromatic, thus avoiding excessive loss of light and aliasing of high spatial-frequency intensity variations. Color is sampled at a very sparse set of locations and then propagated throughout the image with guidance from the un-aliased luminance channel. Experimental results show that this approach often leads to significant reductions in noise and aliasing artifacts, especially in low-light conditions.},
+	pages = {1--8},
+	journaltitle = {2014 {IEEE} International Conference on Computational Photography ({ICCP})},
+	author = {Chakrabarti, Ayan and Freeman, William T. and Zickler, Todd E.},
+	date = {2014},
+	keywords = {Aliasing, Blocking (computing), Color, Demosaicing, Pixel, Ray (optics), read, Sampling (signal processing), Sparse language, Sparse matrix},
+	file = {Chakrabarti et al_2014_Rethinking color cameras.pdf:/Users/wpq/Dropbox (MIT)/zotero/Chakrabarti et al_2014_Rethinking color cameras.pdf:application/pdf}
+}
+
+@book{liImageDemosaicingSystematic,
+	title = {Image Demosaicing: A Systematic Survey},
+	shorttitle = {Image Demosaicing},
+	abstract = {Image demosaicing is a problem of interpolating full-resolution color images from so-called color-filter-array ({CFA}) samples. Among various {CFA} patterns, Bayer pattern has been the most popular choice and demosaicing of Bayer pattern has attracted renewed interest in recent years partially due to the increased availability of source codes/executables in response to the principle of “reproducible research”. In this article, we provide a systematic survey of over seventy published works in this field since 1999 (complementary to previous reviews 22, 67). Our review attempts to address important issues to demosaicing and identify fundamental differences among competing approaches. Our findings suggest most existing works belong to the class of sequential demosaicing- i.e., luminance channel is interpolated first and then chrominance channels are reconstructed based on recovered luminance information. We report our comparative study results with a collection of eleven competing algorithms whose source codes or executables are provided by the authors. Our comparison is performed on two data sets: Kodak {PhotoCD} (popular choice) and {IMAX} high-quality images (more challenging). While most existing demosaicing algorithms achieve good performance on the Kodak data set, their performance on the {IMAX} one (images with varying-hue and high-saturation edges) degrades significantly. Such observation suggests the importance of properly addressing the issue of mismatch between assumed model and observation data in demosaicing, which calls for further investigation on issues such as model validation, test data selection and performance evaluation.},
+	author = {Li, Xin and Gunturk, Bahadir and Zhang, Lei},
+	keywords = {Demosaicing, tbr},
+	file = {Li et al_Image Demosaicing - A Systematic Survey.pdf:/Users/wpq/Dropbox (MIT)/zotero/Li et al_Image Demosaicing - A Systematic Survey.pdf:application/pdf}
+}
+
+@inproceedings{malvarHighqualityLinearInterpolation2004,
+	title = {High-quality linear interpolation for demosaicing of Bayer-patterned color images},
+	volume = {3},
+	doi = {10.1109/ICASSP.2004.1326587},
+	abstract = {This paper introduces a new interpolation technique for demosaicing of color images produced by single-{CCD} digital cameras. We show that the proposed simple linear filter can lead to an improvement in {PSNR} of over 5.5 {dB} when compared to bilinear demosaicing, and about 0.7 {dB} improvement in R and B interpolation when compared to a recently introduced linear interpolator. The proposed filter also outperforms most nonlinear demosaicing algorithms, without the artifacts due to nonlinear processing, and a much reduced computational complexity.},
+	eventtitle = {2004 {IEEE} International Conference on Acoustics, Speech, and Signal Processing},
+	pages = {iii--485},
+	booktitle = {2004 {IEEE} International Conference on Acoustics, Speech, and Signal Processing},
+	author = {Malvar, H. S. and {Li-wei He} and Cutler, R.},
+	date = {2004-05},
+	keywords = {Bayer-patterned color images, Charge coupled devices, Color, color image linear interpolation, computational complexity reduction, Demosaicing, Digital cameras, image colour analysis, image demosaicing, image reconstruction, interpolation, Interpolation, linear filter, Nonlinear filters, Optical films, Optical filters, Optical sensors, Pixel, {PSNR} improvement, R/B interpolation, read, Sensor arrays, single-{CCD} digital cameras},
+	file = {Malvar et al_2004_High-quality linear interpolation for demosaicing of Bayer-patterned color images.pdf:/Users/wpq/Dropbox (MIT)/zotero/Malvar et al_2004_High-quality linear interpolation for demosaicing of Bayer-patterned color images.pdf:application/pdf}
+}
+
+@article{narasimhanEnhancingResolutionMultiple2005,
+	title = {Enhancing resolution along multiple imaging dimensions using assorted pixels},
+	volume = {27},
+	issn = {0162-8828},
+	doi = {10.1109/TPAMI.2005.76},
+	abstract = {Multisampled imaging is a general framework for using pixels on an image detector to simultaneously sample multiple dimensions of imaging (space, time, spectrum, brightness, polarization, etc.). The mosaic of red, green, and blue spectral filters found in most solid-state color cameras is one example of multisampled imaging. We briefly describe how multisampling can be used to explore other dimensions of imaging. Once such an image is captured, smooth reconstructions along the individual dimensions can be obtained using standard interpolation algorithms. Typically, this results in a substantial reduction of resolution (and, hence, image quality). One can extract significantly greater resolution in each dimension by noting that the light fields associated with real scenes have enormous redundancies within them, causing different dimensions to be highly correlated. Hence, multisampled images can be better interpolated using local structural models that are learned offline from a diverse set of training images. The specific type of structural models we use are based on polynomial functions of measured image intensities. They are very effective as well as computationally efficient. We demonstrate the benefits of structural interpolation using three specific applications. These are 1) traditional color imaging with a mosaic of color filters, 2) high dynamic range monochrome imaging using a mosaic of exposure filters, and 3) high dynamic range color imaging using a mosaic of overlapping color and exposure filters.},
+	pages = {518--530},
+	number = {4},
+	journaltitle = {{IEEE} Transactions on Pattern Analysis and Machine Intelligence},
+	author = {Narasimhan, S. G. and Nayar, S. K.},
+	date = {2005-04},
+	keywords = {Algorithms, Artificial Intelligence, assorted pixels, Bayer pattern., Brightness, color, Color, Computer Graphics, Demosaicing, Detectors, dynamic range, Dynamic range, Filters, image colour analysis, image enhancement, Image Enhancement, Image Interpretation, Computer-Assisted, image resolution, Image resolution, image sampling, image segmentation, Imaging, Three-Dimensional, Index Terms- Image formation, Information Storage and Retrieval, interpolation, Interpolation, learning, learning (artificial intelligence), multiple imaging dimensions, multisampled imaging, multisampling, Numerical Analysis, Computer-Assisted, Pattern Recognition, Automated, Pixel, Polarization, range monochrome imaging, read, Reproducibility of Results, resolution, Sensitivity and Specificity, Signal Processing, Computer-Assisted, Solid state circuits, standard interpolation algorithms, structural models, Subtraction Technique},
+	file = {Narasimhan_Nayar_2005_Enhancing resolution along multiple imaging dimensions using assorted pixels.pdf:/Users/wpq/Dropbox (MIT)/zotero/Narasimhan_Nayar_2005_Enhancing resolution along multiple imaging dimensions using assorted pixels.pdf:application/pdf}
+}
+
+@article{ramanathDemosaickingMethodsBayer2002,
+	title = {Demosaicking methods for Bayer color arrays},
+	volume = {11},
+	doi = {10.1117/1.1484495},
+	abstract = {Digital Still Color Cameras sample the color spectrum using a monolithic array of color filters overlaid on a charge coupled device array such that each pixel samples only one color band. The resulting mosaic of color samples is processed to produce a high resolution color image such that the values of the color bands not sampled at a certain location are estimated from its neighbors. This process is often referred to as demosaicking. This paper introduces and compares a few commonly used demosaicking methods using error metrics like mean squared error in the {RGB} color space and perceived error in the {CIELAB} color space. © 2002 {SPIE} and {IS}\&T.},
+	pages = {306--315},
+	journaltitle = {J. Electronic Imaging},
+	author = {Ramanath, Rajeev and Snyder, Wesley E. and Bilbro, Griff L. and Sander, William A.},
+	date = {2002},
+	keywords = {Algorithm, Color image, Color space, Computability in Europe, Demosaicing, Experiment, Image resolution, Mean squared error, Nonlinear system, Norm (social), Pixel, read, {XYZ} file format},
+	file = {Ramanath et al_2002_Demosaicking methods for Bayer color arrays.pdf:/Users/wpq/Dropbox (MIT)/zotero/Ramanath et al_2002_Demosaicking methods for Bayer color arrays.pdf:application/pdf}
+}
+
+@article{kokkinosDeepImageDemosaicking2018,
+	title = {Deep Image Demosaicking using a Cascade of Convolutional Residual Denoising Networks},
+	url = {http://arxiv.org/abs/1803.05215},
+	abstract = {Demosaicking and denoising are among the most crucial steps of modern digital camera pipelines and their joint treatment is a highly ill-posed inverse problem where at-least two-thirds of the information are missing and the rest are corrupted by noise. This poses a great challenge in obtaining meaningful reconstructions and a special care for the efficient treatment of the problem is required. While there are several machine learning approaches that have been recently introduced to deal with joint image demosaicking-denoising, in this work we propose a novel deep learning architecture which is inspired by powerful classical image regularization methods and large-scale convex optimization techniques. Consequently, our derived network is more transparent and has a clear interpretation compared to alternative competitive deep learning approaches. Our extensive experiments demonstrate that our network outperforms any previous approaches on both noisy and noise-free data. This improvement in reconstruction quality is attributed to the principled way we design our network architecture, which also requires fewer trainable parameters than the current state-of-the-art deep network solution. Finally, we show that our network has the ability to generalize well even when it is trained on small datasets, while keeping the overall number of trainable parameters low.},
+	journaltitle = {{arXiv}:1803.05215 [cs]},
+	author = {Kokkinos, Filippos and Lefkimmiatis, Stamatios},
+	urldate = {2019-07-19},
+	date = {2018-03-14},
+	eprinttype = {arxiv},
+	eprint = {1803.05215},
+	keywords = {Computer Science - Computer Vision and Pattern Recognition, Demosaicing, tbr},
+	file = {Kokkinos_Lefkimmiatis_2018_Deep Image Demosaicking using a Cascade of Convolutional Residual Denoising Networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Kokkinos_Lefkimmiatis_2018_Deep Image Demosaicking using a Cascade of Convolutional Residual Denoising Networks.pdf:application/pdf}
+}
+
+@article{khashabiJointDemosaicingDenoising2014,
+	title = {Joint Demosaicing and Denoising via Learned Nonparametric Random Fields},
+	volume = {23},
+	issn = {1057-7149},
+	doi = {10.1109/TIP.2014.2359774},
+	abstract = {We introduce a machine learning approach to demosaicing, the reconstruction of color images from incomplete color filter array samples. There are two challenges to overcome by a demosaicing method: 1) it needs to model and respect the statistics of natural images in order to reconstruct natural looking images and 2) it should be able to perform well in the presence of noise. To facilitate an objective assessment of current methods, we introduce a public ground truth data set of natural images suitable for research in image demosaicing and denoising. We then use this large data set to develop a machine learning approach to demosaicing. Our proposed method addresses both demosaicing challenges by learning a statistical model of images and noise from hundreds of natural images. The resulting model performs simultaneous demosaicing and denoising. We show that the machine learning approach has a number of benefits: 1) the model is trained to directly optimize a user-specified performance measure such as peak signal-to-noise ratio ({PSNR}) or structural similarity; 2) we can handle novel color filter array layouts by retraining the model on such layouts; and 3) it outperforms the previous state-of-the-art, in some setups by 0.7-{dB} {PSNR}, faithfully reconstructing edges, textures, and smooth areas. Our results demonstrate that in demosaicing and related imaging applications, discriminatively trained machine learning models have the potential for peak performance at comparatively low engineering effort.},
+	pages = {4968--4981},
+	number = {12},
+	journaltitle = {{IEEE} Transactions on Image Processing},
+	author = {Khashabi, D. and Nowozin, S. and Jancsary, J. and Fitzgibbon, A. W.},
+	date = {2014-12},
+	keywords = {Arrays, Cameras, color filter array, color images reconstruction, Demosaicing, demosaicing method, denoising, Image color analysis, image colour analysis, image demosaicing, image denoising, Image edge detection, Image Processing, Computer-Assisted, image reconstruction, imaging applications, Interpolation, learned nonparametric random fields, learning (artificial intelligence), machine learning approach, machine learning models, natural images statistics, Noise, Noise reduction, peak signal-to-noise ratio, {PSNR}, Regression Analysis, regression tree fields, Signal-To-Noise Ratio, statistical analysis, statistical model, Statistics, Nonparametric, tbr},
+	file = {Khashabi et al_2014_Joint Demosaicing and Denoising via Learned Nonparametric Random Fields.pdf:/Users/wpq/Dropbox (MIT)/zotero/Khashabi et al_2014_Joint Demosaicing and Denoising via Learned Nonparametric Random Fields.pdf:application/pdf;IEEE Xplore Abstract Record:/Users/wpq/Zotero/storage/C549UW2J/6906294.html:text/html}
+}
+
+@article{chungColorDemosaicingUsing2006,
+	title = {Color Demosaicing Using Variance of Color Differences},
+	volume = {15},
+	issn = {1057-7149},
+	doi = {10.1109/TIP.2006.877521},
+	abstract = {This paper presents an adaptive demosaicing algorithm. Missing green samples are first estimated based on the variances of the color differences along different edge directions. The missing red and blue components are then estimated based on the interpolated green plane. This algorithm can effectively preserve the details in texture regions and, at the same time, it can significantly reduce the color artifacts. As compared with the latest demosaicing algorithms, the proposed algorithm produces the best average demosaicing performance both objectively and subjectively},
+	pages = {2944--2955},
+	number = {10},
+	journaltitle = {{IEEE} Transactions on Image Processing},
+	author = {Chung, K.- and Chan, Y.-},
+	date = {2006-10},
+	keywords = {adaptive demosaicing algorithm, Algorithms, Bayer sampling, Color, color artifact reduction, color demosaicing, color difference variance, color filter array, Colorimetry, Costs, Demosaicing, digital camera, Digital cameras, Digital filters, edge directions, green plane interpolation, Heuristic algorithms, image colour analysis, image denoising, Image Enhancement, Image Interpretation, Computer-Assisted, Image sampling, Image sensors, image texture, Information Storage and Retrieval, interpolation, Interpolation, missing blue component, missing green samples, missing red component, Sensor arrays, Signal processing algorithms, tbr, texture regions},
+	file = {Chung_Chan_2006_Color Demosaicing Using Variance of Color Differences.pdf:/Users/wpq/Dropbox (MIT)/zotero/Chung_Chan_2006_Color Demosaicing Using Variance of Color Differences.pdf:application/pdf}
+}
+
+@inproceedings{tanJointDemosaicingDenoising2017,
+	title = {Joint demosaicing and denoising of noisy bayer images with {ADMM}},
+	doi = {10.1109/ICIP.2017.8296823},
+	abstract = {Image demosaicing and denoising are import steps of image signal processing. Sequential executions of demosaicing and denoising have essential drawbacks that they degrade the results of each other. Joint demosaicing and denoising overcomes the difficulties by solving the two problems in one model. This paper introduces a unified object function with hidden priors and a variant of {ADMM} to recover a full-resolution color image with a noisy Bayer input. Experimental results demonstrate that our method performs better than state-of-the-art methods in both {PSNR} comparison and human vision. In addition, our method is much more robust to variations of noise level.},
+	author = {Tan, Hanlin and Zeng, Xiangrong and Lai, Shiming and Liu, Yu and Zhang, Maojun},
+	date = {2017-09-17},
+	keywords = {read},
+	file = {Tan et al_2017_Joint demosaicing and denoising of noisy bayer images with ADMM.pdf:/Users/wpq/Dropbox (MIT)/zotero/Tan et al_2017_Joint demosaicing and denoising of noisy bayer images with ADMM.pdf:application/pdf}
+}

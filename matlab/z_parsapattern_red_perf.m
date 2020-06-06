@@ -29,7 +29,7 @@ CorrectPhase = @(phase) 0.89*phase - 0.5;
 Load = load(sprintf('%s/GroundTruthPhaseDisparity.mat', savedir));
 gt = Load.GroundTruth;
 
-%% phase PSNR with ZNCC/MPS decoder on sinusoids with spatial_freq=1
+%% phase PSNR with ZNCC/MPS decoder on sinusoids (given full res image) with spatial_freq=1
 
 savedir_cur = sprintf('%s/InverseRecontruction',savedir); mkdir(savedir_cur);
 
@@ -37,9 +37,8 @@ savedir_cur = sprintf('%s/InverseRecontruction',savedir); mkdir(savedir_cur);
 spatial_freq = 1;
 [I,P] = ParsaPatternSinusoidsGetStackedIm(hproj,spatial_freq);
 
-
-psnrs.zncc = [];
-psnrs.mps = [];
+zncc.psnrs =[]; zncc.ssims = [];
+mps.psnrs = []; mps.ssims = [];
 Ss = 2:30; Ss = [2:7 12 16 20 24];
 for i = 1:size(Ss,2)
 S = Ss(i);
@@ -49,16 +48,25 @@ P_ = P(:,is);
 I_ = I(:,:,is);
 [phase_zncc,~,~] = DecodeZNCC(I_,P_,Bounds.LB,Bounds.UB);
 [~,~,phase_mps] = DecodePhaseShiftWithDepthBound(I_,W,Bounds.LB,Bounds.UB,hproj,spatial_freq);
-psnrs.zncc = [psnrs.zncc ComputePSNR(gt.phase,phase_zncc)];
-psnrs.mps = [psnrs.mps ComputePSNR(gt.phase,phase_mps)];
+zncc.psnrs = [zncc.psnrs ComputePSNR(gt.phase,phase_zncc)];
+mps.psnrs = [mps.psnrs ComputePSNR(gt.phase,phase_mps)];
+zncc.ssims = [zncc.ssims ComputeSSIM(gt.phase,phase_zncc)];
+mps.ssims = [mps.ssims ComputeSSIM(gt.phase,phase_mps)];
 end
 
-plot(Ss,psnrs.zncc,'-o','LineWidth',3,'MarkerSize',5,'DisplayName','ZNCC'); hold on;
-plot(Ss,psnrs.mps,'-o','LineWidth',3,'MarkerSize',5,'DisplayName','MPS');
+plot(Ss,zncc.psnrs,'-o','LineWidth',3,'MarkerSize',5,'DisplayName','ZNCC'); hold on;
+plot(Ss,mps.psnrs,'--o','LineWidth',3,'MarkerSize',5,'DisplayName','MPS');
 title(sprintf('Phase PSNR vs. Shifts (spatial freqency = %d)',spatial_freq));
-legend;
+legend; grid on;
 hold off;
-saveas(gcf,sprintf('%s/phase_psnr_stackedim_vs_shifts.png',savedir));
+saveas(gcf,sprintf('%s/SinusoidsPhaseUpperBoundPSNR.png',savedir));
+
+plot(Ss,zncc.ssims,'-o','LineWidth',3,'MarkerSize',5,'DisplayName','ZNCC'); hold on;
+plot(Ss,mps.ssims,'--o','LineWidth',3,'MarkerSize',5,'DisplayName','MPS');
+title(sprintf('Phase SSIM vs. Shifts (spatial freqency = %d)',spatial_freq));
+legend; grid on;
+hold off;
+saveas(gcf,sprintf('%s/SinusoidsPhaseUpperBoundSSIM.png',savedir));
 
 
 %% faster denoising step using parfor
@@ -182,36 +190,72 @@ end
 % DeSCI (adaptive rho)                0.010573
 
 
-%% phase PSNR on X reconstructed using ADMM
+%% phase PSNR on X reconstructed using ADMM (varying denoiser/#shifts)
 
 spatial_freq = 1;
-S = 7;
-F = S-1;
+[XX,PP] = ParsaPatternSinusoidsGetStackedIm(hproj,spatial_freq);
+
+clear histories xhats;
+denoiser_types = {'mf','tnrd'};
+Ss = [2:7 12 16 20 24];
+for si = 1:size(Ss,2)
+for di = 1:size(denoiser_types,2)
+S = Ss(si); F = S-1;
+denoiser_type = denoiser_types{di};
+key = sprintf("ADMM_%s_S_%d",upper(denoiser_type),S);
+% parameters for optimization 
 mask_type = "toeplitz";
 M = SubsamplingMask(mask_type,h,w,F);
 W = BucketMultiplexingMatrix(S);
 [A,~,~] = SubsampleMultiplexOperator(S,M);
 Aop  = @(X) reshape(A*X(:),h,w,2);
 ATop = @(Y) reshape(A'*Y(:),h,w,S);
-InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S, ...
-    'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
-SaveIterateDirectory = sprintf('%s/Recon_Sinusoids_S=7_ADMM',savedir);
-params = GetDemosaicDemultiplexParams('SaveIterateDirectory','');
-
-
-[X,P] = ParsaPatternSinusoidsGetStackedIm(hproj,spatial_freq);
+InitEstFunc = InitialEstimateFunc("maxfilter",h,w,F,S,'BucketMultiplexingMatrix',W,'SubsamplingMask',M);
+SaveIterateDirectory = sprintf('%s/SinusoidsNoiseless/%s',savedir,key);
+params = GetDemosaicDemultiplexParams('SaveIterateDirectory',SaveIterateDirectory);
+params.denoiser_type = denoiser_type;
+% simulate missing data
 is = ceil(linspace(1,30*(S-1)/S,S));
-X = X(:,:,is); P = P(:,is);
-
+X = XX(:,:,is); P = PP(:,is);
 Y = Aop(X);
+% admm
 [im_out,history] = ADMM(Y,A,InitEstFunc,params,X);
 [phase,~,~] = DecodeZNCC(im_out,P,Bounds.LB,Bounds.UB);
-ComputePSNR(gt.phase,phase)
+fprintf('Phase SSIM %s:%2.3f\n',upper(denoiser_type),ComputeSSIM(gt.phase,phase));
+histories.(key) = history;
+xhats.(key) = im_out;
+end
+end
+%% Some plotting 
 
-plot(1:params.outer_iters, history.psnrs)
-imshow(FlattenChannels(im_out)/255)
 
+% subplot(1,2,1);
+% plot(1:params.outer_iters, histories.mf.psnrs,'LineWidth',3,'DisplayName','ADMM-MF'); hold on;
+% plot(1:params.outer_iters, histories.tnrd.psnrs,'LineWidth',3,'DisplayName','ADMM-TNRD');
+% legend; hold off;
 
+phases = [];
+Ss = [2:7 12 16 20 24];
+
+for si = 1:size(Ss,2)
+for di = [1,2]    
+S = Ss(si); F = S-1;
+if ~any(S==[3 5 7 14])
+    continue
+end
+denoiser_type = denoiser_types{di};
+key = sprintf("ADMM_%s_S_%d",upper(denoiser_type),S);
+is = ceil(linspace(1,30*(S-1)/S,S)); P = PP(:,is);
+[phase,~,~] = DecodeZNCC(xhats.(key),P,Bounds.LB,Bounds.UB);
+[psnr,ssim] = ComputePSNRSSIM(gt.phase,phase);
+fprintf('%s Phase PSNR/SSIM: %2.3f/%.3f\n',key,psnr,ssim);
+phases = [phases phase];
+% loss curve
+plot(histories.(key).ssims,'DisplayName',strrep(key,'_','-'),'LineWidth',3); hold on;
+end
+end
+legend('Location','southeast');
+% imshow([gt.phase phases]/hproj);
 
 
 %% 
