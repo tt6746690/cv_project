@@ -22,7 +22,7 @@ Instead of treating upsampling (recover $2F$ images $\sI$ from $2$ images $\bY$)
         \frac{1}{2} \norm{\bA\bx-\by}_2^2 + \lambda R(\bx)
     \label{eq:generic_prior_inverse_problem}
 \end{align}
-where $\lambda$ is weight for the regularizer. We solve (\ref{eq:generic_prior_inverse_problem}) using RED \cite{romanoLittleEngineThat2016}. We can specialize the update equations to our problem. First we notice that $\bA\bA^T$ is diagonal when $\bW$ is the optimal bucket multiplexing matrix constructed from Hadamard matrix specified in \cite{weiCodedTwoBucketCameras2018}. The x-update can be simplified  \cite{liuRankMinimizationSnapshot2019} 
+where $\lambda$ is weight for the regularizer. We solve (\ref{eq:generic_prior_inverse_problem}) using RED ADMM \cite{romanoLittleEngineThat2016}. We can specialize the update equations to our problem. First we notice that $\bA\bA^T$ is diagonal when $\bW$ is the optimal bucket multiplexing matrix constructed from Hadamard matrix specified in \cite{weiCodedTwoBucketCameras2018}. The x-update can be simplified  \cite{liuRankMinimizationSnapshot2019} 
 \begin{align}
     \bx^{k+1} 
         = \tilde{\bx} + \bA^T \begin{bmatrix}
@@ -63,9 +63,19 @@ where $\rho$ is the parameter for augmented lagrangian, $\tilde{\bx} = \bz^k - \
         \label{fig:sinusiods_spatial_freq_1_phase_upper_bound_wrt_S}
     \end{center}
 \end{figure}  
- 
+ latex
 
-
+ \begin{table}
+    \centering
+    \begin{tabular}{c|cccccccccc}
+    \hline
+     & S=2 & S=3 & S=4 & S=5 & S=6 & S=7 & S=12 & S=16 & S=20 & S=24 \\
+    ADMM-MF & 1.92/0.436 & 20.44/0.747 & 24.49/0.828 & 25.47/0.832 & 26.35/0.848 & 26.68/0.848 & 27.19/0.861 & 25.71/0.814 & 24.89/0.802 & 23.67/0.787 \\
+    ADMM-TNRD & 1.92/0.436 & 19.13/0.728 & 19.66/0.816 & 20.71/0.812 & 19.35/0.814 & 19.59/0.830 & 21.16/0.856 & 20.00/0.844 & 22.50/0.852 & 23.46/0.845 \\
+    \end{tabular}
+    \caption{MyTableCaption}
+    \label{table:MyTableLabel}
+\end{table}
 
 % \subsection{Solving Inverse Problem using RED}
 

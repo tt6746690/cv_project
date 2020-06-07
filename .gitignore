@@ -13,6 +13,7 @@ data/*
 *.toc
 *.run.xml
 *-blx.bib
+__latexindent_temp.tex
 
 
 *.pyc

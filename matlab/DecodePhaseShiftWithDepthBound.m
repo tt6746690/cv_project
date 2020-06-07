@@ -1,4 +1,4 @@
-function [albedo,wrapped_phase,phase] = DecodePhaseShiftWithDepthBound(X,W,lb,ub,hproj,spatialfrequency,varargin)
+function [albedo,wrapped_phase,phase] = DecodePhaseShiftWithDepthBound(X,lb,ub,hproj,spatialfrequency,varargin)
 %%  Given images under shifted sinusoidal illuminations, 
 %       solves for shape unknowns (albedo, phase)
 %
@@ -13,8 +13,10 @@ function [albedo,wrapped_phase,phase] = DecodePhaseShiftWithDepthBound(X,W,lb,ub
 %       This ordering is not maintanied during image acquisition, so needs to be determined 
 %       experimentally, by brute forcing all circular shifts and find shifts for a specific 
 %       `S` for a fixed scene that has the same disparity map intensity
+%   shift   \in [0,1]^S
 %
-%
+    [h,w,S] = size(X);
+    shifts = ((1:S)-1)/S;
 
     % Map of parameter names to variable names
     params_to_variables = containers.Map( ...
@@ -34,14 +36,10 @@ function [albedo,wrapped_phase,phase] = DecodePhaseShiftWithDepthBound(X,W,lb,ub
         v=v+1;
     end
 
+    shifts = reshape(2*pi*shifts,[],1)
+
     lb = double(lb)*2*pi/hproj;
     ub = double(ub)*2*pi/hproj;
-
-    [h,w,S] = size(X);
-
-    if ~exist('shifts','var')
-        shifts = transpose((0:S-1)*2*pi/S);
-    end
 
     L = [ones(S,1) cos(shifts) -sin(shifts)];
     b = L';

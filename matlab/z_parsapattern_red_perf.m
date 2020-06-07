@@ -308,15 +308,20 @@ end
 
 %% Some plotting 
 
-psnrs = []; ssims = [];
+for di = [1,2]    
+denoiser_type = denoiser_types{di};
+psnrs.(denoiser_type) = [];
+ssims.(denoiser_type) = [];
+end
+
 phases = [];
 Ss = [2:7 12 16 20 24];
 for si = 1:size(Ss,2)
-for di = [1,2]    
+for di = [1 2]    
 S = Ss(si); F = S-1;
-if ~any(S==[12 16 20 24])
-    continue
-end
+% if ~any(S==[12 16 20 24])
+%     continue
+% end
 denoiser_type = denoiser_types{di};
 key = sprintf("ADMM_%s_S_%d",upper(denoiser_type),S);
 % Pattern 
@@ -327,21 +332,86 @@ SaveIterateDirectory = sprintf('%s/Reconstruction/SinusoidsFreq1NoisyInputIm/%s'
 files = dir(sprintf("%s/*.png",SaveIterateDirectory)); last_file_i = size(files,1);
 [fnames,ffolders] = deal({files.name},{files.folder});
 impath = sprintf('%s/%s',ffolders{last_file_i},fnames{last_file_i});
-I = double(imread(impath));
-I = reshape(I,h,w,[]);
+X = double(imread(impath));
+X = reshape(I,h,w,[]);
 % Decoding
-[phase,~,~] = DecodeZNCC(I,P,Bounds.LB,Bounds.UB);
+[phase,~,~] = DecodeZNCC(X,P,Bounds.LB,Bounds.UB);
 [psnr,ssim] = ComputePSNRSSIM(gt.phase,phase);
-
+psnrs.(denoiser_type) = [psnrs.(denoiser_type) psnr];
+ssims.(denoiser_type) = [ssims.(denoiser_type) ssim];
 fprintf('%s Phase PSNR/SSIM: %2.3f/%.3f\n',key,psnr,ssim);
 phases = [phases phase];
 % loss curve
-plot(histories.(key).psnrs,'DisplayName',strrep(key,'_','-'),'LineWidth',3); hold on;
+% plot(histories.(key).psnrs,'DisplayName',strrep(key,'_','-'),'LineWidth',3); hold on;
 end
 end
-legend('Location','southeast');
+% legend('Location','southeast');
 % imshow([gt.phase phases]/hproj);
+%% phase PSNR/SSIM table
 
+% varNames = {}; varTypes = {};
+% for si = 1:size(Ss,2)
+%     S = Ss(si);
+%     varTypes{si} = 'char';
+%     varNames{si} = sprintf('S=%d',S);
+% end
+% colNames = {'ADMM-MF','ADMM-TNRD'};
+% T = table('Size',[2 size(varNames,2)],'VariableTypes',varTypes,...
+%         'VariableNames',varNames,'colNames',colNames);
+%     
+% T(1,:) = arrayfun(@(a,b) sprintf('%2.2f/%.3f',a,b),psnrs.('mf'),ssims.('mf'),'UniformOutput',false);
+% T(2,:) = arrayfun(@(a,b) sprintf('%2.2f/%.3f',a,b),psnrs.('tnrd'),ssims.('tnrd'),'UniformOutput',false);
+
+T = table()
+
+input.data = T;
+input.tableBorders = 0;
+latex = LatexTable(input)
+for i = 1:size(latex,1)
+    fprintf("%s\n",latex{i});
+end
+
+%% See if the image formation model under different illuminations are the same
+
+% denoiser_type = 'tnrd'; S = 7;
+% key = sprintf("ADMM_%s_S_%d",upper(denoiser_type),S);
+% is = ceil(linspace(1,30*(S-1)/S,S));
+% P = PP(:,is);
+% % Last Iterate Image
+% SaveIterateDirectory = sprintf('%s/Reconstruction/SinusoidsFreq1NoisyInputIm/%s',savedir,key);
+% files = dir(sprintf("%s/*.png",SaveIterateDirectory)); last_file_i = size(files,1);
+% [fnames,ffolders] = deal({files.name},{files.folder});
+% impath = sprintf('%s/%s',ffolders{last_file_i},fnames{last_file_i});
+% X = double(imread(impath));
+% X = reshape(X,h,w,[]);
+% % Decoding
+
+S = 7;
+[XX,PP] = ParsaPatternSinusoidsGetStackedIm(hproj,1);
+is = ceil(linspace(1,30*(S-1)/S,S));
+X = XX(:,:,is); P = PP(:,is);
+
+[albedo,~,phase] = DecodePhaseShiftWithDepthBound(X,Bounds.LB,Bounds.UB,hproj,1,'Shifts',(is-1)/30);
+[psnr,ssim] = ComputePSNRSSIM(gt.phase, phase)
+albedo = albedo*1.65;
+
+phase = phase + eps;
+Iq = zeros(h,w,S);
+for i = 1:h
+for j = 1:w
+    Iq(i,j,:) = P(ceil(phase(i,j)),:);
+end
+end
+Xhat = albedo.*Iq;
+
+% Iq \in [0,1] since pattern is in [0,1]
+imshow([albedo/255 disparityFunc(phase)/255]);
+imshow(FlattenChannels(Iq));
+% imshow([FlattenChannels(Xhat)/255; FlattenChannels(X-Xhat)/255]);
+mesh()
+
+fprintf('S=%d Mean X=%2.3f albedo=%2.3f phase=%2.3f xhat=%2.3f\n', ...
+    S,mean(X,'all'),mean(albedo,'all'),mean(phase,'all'),mean(Xhat,'all'));
 
 
 %%
@@ -360,14 +430,14 @@ function [I,P] = ParsaPatternSinusoidsGetStackedIm(hproj,spatial_freq)
     P = 0.5 + 0.5*cos(spatial_freq*(0:hproj-1)'*2*pi/hproj + (shifts-1)*2*pi/30 );
 end
 
-function [I,P] = ParsaPatternGetStackedIm(coding_scheme)
+function [X,P] = ParsaPatternGetStackedIm(coding_scheme)
     % get stackedim and pattern for Hamiltonian/MPS/Optimized-etc.
     imagedir=sprintf('results/reconstruction_parsapattern/%s',coding_scheme);
     files = dir(sprintf("%s/*.png",imagedir));
     [fnames,ffolders] = deal({files.name},{files.folder});
-    K = size(fnames,2); I = [];
+    K = size(fnames,2); X = [];
     for k = 1:K
-        I = cat(3,I,double(imread(sprintf('%s/%s',ffolders{k},fnames{k}))));
+        X = cat(3,X,double(imread(sprintf('%s/%s',ffolders{k},fnames{k}))));
     end
 
     if strcmp(coding_scheme,'Hamiltonian')
@@ -380,9 +450,9 @@ function [I,P] = ParsaPatternGetStackedIm(coding_scheme)
 end
 
 
-function [I,P] = ParsaPatternSinusoidsGetNoisyIm(freq_and_shifts,noisy_input_im_index,blacklvl,hproj,cx,cy)
+function [X,P] = ParsaPatternSinusoidsGetNoisyIm(freq_and_shifts,noisy_input_im_index,blacklvl,hproj,cx,cy)
     n_ims = size(freq_and_shifts,1);
-    I = [];
+    X = [];
 
     for i = 1:n_ims
     spatial_freq = freq_and_shifts(i,1);
@@ -404,7 +474,7 @@ function [I,P] = ParsaPatternSinusoidsGetNoisyIm(freq_and_shifts,noisy_input_im_
     impath = sprintf('%s/%s',ffolders{noisy_input_im_index},fnames{noisy_input_im_index});
     im = double(BlackLevelRead(impath,blacklvl,1));  % note all light go to bkt-1
     im = im(cx,cy);
-    I = cat(3,I,im);
+    X = cat(3,X,im);
     end
 
     P = zeros(hproj,n_ims);
@@ -414,4 +484,6 @@ function [I,P] = ParsaPatternSinusoidsGetNoisyIm(freq_and_shifts,noisy_input_im_
     P(:,i) = 0.5 + 0.5*cos(spatial_freq*(0:hproj-1)'*2*pi/hproj + (shift-1)*2*pi/30 );
     end
 end
+
+
 
