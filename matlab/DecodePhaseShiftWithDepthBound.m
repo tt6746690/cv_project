@@ -1,4 +1,4 @@
-function [albedo,wrapped_phase,phase] = DecodePhaseShiftWithDepthBound(X,lb,ub,hproj,spatialfrequency,varargin)
+function [albedo,wrapped_phase,phase,ambient_ilumination] = DecodePhaseShiftWithDepthBound(X,lb,ub,hproj,spatialfrequency,varargin)
 %%  Given images under shifted sinusoidal illuminations, 
 %       solves for shape unknowns (albedo, phase)
 %
@@ -49,14 +49,17 @@ function [albedo,wrapped_phase,phase] = DecodePhaseShiftWithDepthBound(X,lb,ub,h
     U = A/(L');
     % albedo
     albedo = sqrt(sum(U(:,2:3).^2,2));
+    % ambient illumination
+    ambient_ilumination = U(:,1);
     % phase \in [0,pi]
     phase = acos(U(:,2)./(albedo+(albedo==0)));
     % phase \in [pi,2pi]
     phase = sign(U(:,3)).*phase;
     phase = mod(real(phase),2*pi);
-
-    [wrapped_phase,albedo] = deal(reshape(phase,h,w),reshape(albedo,h,w));
-
+    % reshape back to im
+    wrapped_phase = reshape(phase,h,w);
+    albedo = reshape(albedo,h,w);
+    ambient_ilumination = reshape(ambient_ilumination,h,w);
     % phase unwrapping via depth bound \to [0,2pi]
     phase = refinePhaseUsingDisparityBound(wrapped_phase,spatialfrequency,lb,ub);
     % \to [0,hproj-1] in pixel space

@@ -416,74 +416,8 @@ fprintf('S=%d Mean X=%2.3f albedo=%2.3f phase=%2.3f xhat=%2.3f\n', ...
 
 %%
 
-function [I,P] = ParsaPatternSinusoidsGetStackedIm(hproj,spatial_freq)
-    % get stackedim and pattern for sinusoidal coding scheme
-    imagedir=sprintf('results/reconstruction_parsapattern/Sinusoids/Freq%02d',spatial_freq);
-    files = dir(sprintf("%s/*.png",imagedir));
-    [fnames,ffolders] = deal({files.name},{files.folder});
-    K = size(fnames,2);
-    I = [];
-    for k = 1:K
-        I = cat(3,I,double(imread(sprintf('%s/%s',ffolders{k},fnames{k}))));
-    end
-    shifts = 1:30;
-    P = 0.5 + 0.5*cos(spatial_freq*(0:hproj-1)'*2*pi/hproj + (shifts-1)*2*pi/30 );
-end
-
-function [X,P] = ParsaPatternGetStackedIm(coding_scheme)
-    % get stackedim and pattern for Hamiltonian/MPS/Optimized-etc.
-    imagedir=sprintf('results/reconstruction_parsapattern/%s',coding_scheme);
-    files = dir(sprintf("%s/*.png",imagedir));
-    [fnames,ffolders] = deal({files.name},{files.folder});
-    K = size(fnames,2); X = [];
-    for k = 1:K
-        X = cat(3,X,double(imread(sprintf('%s/%s',ffolders{k},fnames{k}))));
-    end
-
-    if strcmp(coding_scheme,'Hamiltonian')
-        PatternMatrix = load('./data/ParsaPatterns/Hamiltonian/Pi_Ham_608_7_1.mat');
-        P = PatternMatrix.Pi';
-    else
-        PatternMatrix = load('./data/ParsaPatterns/MPS/PatternMat.mat');
-        P = PatternMatrix.patternMatrix;
-    end
-end
 
 
-function [X,P] = ParsaPatternSinusoidsGetNoisyIm(freq_and_shifts,noisy_input_im_index,blacklvl,hproj,cx,cy)
-    n_ims = size(freq_and_shifts,1);
-    X = [];
-
-    for i = 1:n_ims
-    spatial_freq = freq_and_shifts(i,1);
-    shift = freq_and_shifts(i,2);
-    if spatial_freq == 5 && shift == 16
-        error('Missing Data');
-    end
-
-    if spatial_freq == 1
-    imagedir = sprintf('data/ParsaPatterns/Sinusoids/Freq%02d/Shift%02d', ...
-            spatial_freq, shift-1);
-    else
-    imagedir = sprintf('data/ParsaPatterns/Sinusoids/Freq%02d/P%d', ...
-            spatial_freq, shift);
-    end
-
-    files = dir(sprintf("%s/bucket1*.png",imagedir));
-    [fnames,ffolders] = deal({files.name},{files.folder});
-    impath = sprintf('%s/%s',ffolders{noisy_input_im_index},fnames{noisy_input_im_index});
-    im = double(BlackLevelRead(impath,blacklvl,1));  % note all light go to bkt-1
-    im = im(cx,cy);
-    X = cat(3,X,im);
-    end
-
-    P = zeros(hproj,n_ims);
-    for i = 1:n_ims
-    spatial_freq = freq_and_shifts(i,1);
-    shift = freq_and_shifts(i,2);
-    P(:,i) = 0.5 + 0.5*cos(spatial_freq*(0:hproj-1)'*2*pi/hproj + (shift-1)*2*pi/30 );
-    end
-end
 
 
 
