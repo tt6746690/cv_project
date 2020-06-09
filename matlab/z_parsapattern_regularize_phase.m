@@ -60,7 +60,7 @@ mesh(FlattenChannels(Xhat-X));
 % alphas(I)
 
 %% 
-lambda = h;
+lambda = 100;
 h_= h; w_ = w;
 npixels = h_*w_;
 
@@ -75,8 +75,7 @@ G = [Gx;Gy];
 lb = zeros(npixels,1);
 ub = lb + 1;
 z0 = (lb+ub)/2+0.1*(rand(size(lb)));
-z0 = zt + 0.1*rand(size(lb));
-z0 = zt;
+% z0 = zt + 0.1*rand(size(lb));
 
 % [0,1] -> \R^S
 I = @(z) 0.5 + 0.5*cos(spatial_freq*2*pi*z + (is-1)*2*pi/30 );
@@ -88,7 +87,7 @@ f1 = @(z) sum(arrayfun(@(p) f1p(z,p),1:npixels));
 f2 = @(z) lambda*norm(G*z,1);
 f = @(z) f1(z) + f2(z);
 % gradient 
-g1p = @(z,p) 2*sum( (X_(p,:) - albedo(p)*I(z(p)) - b(p)).*Igrad(z(p)),2 );
+g1p = @(z,p) -2*albedo(p)*sum( (X_(p,:) - albedo(p)*I(z(p)) - b(p)).*Igrad(z(p)),2 );
 g1 = @(z) arrayfun(@(p) g1p(z,p),1:npixels);
 g2 = @(z) lambda*G'*sign(G*z);
 g = @(z) g1(z) + g2(z);
@@ -96,7 +95,7 @@ g = @(z) g1(z) + g2(z);
 
 options = optimoptions('fmincon','Diagnostics','on','Display',...
     'iter-detailed','MaxIterations',100,'Algorithm','interior-point',...
-    'HessianApproximation','lbfgs','SpecifyObjectiveGradient',false,...
+    'HessianApproximation','lbfgs','SpecifyObjectiveGradient',true,...
     'PlotFcn','optimplotfval','OutputFcn',@outfun,'MaxFunctionEvaluations',100000);
 % funcon on P pixels too high dimensional to do effective optimization
 % [z,fval,exitflag,output,~,~,~] = fmincon(@(z) problem(z,f1,g1),z0,[],[],[],[],lb,ub,'',options);
@@ -110,7 +109,7 @@ options = optimoptions('fmincon','Diagnostics','on','Display',...
 
 
 imshow([reshape(zt,h_,w_) reshape(z0,h_,w_) reshape(z,h_,w_) ...
-    mat2gray(reshape(ggrad,h_,w_)) mat2gray(reshape(g1(z),h_,w_)) mat2gray(reshape(g2(z),h_,w_)) ]);
+    mat2gray(reshape(g1(z),h_,w_)) mat2gray(reshape(g2(z),h_,w_)) ]);
 norm(g1(z)),norm(g2(z))
 
 function [fz,gz] = problem(z,f,g)
@@ -126,7 +125,7 @@ stop = false;
        case 'init'
            hold on
        case 'iter'
-%            imshow([reshape(x,160,238)]);
+           imshow([reshape(x,160,238)]);
 % 
 %            % Concatenate current point and objective function
 %            % value with history. x must be a row vector.
