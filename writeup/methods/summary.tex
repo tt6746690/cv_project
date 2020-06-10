@@ -138,12 +138,12 @@ Without assumption of coordinate-wise convexity of $\bl$, the objective function
 where (\ref{eq:tv_regularized_ls_for_solving_correspondence_altmin_1}) can be solved with any sparse linear solver, and (\ref{eq:tv_regularized_ls_for_solving_correspondence_altmin_2}) can be solved using some nonlinear solver such as lbfgs as it emits computable sub-gradients 
 \begin{align}
      -\sum_{s=1}^S 
-            \left( \si^p - \ba^p \bl_s(\bz^p) - \bb^p \right) \ba^p \frac{d}{dz} \bl_s(\bz^p)
+            \left( \si^p - \ba^p \bl_s(\bz^p) - \bb^p \right) \ba^p g_s(\bz^p)
             + \lambda \left( \bG^T \textsf{sgn}\left( \bG \bz \right) \right)_p
         \in \partial_{\bz^p}(\cdot)
     \label{eq:tv_regularized_ls_for_solving_correspondence_altmin_1_gradient}
 \end{align}
-In case when $\bl$ is coordinate-wise convex, the objective for (\ref{eq:tv_regularized_ls_for_solving_correspondence}) is a bi-convex problem, which enjoys certain conergence properties. Optimizing multi-convex function has been explored in applications such as time-of-flight reconstruction \cite{heideNonlineofsightImagingPartial2017}.
+where $g_s(\bz^p) \in \partial_{z}\bl_s(\bz^p)$. In case when $\bl$ is coordinate-wise convex, the objective for (\ref{eq:tv_regularized_ls_for_solving_correspondence}) is a bi-convex problem, which enjoys certain conergence properties. Optimizing multi-convex function has been explored in applications such as time-of-flight reconstruction \cite{heideNonlineofsightImagingPartial2017}.
  
 
 
