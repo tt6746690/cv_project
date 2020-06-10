@@ -127,6 +127,7 @@ npixels = h_*w_;
 
 toim = @(x) reshape(x,h_,w_);
 
+phase = 0.1+0.8*rand(h*w,1)*hproj;
 zt = phase(1:npixels)'/hproj;
 X_ = reshape(X,[],S);
 [Gx,Gy] = ImGrad([h_ w_]);
@@ -161,6 +162,11 @@ g1 = @(z) arrayfun(@(p) g1p(z,p),1:npixels);
 g2 = @(z) lambda*G'*sign(G*z);
 g = @(z) g1(z) + g2(z);
 
+% convexity of per-pixel function of f1
+z = 0.1+0.8*rand(h*w,1);
+p=500; ep = zeros(size(z)); ep(p) = 1; z(p)=0; ys = arrayfun(@(mult) f1(z+mult*ep),0.1:0.02:0.9); plot(ys)
+
+%%
 
 options = optimoptions('fmincon','Diagnostics','on','Display',...
     'iter-detailed','MaxIterations',100,'Algorithm','interior-point',...

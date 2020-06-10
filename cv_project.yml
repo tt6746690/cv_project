@@ -8,3 +8,4 @@ dependencies:
     - nb_conda
     - pyyaml
     - scipy
+    - graphviz
