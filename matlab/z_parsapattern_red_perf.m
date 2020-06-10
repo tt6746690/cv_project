@@ -416,8 +416,3 @@ fprintf('S=%d Mean X=%2.3f albedo=%2.3f phase=%2.3f xhat=%2.3f\n', ...
 
 %%
 
-
-
-
-
-

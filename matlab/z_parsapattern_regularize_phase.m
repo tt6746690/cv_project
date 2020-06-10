@@ -27,17 +27,24 @@ disparityFunc = @(corres) double(corres)-2.35*Y;
 CorrectPhase = @(phase) 0.89*phase - 0.5;
 Load = load(sprintf('%s/GroundTruthPhaseDisparity.mat', savedir));
 gt = Load.GroundTruth;
+noisy_input_im_index = 1;
 
 %% Given groundtruth albedo / ambient illumination, find phase 
 
+% sinusoids 
 spatial_freq = 2;
-S = 7;
-% [XX,PP] = ParsaPatternSinusoidsGetStackedIm(hproj,spatial_freq);
+S = 24;
 is = ceil(linspace(1,30*(S-1)/S,S));
-freq_and_shifts = [repmat([1],7,1) is'];
-S = 7;
+freq_and_shifts = [repmat([1],S,1) is'];
 [XX,PP] = ParsaPatternSinusoidsGetNoisyIm(freq_and_shifts,1,blacklvl,hproj,cx,cy);
 X = XX; P = PP;
+
+% hamiltonian 
+S = 7;
+coding_scheme = 'Hamiltonian';
+[X,P] = ParsaPatternGetNoisyIm(coding_scheme,noisy_input_im_index,blacklvl,hproj,cx,cy);
+LinInterp = @(x,y,c) (1-c).*x + c.*y;
+[psnr,ssim] = ComputePSNRSSIM(gt.phase, DecodeZNCC(X,P,Bounds.LB,Bounds.UB))  
 
 %%
 % parameters for optimization 
@@ -59,23 +66,43 @@ Y = Aop(X);
 [im_out,history] = ADMM(Y,A,InitEstFunc,params,X);
 [phase,~,~] = DecodeZNCC(im_out,P,Bounds.LB,Bounds.UB);
 [psnr,ssim] = ComputePSNRSSIM(gt.phase, phase)  
+[psnr,ssim] = ComputePSNRSSIM(gt.phase, Denoiser(phase,5,'mf'))
+
+imshow([disparityFunc( phase  ) disparityFunc( Denoiser(phase,5,'mf')  )]/255)
+
 %%
-
-% X = XX(:,:,is); P = PP(:,is);
-
-% [albedo,~,phase,b] = DecodePhaseShiftWithDepthBound(X,Bounds.LB,Bounds.UB,hproj,1,'Shifts',(is-1)/30);
-[phase,~,~] = DecodeZNCC(X,P,Bounds.LB,Bounds.UB);
-[psnr,ssim] = ComputePSNRSSIM(gt.phase, phase)  
-
 % freq=1,S=7,noisy im           26.8787, 0.864
 % freq=1,S=7,reconstructed im   19.4505, 0.8396
+% freq=1,S=7,denoised           20.9802, 0.8827 *
 % freq=1,S=7,finetune phase     20.1797, 0.8581
 % freq=1,S=7,denoise phase      21.8536, 0.9218
 % after readjust for albedo     ~       ,0.8979
 % freq=1,S=7,denoise again      22.0902, 0.9236
 % after readjust for albedo     20.7488, 0.8578
-% freq=1,S=7,denoise again      22.4455, 0.9239
+% freq=1,S=7,denoise again      22.4455, 0.9239 *
+%                               +1.46    +0.041
 
+% freq=1,S=24
+% noisy im (gt)                 29.0545  0.9096
+% reconstructed                 23.4951  0.8476
+% denoised                      23.7977  0.8584 *
+% finetune phase                25.7843  0.9062
+% denoised                      26.7942  0.9405
+% adjust for albedo
+% finetune phase                25.9786  0.9079
+% denoised                      26.8550  0.9430
+%                               +3.057   +0.0846 *
+
+% S=7, Hamiltonian              
+% noisy im (gt)                 15.4316  0.8655
+% reconstructed                 14.4423  0.7912
+% denoised                      15.1446  0.8373
+%
+
+% should be even better if evaluate l2 loss in c2b 2 image domain, not in
+%     reconstructed domain ... 
+% what pattern to use should not be of too much concern, even if the method
+%     works with sinusoids with f=1, would still be useful potentially
 
 % 21.8861, 0.6588
 %
@@ -93,15 +120,8 @@ Xhat = albedo.*Iz;
 mesh(FlattenChannels(Xhat-X));
 imshow([10*albedo/255 disparityFunc(phase)/255 b/255]);
 
-% multiply albedo by 1.74
-% b = zeros(h,w);
-% alphas = 0:0.02:5;
-% err = arrayfun(@(alpha) norm(FlattenChannels((alpha*albedo).*Iq + b - X)), alphas);
-% [M,I] = min(err)
-% alphas(I)
-
 %% 
-lambda = 1000;
+lambda = 0;
 h_= h; w_ = w;
 npixels = h_*w_;
 
@@ -112,18 +132,23 @@ X_ = reshape(X,[],S);
 [Gx,Gy] = ImGrad([h_ w_]);
 G = [Gx;Gy];
 
-lb = zeros(npixels,1);
-ub = lb + 1;
+lb = zeros(npixels,1) + 1/hproj;
+ub = ones(npixels,1) - 1/hproj;
 z0 = (lb+ub)/2+0.1*(rand(size(lb)));
 % z0 = (lb+ub)/2;
-z0 = 0.5+0.5*rand(size(lb));
+z0 = 0.5*rand(size(lb));
+%z0 = 0.5+0.5*rand(size(lb));
 z0 = reshape(phase,h*w,1)/hproj;
 %z0 = z;
 %z0 = zt + 0.1*rand(size(lb));
 
 % [0,1] -> \R^S
+% sinusoids
 I = @(z) 0.5 + 0.5*cos(2*pi*freq_and_shifts(:,1)'.*z + (freq_and_shifts(:,2)'-1)*2*pi/30 );
 Igrad = @(z) -spatial_freq*pi*sin(2*pi*freq_and_shifts(:,1)'.*z + (freq_and_shifts(:,2)'-1)*2*pi/30 );
+% Hamiltonian
+I = @(z) LinInterp(P(floor(z*hproj),:), P(ceil(z*hproj),:), mod(z*hproj,1));
+Igrad = @(z) (I(z)>0 & I(z)<1)*(2^S-2)/hproj;
 % l2 norm at pixel p \in 1,2,...,h*w
 f1p = @(z,p) norm(X_(p,:) - albedo(p)*I(z(p)) - b(p)*ones(1,S));
 % regularized objective 
@@ -164,6 +189,23 @@ M = [
     spdiags([Iz(:,5)],0,h*w,h*w) speye(h*w);
     spdiags([Iz(:,6)],0,h*w,h*w) speye(h*w);
     spdiags([Iz(:,7)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,8)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,9)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,10)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,11)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,12)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,13)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,14)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,15)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,16)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,17)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,18)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,19)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,20)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,21)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,22)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,23)],0,h*w,h*w) speye(h*w);
+    spdiags([Iz(:,24)],0,h*w,h*w) speye(h*w);
     ];
 
 ab = M\X(:);

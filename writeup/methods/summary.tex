@@ -15,11 +15,11 @@ One approach which we can consider involves the following steps
     \item Recover full resolution images $\bX$ under $S$ illuminations from $\bY$ by solving a linear inverse problem
     \item use $\bX$ to solve for phase and albedo using ZNCC decoding \cite{mirdehghanOptimalStructuredLight2018}
 \end{enumerate}
-Instead of treating upsampling (recover $2F$ images $\sI$ from $2$ images $\bY$) and demultiplexing (recover $S$ images $\bX$ from $2F$ images $\sI$) as distinct steps, we aim to recover $\bX$ directy from $\bY$, in a single step, by solving a linear inverse problem. Jointly upsample and demultiplex enforces a prior knowledge of image formation and reduces accumulation of error at each image processing step \cite{heideFlexISPFlexibleCamera2014}. This approach allows encoding arbitrary subsampling schemes in the forward operator and can be adapted to any frame number $F$. Assuming an isotropic Gaussian noise model ($\by=\bA\bx + \be$ where $\be\sim \sN(0,\sigma^2 \bI)$), and prior $p_{\rx}(x) \propto \exp\pc{- (\lambda/\sigma^2) R(\bx) }$ where $R:\R^{SP}\to\R$ is some regularizer for $\bx$. Given noisy measurement $\by$, \textit{max a posterior} estimate $\hat{\bx}$ can be obtained by solving the following
+Instead of treating upsampling (recover $2F$ images $\sI$ from $2$ images $\bY$) and demultiplexing (recover $S$ images $\bX$ from $2F$ images $\sI$) as distinct steps, we aim to recover $\bX$ directy from $\bY$, in a single step, by solving a linear inverse problem. Jointly upsample and demultiplex enforces a prior knowledge of image formation and reduces accumulation of error at each image processing step \cite{heideFlexISPFlexibleCamera2014}. This approach allows encoding arbitrary subsampling schemes in the forward operator and can be adapted to any frame number $F$. Assuming an isotropic Gaussian noise model ($\by=\bA\bx + \be$ where $\be\sim \sN(0,\sigma^2 \bI)$), and prior $p_{\rx}(x) \propto \exp\pc{- (\lambda/\sigma^2) \Gamma(\bx) }$ where $\Gamma:\R^{SP}\to\R$ is some regularizer for $\bx$. Given noisy measurement $\by$, \textit{max a posterior} estimate $\hat{\bx}$ can be obtained by solving the following
 \begin{align}
     \hat{\bx}(\by)
         = \argmin_{\bx}
-        \frac{1}{2} \norm{\bA\bx-\by}_2^2 + \lambda R(\bx)
+        \frac{1}{2} \norm{\bA\bx-\by}_2^2 + \lambda \Gamma(\bx)
     \label{eq:generic_prior_inverse_problem}
 \end{align}
 where $\lambda$ is weight for the regularizer. We solve (\ref{eq:generic_prior_inverse_problem}) using PnP/RED \cite{venkatakrishnanPlugandPlayPriorsModel2013,romanoLittleEngineThat2016}, which use denoisers in place of a proximal operator under a ADMM style updates. We can specialize the update equations to our problem. First we notice that $\bA\bA^T$ is diagonal when $\bW$ is the optimal bucket multiplexing matrix constructed from Hadamard matrix specified in \cite{weiCodedTwoBucketCameras2018}. The x-update can be simplified  \cite{liuRankMinimizationSnapshot2019} 
@@ -63,7 +63,7 @@ where $\rho$ is the parameter for augmented lagrangian, $\tilde{\bx} = \bz^k - \
         \label{fig:sinusiods_spatial_freq_1_phase_upper_bound_wrt_S}
     \end{center}
 \end{figure}  
- latex
+ 
 
  \begin{table}
     \centering

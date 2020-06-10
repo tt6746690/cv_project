@@ -29,11 +29,11 @@ function [Xhat,history] = ADMM(Y,A,InitEstFunc,params,orig_im)
         mkdir(save_iterates);
     end
 
-    x_est = InitEstFunc(Y);
-    z_est = x_est;
-    u_est = zeros(size(x_est));
+    x = InitEstFunc(Y);
+    z = x;
+    u = zeros(size(x));
 
-    [h,w,S] = size(x_est);
+    [h,w,S] = size(x);
     ToIm = @(x) reshape(x,h,w,[]);
     
     % precomputation for x-update
@@ -52,20 +52,20 @@ function [Xhat,history] = ADMM(Y,A,InitEstFunc,params,orig_im)
     
     for k = 1:outer_iters
 
-        x_old = x_est;
-        z_old = z_est;
-        u_old = u_est;
+        x_old = x;
+        z_old = z;
+        u_old = u;
 
         % primal x update
 
         if x_update_fast
-            x_est = z_est-u_est;
-            x_est = x_est(:) + A'*( (Y(:) - A*x_est(:))./(zeta+rho) );
-            x_est = ToIm( Clip(x_est,0,255) );
+            x = z-u;
+            x = x(:) + A'*( (Y(:) - A*x(:))./(zeta+rho) );
+            x = ToIm( Clip(x,0,255) );
         else
-            x_est = ToIm(A'*Y(:))+rho*(z_est-u_est);
-            x_est = R\(R'\(x_est(:)));
-            x_est = ToIm( Clip(x_est,0,255) );
+            x = ToIm(A'*Y(:))+rho*(z-u);
+            x = R\(R'\(x(:)));
+            x = ToIm( Clip(x,0,255) );
         end
 
 
@@ -74,38 +74,38 @@ function [Xhat,history] = ADMM(Y,A,InitEstFunc,params,orig_im)
         switch z_update_method
         case "fixed_point"
             for j = 1:1:inner_denoiser_iters
-                denoised_z_est = Denoiser(z_est,effective_sigma,denoiser_type);
-                z_est = (rho*(x_est+u_est) + lambda*denoised_z_est)/(lambda + rho);
+                denoised_z = Denoiser(z,effective_sigma,denoiser_type);
+                z = (rho*(x+u) + lambda*denoised_z)/(lambda + rho);
             end
         case "denoiser"
-            z_est = Denoiser(x_est+u_est,lambda/rho,denoiser_type);
+            z = Denoiser(x+u,lambda/rho,denoiser_type);
         otherwise
             warning("v-update method not correct");
         end
     
         % scaled dual u update
         
-        u_est = u_est + x_est - z_est;
+        u = u + x - z;
         
         % print/save
         
         if compute_psnr_ssim
-            [psnr,ssim] = ComputePSNRSSIM(orig_im, x_est);
+            [psnr,ssim] = ComputePSNRSSIM(orig_im, x);
             history.psnrs = [history.psnrs psnr];
             history.ssims = [history.ssims ssim];
             if verbose && (mod(k,floor(outer_iters/10)) == 0 || k == outer_iters)
                 fprintf('ADMM-%s (k=%3d) sigma:%.1f\t PSNR/SSIM: %2.2f/%.4f\n',...
                     upper(denoiser_type),k,effective_sigma,psnr,ssim);
-                % imshow(mat2gray(FlattenChannels(orig_im,x_est,z_est,u_est)));
+                % imshow(mat2gray(FlattenChannels(orig_im,x,z,u)));
             end
             
             if ~strcmp(save_iterates,'')
-                imwrite(uint8(FlattenChannels(x_est)),...
+                imwrite(uint8(FlattenChannels(x)),...
                     sprintf('%s/Iter=%03d_PSNR=%2.2f_SSIM=%.4f.png',...
                         save_iterates,k,psnr,ssim));
             end
         end
     end
     
-    Xhat = Clip(x_est,0,255);
+    Xhat = Clip(x,0,255);
 end
