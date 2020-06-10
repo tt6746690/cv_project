@@ -20,8 +20,7 @@ Instead of treating upsampling (recover $2F$ images $\sI$ from $2$ images $\bY$)
 \paragraph{MAP Inference with Implicit Regularizer}
 Assuming an isotropic Gaussian noise model ($\by=\bA\bx + \be$ where $\be\sim \sN(0,\sigma^2 \bI)$), and prior $p_{\rx}(x) \propto \exp\pc{- (\lambda/\sigma^2) \Gamma(\bx) }$ where $\Gamma:\R^{SP}\to\R$ is some regularizer for $\bx$. Given noisy measurement $\by$, \textit{max a posterior} estimate $\hat{\bx}$ can be obtained by solving the following
 \begin{align}
-    \hat{\bx}(\by)
-        = \argmin_{\bx}
+    \text{minimize}_{\bx}\;\;
         \frac{1}{2} \norm{\bA\bx-\by}_2^2 + \lambda \Gamma(\bx)
     \label{eq:generic_prior_inverse_problem}
 \end{align}
@@ -77,7 +76,6 @@ Note this method is general enough to allow for both multispectral imaging, stru
         \label{fig:draw_phase_signal_image_formation_model}
     \end{center}
 \end{figure}  
-
 In applications where we are purely interested in structured light reconstruction. There are artifacts associated with spatial subsampling when number of illuminated patterns gets larger. Here we exploit a simple image formation model under active illumination to refine correspondence.
 
 \paragraph{Image Formation Under Active Illumination}
@@ -90,7 +88,7 @@ Let $\ba \in \R_+^{P}$ be albedo, $\bb\in\R_+^P$ be ambient illumination, $\bz\i
         p = 1,2,\cdots,P
     \label{eq:per_pixel_image_formation_patterned_image}
 \end{align}
-where $\bl:[0,1]\to [0,1]^S$ where $\bl(z) = (\bl_1(z),\cdots,\bl_S(z))$ is vector valued function that specifies illumination condition at a particular projector index. Note the relationship in (\ref{eq:per_pixel_image_formation_patterned_image}) is nonlinear and nonconvex, due to coupling of albedo and illumination conditions. Given $\bz$, the relationship becomes linear
+where $\bl:[0,1]\to [0,1]^S$ where $\bl(z) = (\bl_1(z),\cdots,\bl_S(z))$ is vector valued function that specifies illumination condition at a particular projector index $z$, normalized to lie in $[0,1]$. Note the relationship in (\ref{eq:per_pixel_image_formation_patterned_image}) is nonlinear and nonconvex, due to coupling of albedo and illumination conditions. Given $\bz$, the relationship becomes linear
 \begin{align}
     \vec{\bX^T}
         =
@@ -100,18 +98,16 @@ where $\bl:[0,1]\to [0,1]^S$ where $\bl(z) = (\bl_1(z),\cdots,\bl_S(z))$ is vect
         \si^P \\
     \end{bmatrix}
         =
-            \underbrace{
-                \begin{bmatrix}
-                    \diag \bl(\bz^1) & \bI \\ 
-                    \vdots & \vdots \\ 
-                    \diag \bl(\bz^P) & \bI \\
-                \end{bmatrix}
-            }_{\bM}
-            \underbrace{
-                \begin{bmatrix}
-                    \ba \\ \bb 
-                \end{bmatrix}
-            }_{\bv}
+        \underbrace{
+            \begin{bmatrix}
+                \diag \bl(\bz^1) & \bI \\ 
+                \vdots & \vdots \\ 
+                \diag \bl(\bz^P) & \bI \\
+            \end{bmatrix}
+        }_{\bM}
+        \begin{bmatrix}
+            \ba \\ \bb 
+        \end{bmatrix}
     \label{eq:per_pixel_image_formation_patterned_image_given_correspondence}
 \end{align}
 
@@ -120,20 +116,20 @@ where $\bl:[0,1]\to [0,1]^S$ where $\bl(z) = (\bl_1(z),\cdots,\bl_S(z))$ is vect
 For arbitrary patterns, the MAP estimate of a discrete set of correspondences is very hard, as it involves a combinatorial problem over a very high dimensional space, in particular $L^P$ possible combinations.
 \begin{align}
     \hat{\ba},\hat{\bb},\hat{\bz}
-        = \argmax_{a\R_+^P,b\in\R_+^P,z\in \pb{L}^P} p_{\ra,\rb,\rz|\rx}(a,b,z|x)
-        = \argmin_{a\in\R_+^P,b\in\R_+^P,z\in \pb{L}^P} p_{\rz|\ra,\rb,\rz}(x|a,b,z) p_{\ra}(a) p_{\rb}(b) p_{\rz}(z)
+        = \argmax_{a,b,z} p_{\ra,\rb,\rz|\rx}(a,b,z|x)
+        = \argmin_{z,b,z} p_{\rz|\ra,\rb,\rz}(x|a,b,z) p_{\ra}(a) p_{\rb}(b) p_{\rz}(z)
     \label{eq:map_inference_of_correspondence_is_hard}
 \end{align}
 For convenience of optimization, we assume $\bl$ be a coordinate-wise continuous function, and we are interested in finding correspondence in the real numbers. A similar bayesian setup for solving depth and albedo is detailed in \cite{adamBayesianTimeofFlightRealtime2015}. Assumption of Gaussian noise in (\ref{eq:per_pixel_image_formation_patterned_image}) and uniform prior for $\ba,\bb$ and $p_{\rz}(z)\propto \exp\pc{ - (\lambda/\sigma_{\epsilon}^2) \norm{\bG \bz}_1 }$ ($\bG=[\bG_x;\bG_y]\in \R^{2P\times P}$ are the differencing matrix for computing total variation norm) yield the following optimization problem
 \begin{align}
-    \underset{ \ba\R_+^P,\bb\in\R_+^P,\bz\in [0,1]^P }{\text{minimize}}\;\;
+    \underset{ \ba\in\R_+^P,\bb\in\R_+^P,\bz\in [0,1]^P }{\text{minimize}}\;\;
         \frac{1}{2} \sum_{ p=1 }^P \norm{ \si^p - \ba^p \bl(\bz^p) - \bb^p }_2^2 + \lambda \norm{\bG \bz}_1
     \label{eq:tv_regularized_ls_for_solving_correspondence}
 \end{align}
 Without assumption of coordinate-wise convexity of $\bl$, the objective function is subject to bad local minimas. Idea is to seed the nonlinear optimization procedure with ZNCC decoding of $\bx$ solved by (\ref{eq:red_admm_update_equations_fast_x_update}) and hope that this refinement will get us to the destination. To make optimization easier (\ref{eq:tv_regularized_ls_for_solving_correspondence}), similar to \cite{rosmanSparseModelingShape2012}, we use block coordinate descent to optimize for $\ba,\bb$ and $\bz$ in an alternating fashion,
 \begin{align}
     \ba^{k+1},\bb^{k+1}
-        &= \argmin_{\bv} \norm{ \bM\bv - \vec{\bX^T} }_2^2 
+        &= \argmin_{\ba\in\R_+^P,\bb\in\R_+^P} \norm{ \bM\pb{\ba;\bb}^T - \vec{\bX^T} }_2^2 
     \label{eq:tv_regularized_ls_for_solving_correspondence_altmin_1} \\
     \bz^{k+1}
         &= \argmin_{\bz\in[0,1]^P} \frac{1}{2} \sum_{ p=1 }^P \norm{ \si^p - \ba^p \bl(\bz^p) - \bb^p }_2^2 + \lambda \norm{\bG \bz}_1 
@@ -141,13 +137,13 @@ Without assumption of coordinate-wise convexity of $\bl$, the objective function
 \end{align}
 where (\ref{eq:tv_regularized_ls_for_solving_correspondence_altmin_1}) can be solved with any sparse linear solver, and (\ref{eq:tv_regularized_ls_for_solving_correspondence_altmin_2}) can be solved using some nonlinear solver such as lbfgs as it emits computable sub-gradients 
 \begin{align}
-    \frac{\partial}{\partial \bz} \left(\cdot\right)
-        = \sum_{p=1}^P \sum_{s=1}^S 
+     -\sum_{s=1}^S 
             \left( \si^p - \ba^p \bl_s(\bz^p) - \bb^p \right) \ba^p \frac{d}{dz} \bl_s(\bz^p)
-            + \lambda \bG^T \textsf{sgn}\left( \bG \bz \right)
+            + \lambda \left( \bG^T \textsf{sgn}\left( \bG \bz \right) \right)_p
+        \in \partial_{\bz^p}(\cdot)
     \label{eq:tv_regularized_ls_for_solving_correspondence_altmin_1_gradient}
 \end{align}
-In case when $\bl$ is coordinate-wise convex, the objective for (\ref{eq:tv_regularized_ls_for_solving_correspondence}) is a bi-convex problem, which enjoys certain conergence properties. Optimizing multi-convex function has been explored in time-of-flight reconstruction \cite{heideNonlineofsightImagingPartial2017}.
+In case when $\bl$ is coordinate-wise convex, the objective for (\ref{eq:tv_regularized_ls_for_solving_correspondence}) is a bi-convex problem, which enjoys certain conergence properties. Optimizing multi-convex function has been explored in applications such as time-of-flight reconstruction \cite{heideNonlineofsightImagingPartial2017}.
  
 
 
