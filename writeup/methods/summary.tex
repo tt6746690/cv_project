@@ -52,31 +52,19 @@ where $\rho$ is the parameter for augmented lagrangian, $\tilde{\bx} = \bz^k - \
 \end{align}
 Note this method is general enough to allow for both multispectral imaging, structured light reconstruction, and perhaps a mix of the two modalities.
 
-
-\subsubsection{Experimental Results}
-
-\paragraph{Ground Truth} Ground truth phase/disparity is obtained by computing ZNCC decoding on sinusoids of periods 1,2,5,17,31, each shifted 30 times. Each measurement under a unique illumination pattern is stacked form 250 noisy images. 
-
-\paragraph{Empirical Performance Upper Bound} In Figure~\ref{fig:sinusiods_spatial_freq_1_phase_upper_bound_wrt_S}, we experimentally determine what is empirically possible for the decoding algorithm, without either noise nor recosntruction error, when given measurement under different number of phase shifts, assuming sinusoidal pattern with period 1.
-\begin{figure}[h!]
-    \begin{center}
-        \includegraphics[width=0.49\textwidth]{SinusoidsSpatialFreq1PhaseUpperBoundPSNR}
-        \includegraphics[width=0.49\textwidth]{SinusoidsSpatialFreq1PhaseUpperBoundSSIM}
-        \caption{PSNR/SSIM computed by comparing phase obtained by ZNCC/MPS decoding on stacked noiseless images for sinusoidal pattern with period of 1 with varying number of phase shifts to the ground-truth phase. Both decoder performed similarly. We see large improvement when $S=3,4$ and minimal improvement when $S>7$.}
-        \label{fig:sinusiods_spatial_freq_1_phase_upper_bound_wrt_S}
-    \end{center}
-\end{figure}  
  
+
 \subsection{Correspondence Refinement}
+In applications where we are purely interested in structured light reconstruction. There are artifacts associated with spatial subsampling when number of illuminated patterns gets larger. Here we exploit a simple image formation model under active illumination to refine correspondence.
+
 
 \begin{figure}[h!]
     \begin{center}
-        \includegraphics[height=4cm]{draw_phase_signal_image_formation_model}
-        \caption{Signal and its relationship to albedo, phase, and ambient illumination.}
+        \includegraphics[height=3cm]{draw_phase_signal_image_formation_model}
+        \caption{Reconstructed Images $\bX$ and its relationship to albedo, phase, and ambient illumination.}
         \label{fig:draw_phase_signal_image_formation_model}
     \end{center}
 \end{figure}  
-In applications where we are purely interested in structured light reconstruction. There are artifacts associated with spatial subsampling when number of illuminated patterns gets larger. Here we exploit a simple image formation model under active illumination to refine correspondence.
 
 \paragraph{Image Formation Under Active Illumination}
 
@@ -88,7 +76,7 @@ Let $\ba \in \R_+^{P}$ be albedo, $\bb\in\R_+^P$ be ambient illumination, $\bz\i
         p = 1,2,\cdots,P
     \label{eq:per_pixel_image_formation_patterned_image}
 \end{align}
-where $\bl:[0,1]\to [0,1]^S$ where $\bl(z) = (\bl_1(z),\cdots,\bl_S(z))$ is vector valued function that specifies illumination condition at a particular projector index $z$, normalized to lie in $[0,1]$. Note the relationship in (\ref{eq:per_pixel_image_formation_patterned_image}) is nonlinear and nonconvex, due to coupling of albedo and illumination conditions. Given $\bz$, the relationship becomes linear
+where $\bl:[0,1]\to [0,1]^S$ where $\bl(z) = (\bl_1(z),\cdots,\bl_S(z))$ is vector valued function that specifies illumination condition at a particular projector index $z$, normalized to lie in $[0,1]$. From perspective of structured light coding, $\bl$ is the coding scheme for the system. It might be interesting to extend (\ref{eq:per_pixel_image_formation_patterned_image}) to include effect of global illumination and defocus, similar to \cite{guptaMicroPhaseShifting2012}. Note the relationship in (\ref{eq:per_pixel_image_formation_patterned_image}) is nonlinear and nonconvex, due to coupling of albedo and illumination conditions. Given $\bz$, the relationship becomes linear
 \begin{align}
     \vec{\bX^T}
         =
@@ -104,23 +92,24 @@ where $\bl:[0,1]\to [0,1]^S$ where $\bl(z) = (\bl_1(z),\cdots,\bl_S(z))$ is vect
                 \vdots & \vdots \\ 
                 \diag \bl(\bz^P) & \bI \\
             \end{bmatrix}
-        }_{\bM}
+        }_{\bM(\bz)}
         \begin{bmatrix}
             \ba \\ \bb 
         \end{bmatrix}
     \label{eq:per_pixel_image_formation_patterned_image_given_correspondence}
 \end{align}
 
+
 \paragraph{MAP Inference of Correspondence}
 
-For arbitrary patterns, the MAP estimate of a discrete set of correspondences is very hard, as it involves a combinatorial problem over a very high dimensional space, in particular $L^P$ possible combinations.
+For arbitrary patterns, the MAP estimate of a discrete set of correspondences is very hard, as it involves a combinatorial problem over a very high dimensional space, in particular $L^P$ possible combinations. For convenience of optimization, we assume $\bl$ be a coordinate-wise continuous function, and we are interested in finding correspondence in the real numbers. A similar bayesian setup for solving depth and albedo is detailed in \cite{adamBayesianTimeofFlightRealtime2015}. Assuming uniform prior for $\ba,\bb$, we have
 \begin{align}
     \hat{\ba},\hat{\bb},\hat{\bz}
         = \argmax_{a,b,z} p_{\ra,\rb,\rz|\rx}(a,b,z|x)
-        = \argmin_{z,b,z} p_{\rz|\ra,\rb,\rz}(x|a,b,z) p_{\ra}(a) p_{\rb}(b) p_{\rz}(z)
+        = \argmin_{a,b,z} -\log p_{\rx|\ra,\rb,\rz}(x|a,b,z) - \log p_{\rz}(z)
     \label{eq:map_inference_of_correspondence_is_hard}
 \end{align}
-For convenience of optimization, we assume $\bl$ be a coordinate-wise continuous function, and we are interested in finding correspondence in the real numbers. A similar bayesian setup for solving depth and albedo is detailed in \cite{adamBayesianTimeofFlightRealtime2015}. Assumption of Gaussian noise in (\ref{eq:per_pixel_image_formation_patterned_image}) and uniform prior for $\ba,\bb$ and $p_{\rz}(z)\propto \exp\pc{ - (\lambda/\sigma_{\epsilon}^2) \norm{\bG \bz}_1 }$ ($\bG=[\bG_x;\bG_y]\in \R^{2P\times P}$ are the differencing matrix for computing total variation norm) yield the following optimization problem
+Assumption of Gaussian noise in (\ref{eq:per_pixel_image_formation_patterned_image}) and $p_{\rz}(z)\propto \exp\pc{ - (\lambda/\sigma_{\epsilon}^2) \norm{\bG \bz}_1 }$ ($\bG=[\bG_x;\bG_y]\in \R^{2P\times P}$ are the differencing matrix for computing total variation norm) yield the following optimization problem
 \begin{align}
     \underset{ \ba\in\R_+^P,\bb\in\R_+^P,\bz\in [0,1]^P }{\text{minimize}}\;\;
         \frac{1}{2} \sum_{ p=1 }^P \norm{ \si^p - \ba^p \bl(\bz^p) - \bb^p }_2^2 + \lambda \norm{\bG \bz}_1
@@ -128,11 +117,13 @@ For convenience of optimization, we assume $\bl$ be a coordinate-wise continuous
 \end{align}
 Without assumption of coordinate-wise convexity of $\bl$, the objective function is subject to bad local minimas. Idea is to seed the nonlinear optimization procedure with ZNCC decoding of $\bx$ solved by (\ref{eq:red_admm_update_equations_fast_x_update}) and hope that this refinement will get us to the destination. To make optimization easier (\ref{eq:tv_regularized_ls_for_solving_correspondence}), similar to \cite{rosmanSparseModelingShape2012}, we use block coordinate descent to optimize for $\ba,\bb$ and $\bz$ in an alternating fashion,
 \begin{align}
-    \ba^{k+1},\bb^{k+1}
-        &= \argmin_{\ba\in\R_+^P,\bb\in\R_+^P} \norm{ \bM\pb{\ba;\bb}^T - \vec{\bX^T} }_2^2 
+    \ba_{k+1},\bb_{k+1}
+        &= \argmin_{\ba\in\R_+^P,\bb\in\R_+^P} \norm{ \bM(\bz_k) \begin{bmatrix}
+            \ba \\ \bb
+        \end{bmatrix} - \vec{\bX^T} }_2^2 
     \label{eq:tv_regularized_ls_for_solving_correspondence_altmin_1} \\
-    \bz^{k+1}
-        &= \argmin_{\bz\in[0,1]^P} \frac{1}{2} \sum_{ p=1 }^P \norm{ \si^p - \ba^p \bl(\bz^p) - \bb^p }_2^2 + \lambda \norm{\bG \bz}_1 
+    \bz_{k+1}
+        &= \argmin_{\bz\in[0,1]^P} \frac{1}{2} \sum_{ p=1 }^P \norm{ \si^p - \ba_{k+1}^p \bl(\bz^p) - \bb_{k+1}^p }_2^2 + \lambda \norm{\bG \bz}_1 
     \label{eq:tv_regularized_ls_for_solving_correspondence_altmin_2}
 \end{align}
 where (\ref{eq:tv_regularized_ls_for_solving_correspondence_altmin_1}) can be solved with any sparse linear solver, and (\ref{eq:tv_regularized_ls_for_solving_correspondence_altmin_2}) can be solved using some nonlinear solver such as lbfgs as it emits computable sub-gradients 
@@ -143,10 +134,43 @@ where (\ref{eq:tv_regularized_ls_for_solving_correspondence_altmin_1}) can be so
         \in \partial_{\bz^p}(\cdot)
     \label{eq:tv_regularized_ls_for_solving_correspondence_altmin_1_gradient}
 \end{align}
-where $g_s(\bz^p) \in \partial_{z}\bl_s(\bz^p)$. In case when $\bl$ is coordinate-wise convex, the objective for (\ref{eq:tv_regularized_ls_for_solving_correspondence}) is a bi-convex problem, which enjoys certain conergence properties. Optimizing multi-convex function has been explored in applications such as time-of-flight reconstruction \cite{heideNonlineofsightImagingPartial2017}.
- 
+where $g_s(\bz^p) \in \partial_{z}\bl_s(\bz^p)$. In case when $\bl$ is coordinate-wise convex, the objective for (\ref{eq:tv_regularized_ls_for_solving_correspondence}) is a bi-convex problem, which enjoys certain conergence properties. Optimizing multi-convex function has been explored in applications such as time-of-flight reconstruction \cite{heideNonlineofsightImagingPartial2017}. 
+
+\paragraph{Applicable Coding Schemes}
+
+Empirically, the choice of $\bl$ is very important for optimization. Some coding schemes are more well behaved, for example spatial sinusoids with frequency of 1 shifted multiple times. Spatial sinusoids with spatial frequency $> 2$, micro phase shifting code \cite{guptaMicroPhaseShifting2012}, Hamiltonian code \cite{guptaGeometricPerspectiveStructured2018}, a la carte code \cite{mirdehghanOptimalStructuredLight2018} all give rise to objective functions in (\ref{eq:tv_regularized_ls_for_solving_correspondence}) with bad local minima. One potential way to alleviate this is perhaps to design coding schemes that are coordinate-wise convex, which will ensure that the objective function is bi-convex.
 
 
+\subsection{Revised Noise Model}
+We might argue the Gaussian model assumption does actually reflect the physical reality. In particular, sensor noise happens when the images $\bY$ are acquired, as depicted in Figure~\ref{fig:draw_phase_c2b_image_formation_model}.
+
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[height=3cm]{draw_phase_c2b_image_formation_model}
+        \caption{c2b measurements $\bY$ and its relationship to albedo, phase, and ambient illumination}
+        \label{fig:draw_phase_c2b_image_formation_model}
+    \end{center}
+\end{figure}  
+
+
+
+
+
+
+\subsection{Experimental Results}
+
+\paragraph{Ground Truth} Ground truth phase/disparity is obtained by computing ZNCC decoding on sinusoids of periods 1,2,5,17,31, each shifted 30 times. Each measurement under a unique illumination pattern is stacked form 250 noisy images. 
+
+\paragraph{Empirical Performance Upper Bound} In Figure~\ref{fig:sinusiods_spatial_freq_1_phase_upper_bound_wrt_S}, we experimentally determine what is empirically possible for the decoding algorithm, without either noise nor recosntruction error, when given measurement under different number of phase shifts, assuming sinusoidal pattern with period 1.
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.49\textwidth]{SinusoidsSpatialFreq1PhaseUpperBoundPSNR}
+        \includegraphics[width=0.49\textwidth]{SinusoidsSpatialFreq1PhaseUpperBoundSSIM}
+        \caption{PSNR/SSIM computed by comparing phase obtained by ZNCC/MPS decoding on stacked noiseless images for sinusoidal pattern with period of 1 with varying number of phase shifts to the ground-truth phase. Both decoder performed similarly. We see large improvement when $S=3,4$ and minimal improvement when $S>7$.}
+        \label{fig:sinusiods_spatial_freq_1_phase_upper_bound_wrt_S}
+    \end{center}
+\end{figure}  
 
 
 % \newpage\newpage

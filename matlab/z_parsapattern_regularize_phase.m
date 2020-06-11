@@ -82,7 +82,11 @@ imshow([disparityFunc( phase  ) disparityFunc( Denoiser(phase,5,'mf')  )]/255)
 % freq=1,S=7,denoise again      22.4455, 0.9239 *
 %                               +1.46    +0.041
 
+% freq=1,S=24    22.4455, 0.9239 *
+%                               +1.46    +0.041
+
 % freq=1,S=24
+% noisy im (gt)                 29.0
 % noisy im (gt)                 29.0545  0.9096
 % reconstructed                 23.4951  0.8476
 % denoised                      23.7977  0.8584 *
