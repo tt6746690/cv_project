@@ -79,3 +79,23 @@ v = [-2 -1 1]; view(v);
 
 saveas(gcf,'../writeup/assets/coding_curve_sinusoids_pairwise_coprime.png');
 
+
+%% coordinate-wise convex code
+
+
+xs = 0:0.01:1;
+P = [];
+P(:,1) = betapdf(xs,10,0.5);
+P(:,2) = betapdf(xs,0.5,10);
+P(:,3) = betapdf(xs,0.5,0.5);
+
+plot3(P(:,1),P(:,2),P(:,3),'-o','Color','#89C4F4','MarkerSize',5,'MarkerFaceColor','#59ABE3');
+title('Coordinate-wise Convex Code');
+xlabel('$P_1(c)$','Interpreter','latex');
+ylabel('$P_2(c)$','Interpreter','latex');
+zlabel('$P_3(c)$','Interpreter','latex');
+grid on;
+
+
+
+

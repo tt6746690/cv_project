@@ -96,6 +96,11 @@ where $\bl:[0,1]\to [0,1]^S$ where $\bl(z) = (\bl_1(z),\cdots,\bl_S(z))$ is vect
         \begin{bmatrix}
             \ba \\ \bb 
         \end{bmatrix}
+        + \begin{bmatrix}
+            \bepsilon^1 \\
+            \vdots  \\
+            \bepsilon^P
+        \end{bmatrix}
     \label{eq:per_pixel_image_formation_patterned_image_given_correspondence}
 \end{align}
 
@@ -105,11 +110,11 @@ where $\bl:[0,1]\to [0,1]^S$ where $\bl(z) = (\bl_1(z),\cdots,\bl_S(z))$ is vect
 For arbitrary patterns, the MAP estimate of a discrete set of correspondences is very hard, as it involves a combinatorial problem over a very high dimensional space, in particular $L^P$ possible combinations. For convenience of optimization, we assume $\bl$ be a coordinate-wise continuous function, and we are interested in finding correspondence in the real numbers. A similar bayesian setup for solving depth and albedo is detailed in \cite{adamBayesianTimeofFlightRealtime2015}. Assuming uniform prior for $\ba,\bb$, we have
 \begin{align}
     \hat{\ba},\hat{\bb},\hat{\bz}
-        = \argmax_{a,b,z} p_{\ra,\rb,\rz|\rx}(a,b,z|x)
-        = \argmin_{a,b,z} -\log p_{\rx|\ra,\rb,\rz}(x|a,b,z) - \log p_{\rz}(z)
+        = \argmax_{\ba,\bb,\bz} p_{\ra,\rb,\rz|\rx}(\ba,\bb,\bz|\bx)
+        = \argmin_{\ba,\bb,\bz} -\log p_{\rx|\ra,\rb,\rz}(\bx|\ba,\bb,\bz) - \log p_{\rz}(\bz)
     \label{eq:map_inference_of_correspondence_is_hard}
 \end{align}
-Assumption of Gaussian noise in (\ref{eq:per_pixel_image_formation_patterned_image}) and $p_{\rz}(z)\propto \exp\pc{ - (\lambda/\sigma_{\epsilon}^2) \norm{\bG \bz}_1 }$ ($\bG=[\bG_x;\bG_y]\in \R^{2P\times P}$ are the differencing matrix for computing total variation norm) yield the following optimization problem
+Assumption of Gaussian noise in (\ref{eq:per_pixel_image_formation_patterned_image}) and $p_{\rz}(\bz)\propto \exp\pc{ - (\lambda/\sigma_{\epsilon}^2) \norm{\bG \bz}_1 }$ ($\bG=[\bG_x;\bG_y]\in \R^{2P\times P}$ are the differencing matrix for computing total variation norm) yield the following optimization problem
 \begin{align}
     \underset{ \ba\in\R_+^P,\bb\in\R_+^P,\bz\in [0,1]^P }{\text{minimize}}\;\;
         \frac{1}{2} \sum_{ p=1 }^P \norm{ \si^p - \ba^p \bl(\bz^p) - \bb^p }_2^2 + \lambda \norm{\bG \bz}_1
@@ -134,7 +139,7 @@ where (\ref{eq:tv_regularized_ls_for_solving_correspondence_altmin_1}) can be so
         \in \partial_{\bz^p}(\cdot)
     \label{eq:tv_regularized_ls_for_solving_correspondence_altmin_1_gradient}
 \end{align}
-where $g_s(\bz^p) \in \partial_{z}\bl_s(\bz^p)$. In case when $\bl$ is coordinate-wise convex, the objective for (\ref{eq:tv_regularized_ls_for_solving_correspondence}) is a bi-convex problem, which enjoys certain conergence properties. Optimizing multi-convex function has been explored in applications such as time-of-flight reconstruction \cite{heideNonlineofsightImagingPartial2017}. 
+where $g_s(\bz^p) \in \partial_{z}\bl_s(\bz^p)$. In case when $\bl$ is coordinate-wise convex, the objective for (\ref{eq:tv_regularized_ls_for_solving_correspondence}) is a bi-convex problem, whereby block coordinate descent converges monotonically to stationary points \cite{gorskiBiconvexSetsOptimization2007}. Optimizing multi-convex function has been explored in applications such as time-of-flight reconstruction \cite{heideNonlineofsightImagingPartial2017}. 
 
 \paragraph{Applicable Coding Schemes}
 
