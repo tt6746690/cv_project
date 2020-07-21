@@ -177,6 +177,16 @@ We might argue the Gaussian model assumption does actually reflect the physical 
     \end{center}
 \end{figure}  
 
+\paragraph{Correspondence Refinement} In Figure~\ref{fig:correspondence_refinement}, we are able to improve disparity estimation by incorporating image formation of the structured light system.
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=\textwidth]{correspondence_refinement}
+        \caption{Solving the MAP estimation problem in \ref{eq:tv_regularized_ls_for_solving_correspondence} improves disparity estimation. From left to right are (1) ground-truth disparity (2) disparity computed from $S=24$ (sinusoids with spatial frequency of 1) reconstructed images given two-bucket image (3) disparity fine-tuned from previous. The refinement is able to remove artifacts and provide a gain of +3.057  PSNR / +0.0846 SSIM}
+        \label{fig:correspondence_refinement}
+    \end{center}
+\end{figure}  
+
 
 % \newpage\newpage
 % \subsection{Solving Inverse Problem using RED}
