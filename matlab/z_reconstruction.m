@@ -86,7 +86,7 @@ for tempshift = (.8584-0.5):0.02:(.8584+0.5)
     gt_im = reshape(tiled(1:h,:),h,w,[]);
     % imshow([gt_im(:,:,1) gt_im(:,:,2) gt_im(:,:,3) gt_im(:,:,4)]/255);
 
-    [albedo,wrapped_phase,phase] = SLTriangulation(gt_im,W,Bounds,4);
+    [albedo,wrapped_phase,phase] = DecodePhaseShiftWithDepthBound(gt_im,W,Bounds,4);
 
 
     % imshow([wrapped_phase phase]/(2*pi));

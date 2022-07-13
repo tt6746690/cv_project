@@ -1,16 +1,29 @@
 \documentclass[11pt]{article}
 \input{\string~/.macros}
-\usepackage[a4paper, total={7in, 9in}]{geometry}
-% \usepackage[a4paper]{geometry}
+\usepackage[a4paper, total={6in, 10in}]{geometry}
 \usepackage{bm}
+\usepackage{datetime}
 \usepackage{accents}
 \usepackage{bbm}
 \usepackage{graphicx}
-\graphicspath{{./assets}}
+    \graphicspath{{./assets/}{../assets/}}
 \usepackage{hyperref}
-\hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=red}
+    \hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=red}
 \usepackage[backend=biber,sorting=none]{biblatex}
-\addbibresource{references.bib}
+    \addbibresource{textbooks.bib}
+    \addbibresource{structured_light.bib}
+    \addbibresource{inverse_problem.bib}
+    \addbibresource{photography.bib}
+    \addbibresource{optimization.bib}
+    \addbibresource{denoising.bib}
+    \addbibresource{demosaicing.bib}
+    \addbibresource{opt_nonconvex.bib}
+
+
+\providecommand{\main}{.}
+\usepackage{xr-hyper} % cross-referencing with \ref
+    \externaldocument[main-]{\main/summary}
+
 \setcounter{MaxMatrixCols}{30}
  
 
@@ -21,13 +34,27 @@
 \renewcommand{\diag}{\mathbf{diag}}
 \newcommand{\minimize}{\text{minimize}\quad}
 \newcommand{\subjectto}{\text{subject to}\quad}
-\newcommand{\prox}{\textbf{prox}}
+\newcommand{\prox}{\textsf{prox}}
 
-\newcommand{\blambda}{\boldsymbol{\lambda}}
+\newcommand\ry{\ensuremath{\mathsf{y}}}
+\newcommand\rx{\ensuremath{\mathsf{x}}}
+\newcommand\ra{\ensuremath{\mathsf{a}}}
+\newcommand\rb{\ensuremath{\mathsf{b}}}
+\newcommand\rn{\ensuremath{\mathsf{n}}}
+\newcommand\rz{\ensuremath{\mathsf{z}}}
+
+
+\renewcommand\bmu{\ensuremath{\boldsymbol{\mu}}}
+\newcommand\bSigma{\ensuremath{\boldsymbol{\Sigma}}}
+\newcommand\bzeta{\ensuremath{\boldsymbol{\zeta}}}
+\newcommand\bepsilon{\ensuremath{\boldsymbol{\epsilon}}}
+
+
+\usepackage{subfiles}
+
 
 \title{Project Report}
 \author{Peiqi Wang}
-\date{July 20, 2019} 
 
 \begin{document}
 
@@ -40,341 +67,9 @@
 \section{Abstract}
 We aim to improve upon low level image proecssing pipeline for the coded two-bucket camera. Specifically, we aim to jointly upsample, demultiplex, and denoise two-bucket images to produce full resolution images under different illumination conditions for downstream reconstruction tasks.
 
-
-\section{The Two-Bucket Camera}
-
-\subsection{Notations}
-
-The coded two-bucket (C2B) camera is a pixel-wise coded exposure camera that outputs two images in a single exposure.\cite{weiCodedTwoBucketCameras2018} Each pixel in the sensor has two photo-collecting site, i.e. the two \textit{buckets}, as well as a 1-bit writable memory controlling which bucket is actively collecting light. It was shown previously that C2B camera is capable of one-shot 3D reconstruction by solving a simpler image demosaicing and illumination demultiplexing problem instead of a difficult 3D reconstruction problem. We summarize the following notations relevant to discussion
-
-\begin{table}[!htbp]
-    \begin{center}
-    \begin{tabular}{rll}
-        \multicolumn{1}{r}{\bf} & \multicolumn{1}{l}{\bf Notation}   &\multicolumn{1}{l}{\bf Meaning}\\
-        \hline \\
-                             & F                                       & number of video frames \\
-                             & P                                       & number of pixels \\
-                             & S                                       & number of sub-frames \\
-                             & h,w                                     & dimension of image \\
-        $P\times F\times S$  & $\bC$                                   & code tensor \\
-        $P\times 1\times S$  & $\widetilde{\bC}$                       & 1-frame code tensor that spatially multiplex $F$ frame tensor $\bC$ \\
-        $F\times S$          & $\bC^p$                                 & activity of bucket 0 pixel $p$ cross all frames and sub-frames \\
-        $F\times S$          & $\overline{\bC}^p$                       & activity of bucket 1 pixel $p$ cross all frames and sub-frames \\
-        $1\times S$          & $\bc^p_f$                               & active bucket of pixel $p$ in the sub-frames of frame $f$ \\
-        $1\times L$          & $\bl_s$                                 & scene's illumination condition in sub-frame $s$ of every frame \\
-        $P\times S$          & $\bC_f=[\bc_1^p;\cdots;\bc_F^p]$        & activity of bucket activity of all pixels across all sub-frames of $f$ \\
-        $S\times L$          & $\bL= [\bl_1;\cdots;\bl_S]$             & time-varying illumination condition (same for all frames) \\
-        $2F\times S$         & $\bW$                                   & optimal bucket multiplexing matrix \\
-                             & $\bt^p$                                 & transport vector at pixel $p$ \\
-        $F \times 1$         & $\bi^p,\hat{\bi}^p$                     & measured two-bucket intensity at pixel $p$ in $F$ frames \\
-        $F \times 1$         & $r,\hat{r}$                             & illumination ratios at pixel $p$ in $F$ frames \\
-        $F\times P$          & $\bI = [\bi^1 \cdots \bi^P],\hat{\bI}$  & two-bucket image sequence in $F$ frames \\ 
-        $P\times 2F$         & $\sI = [\bI^T \;\hat{\bI}^T]$           & two-bucket image sequence \\
-        $P\times 2$          & $\bY$                                   & two-bucket illumination mosaic \\
-        $S\times 1$          & $\si^p$                                 & pixel intensity under $S$ illuminations at pixel $p$ \\
-        $P\times S$          & $\bX = [\si^1 \cdots \si^P]^T$          & pixel intensity under $S$ illuminations \\    
-        $2P\times 1$         & $\by = \vec{\bY}$                       & vectorized two-bucket illumination mosaic \\
-        $SP\times 1$         & $\bx = \vec{\bX}$                       & vectorized pixel intensity under $S$ illumiantions \\
-        $2P\times 2PF$       & $\bB$                                   & subsampling linear map \\
-        $2P\times SP$        & $\bA = \bB(\bW\otimes \bI_P)$           & illumination multiplexing and subsampling linear map \\
-    \end{tabular}
-    \end{center}
-\end{table}
-\noindent Illumination ratios are albedo \textit{quasi-invariant}, a property which can be exploited for downstream processing
-\[
-    r = \frac{\bi^p[f]}{\bi^p[f] + \hat{\bi}^p[f]} 
-    \quad\quad
-    \hat{r} =   \frac{\hat{\bi}^p[f]}{\bi^p[f] + \hat{\bi}^p[f]} 
-\]
-
-\subsection{Subsampling Mapping}
-Let $\bS \in \{1,2,\cdots,F\}^P$ be a vector specifying how the one-frame code tensor $\widetilde{\bC}$ is constructed, i.e.
-\[
-    \tilde{\bc}_1^{p} := \bc_{\bS_p}^p    
-\]
-for all pixels $p$. We can view $\bS$ as a mask to construct a \textbf{S}ubsampling linear map that maps vectorized two-bucket image sequences $\sI$ to the vectorized illumination mosaics $\bY$. In particular, let $\bB' \in \R^{P\times PF}$ and $\bB \in \R^{2P \times 2PF}$ be defined as follows 
-\begin{align*}
-    \bB' &=
-    \begin{bmatrix}
-        \diag{\mathbbm{1}_{\{1\}}(\bS) } & \diag{\mathbbm{1}_{\{2\}}(\bS) } & \cdots & \diag{\mathbbm{1}_{\{F\}}(\bS) }
-    \end{bmatrix} \\
-    \bB &=  \bI_2 \otimes \bB' = 
-    \begin{bmatrix}
-        \bB' & \mathbf{0} \\
-        \mathbf{0} & \bB' \\
-    \end{bmatrix}
-\end{align*}
-Then we have the following relation between $\sI$ and $\bY$,
-\begin{equation}
-    \label{eq:subsampling_relation}
-    \vec{\bY} = \bB \vec{\sI}
-\end{equation}
-We are motivated to think of an analogue where it is common place to perform spatial subsampling. In RGB color imaging, bayer mosaics trade spatial resolution for spectral resolution (R,G,B colors). We can find an analogous one-frame code tensor which generate illuination mosaics that trade spatial resolution for temporal resolution ($1,2,\cdots,F$ frames). As an example in case of $F=3$ and $P=4$, the corresponding $\bS$, when reshaped to dimension of a $2\times 2$ image, and single image subsampling linear map $\bB'$ are simply
-\[
-    \bS = 
-    \begin{pmatrix}
-        1 & 2 \\
-        2 & 3
-    \end{pmatrix}    
-\]
-\[
-    \bB' = 
-    \begin{bmatrix}
-        \diag{\mathbbm{1}_{\{1\}}(\bS) } & \diag{\mathbbm{1}_{\{2\}}(\bS) } & \diag{\mathbbm{1}_{\{3\}}(\bS) }
-    \end{bmatrix}
-    =
-    \begin{pmatrix}
-        1& 0& 0& 0& 0& 0& 0& 0& 0& 0& 0& 0 \\
-        0& 0& 0& 0& 0& 1& 0& 0& 0& 0& 0& 0 \\
-        0& 0& 0& 0& 0& 0& 1& 0& 0& 0& 0& 0 \\
-        0& 0& 0& 0& 0& 0& 0& 0& 0& 0& 0& 1 \\
-    \end{pmatrix}
-\]
-
-
-
-\subsection{Image Formation}
-Per-pixel image formation model is
-\[
-    \begin{bmatrix}
-        \bi^p \\ \hat{\bi}^p
-    \end{bmatrix}
-    = 
-    \begin{bmatrix}
-        \bC^p \\ \overline{\bC}^p
-    \end{bmatrix}
-    \begin{bmatrix}
-        \bl_1 \bt^p \\ \vdots \\ \bl_S \bt^p
-    \end{bmatrix}
-    = 
-    \begin{bmatrix}
-        \bC^p \\ \overline{\bC}^p
-    \end{bmatrix}
-    \si^p
-\]
-If bucket activity is same for all pixels and we use the optimal bucket multiplexing matrix $\bW$, then
-\begin{equation}
-    \label{eq:image_formation}
-    \sI = \bX \bW^T
-\end{equation}
-
-\subsection{Image Processing Pipeline}
-The reconstruction pipeline is as follows
-\begin{enumerate}
-    \item Use $\widetilde{\bC}$ for bucket activities and capture the two-bucket image $\bY$
-    \item upsample the images to full resolution images $\sI$
-    \item demultiplex $\sI$ to obtain $S$ full resolution images $\bX$ as a least squares solution to a (\ref{eq:image_formation})
-    \item use $\bX$ to solve for disparity and albedo
-\end{enumerate}
-Step 2 and 3 are critical to downstream reconstuctions. When $S=3,S=4$ and $\bS$ being analogous to bayer mask, we can upsample the images using standard demosaicing algorithms. However, it is not immediately obvious to extend demosaicing methods to support arbitrary $\bS$, or more specifically, for scenarios where the spatial subsampling scheme is not bayer and when number of frames is not 3. 
-
-\section{Literature Review}
-
-\subsection{Image Priors} 
-
-The choice of regularization has been an important research topic in image processing. Handcrafted priors have been successful in a number of different image recovery tasks. For example, we can choose to enforce task-specific priors: (1) the sparsity of $\bx$ with $\ell$-1 norm in image deblurring \cite{beckFastIterativeShrinkageThresholding2009} (2) total variation in image denoising \cite{buadesNonlocalImageMovie2008} (3) cross-channel correlation in color image demosaicing \cite{malvarHighqualityLinearInterpolation2004} (4) dark channel prior in image dehazing \cite{fattalSingleImageDehazing2008}, etc. More exhotically, randomly initialized neural network can inject inductive bias to the optimization and act as image priors. \cite{ulyanovDeepImagePrior2017}
-
-$ $\\
-In addition to hand-crafted priors, there has been interest in algorithm induced priors. Alternating direction method of multipliers (ADMM) is a common convex optimization method for inverse problem where the objective function is separable with respect to the \textit{data term} and the \textit{regularizer}. Each primal update involves an evaluation of a proximal operator, which can be interpreted as performing denoising on some iterate. \cite{venkatakrishnanPlugandPlayPriorsModel2013,heideFlexISPFlexibleCamera2014,chanAlgorithmInducedPriorImage2016} proposed plug-and-play priors where the choice of regularization is implicitly specified by the denoiser used. \cite{romanoLittleEngineThat2016} proposed an explicit laplacian-based expression for the regularizer and generalizes the method to a number of different iterative optimization algorithms.
-
-$ $\\
-The convergence of plug-and-play ADMM is studied by a number of papers. \cite{chanPlugandPlayADMMImage2016} showed fixed point convergence of plug-and-play ADMM. \cite{romanoLittleEngineThat2016} showed convergence of the algorithm under some mild conditions of the denoiser, which are satisfied by some state of the art denoisers like \textit{Block-matching and 3D filtering
- (BM3D)} \cite{dabovImageDenoisingSparse2007} and \textit{Trainable Nonlienar Reaction Diffusion (TNRD)} \cite{chenTrainableNonlinearReaction2017}. Most recently, \cite{ryuPlugandPlayMethodsProvably2019} established convergence given that the denoising network satisfy certain Lipschitz condition.
-
-$ $\\ 
-Some proposed to learn proximal operator from data. \cite{meinhardtLearningProximalOperators2017} used a CNN denoiser \cite{zhangGaussianDenoiserResidual2017}. Instead of substituting the proximal operator with a denoiser, \cite{changOneNetworkSolve2017} learns a projection mapping to the space of natural images by training a single neural network and showed impressive results on a number of different linear inverse problems.
-
-\subsection{Constrained Convex Optimization}
-
-Alternating Method of Multipliers (ADMM) is an efficient convex optimization algorithm for minimizing the sum of nonsmooth convex separable functions subject to a set of linear equality constraints. It combines the advantage of dual decomposition, where we can solve subproblems at each iteration, and that of method of multipliers, where optimization over augmented lagrangian relaxes strict convexity condition for the objective.\cite{boydDistributedOptimizationStatistical2011} Specifically, we are interested in solving the following constrained convex optimization problem
-\begin{equation}
-    \label{eq:constrained_cvx}
-    \begin{aligned}
-        \underset{\bx_1,\cdots,\bx_N}{\minimize}  & \sum_{i=1}^N f_i(\bx_i) \\
-        \subjectto & (\bx_1,\cdots,\bx_N) \in \sC \\
-    \end{aligned}
-\end{equation}
-where $\bx_i\in\R^{n_i}$, $f_i: \R^{n} \to (-\infty,\infty)$ are closed proper convex functions for $i=1,\cdots,N$, and $\sC$ is an affine set of the form
-\[
-    \sC = \{ \bx \in\R^{\sum_i n_i} \;\mid\; A \bx = \bb \}    
-\]
-which has an equivalent ADMM form \cite{boydDistributedOptimizationStatistical2011},
-\begin{equation}
-    \label{eq:constrained_cvx_admm_form}
-    \begin{aligned}
-        \underset{\bx,\bz}{\minimize}  & f(\bx) + \sI_{\sC}(\bz) \\
-        \subjectto & \bx - \bz = 0 \\
-    \end{aligned}
-\end{equation}
-where $f(\bx) = \sum_{i=1}^N f_i(\bx_i)$. The scaled form of ADMM for (\ref{eq:constrained_cvx_admm_form}) is 
-\begin{align*}
-    \bx_i^{k+1} 
-        &= \argmin_{\bx_i} \left( f_i(\bx_i) + \frac{\rho}{2} \norm{\bx_i - (\bz_i^k - \bu_i^k)}_2^2 \right) 
-        = \prox_{(1/\rho)f_i}(\bz_i^k - \bu_i^k) \\
-    \bz^{k+1}
-        &= \argmin_{\bz} \left( \sI_{\sC}(\bz) + \frac{\rho}{2} \norm{ \bz - (\bx^{k+1} + \bu^k) }_2^2 \right)
-        = \prox_{(1/\rho)\sI_{\sC}}(\bx^{k+1} + \bu^k) \\
-    \bu^{k+1} 
-        &= \bu^k + \bx^{k+1} - \bz^{k+1}
-\end{align*}
-$\bu^{k}$ is the scaled dual variable. $\rho>0$ is the augmented lagrangian parameter. $\prox_{\lambda f}: \R^n \to \R^n$ is the proximal operator of $\lambda f$, $\lambda >0$, 
-\[
-    \prox_{\lambda f}(\bv) = \argmin_{\bx} \left( f(\bx) + \frac{1}{2\lambda} \norm{\bx-\bv}_2^2 \right)    
-\]
-
-\subsection{Evaluating the Proximal Operator}
-
-Evaluating the proximal operator involves solving a convex optimization problem. We will show how we can compute the proximal operators relevant to our methods. (See section 6 of \cite{parikhProximalAlgorithms2014}) 
-\begin{enumerate}
-    \item The proximal operator of an indicator function onto a convex set $\sC$ is simply the projection onto $\sC$. 
-    \[
-        \prox_{(1/\rho)\sI_{\sC}}(\bx^{k+1} + \bu^k) =  \textstyle\prod_{\sC}(\bx^{k+1}+\bu^k)
-    \]
-    When $\sC$ is affine, there is an analytic expression for the projection
-    \begin{align*}
-        \textstyle\prod_{\sC}(\bv) 
-            &= \bv - A^{\dagger}(A\bv-\bb)  \\
-            &= \bv - A^T(A^TA)^{-1}(A\bv-\bb) \tag{if $A\in\R^{m\times n}$ has $m<n$ and full rank}
-    \end{align*}
-    \item Let $f$ be $\ell$-2 norm of an affine function, 
-    \[
-        f(x) = \norm{A\bx-\by}_2^2 = \bx^TA^TA\bx - 2\by^TA\bx + \by^T\by
-    \]
-    Then proximal operator of $(1/\rho)f$ has a closed form expression
-    \[
-        \prox_{(1/\rho)f}(\bv) 
-            = \prox_{(2/\rho)(1/2)f}
-            = (I + \frac{2}{\rho}A^TA)^{-1} (\bv + \frac{2}{\rho}A^T \by)
-    \]
-    which can be solved efficiently with conjugate gradient, as $(I + \frac{2}{\rho} A^TA) \succ 0$. If $\rho$ is fixed throughout, we can use Cholesky factorization to factor $(I + (2/\rho)A^TA)$ in $\sO(n^3)$. Any subsequent computation of the inverse would only cost $\sO(mn)$.
-    \item Let $f(\bx) = \norm{\bx}_1$, then the proximal operator of $(\lambda/\rho) f$ is
-    \[
-        \prox_{(\lambda/\rho)f}(\bv) 
-            = \sS_{\lambda/\rho}(\bv)
-    \]
-    where $\sS$ is element-wise soft shrinkage operator
-    \[
-        (\sS_{\kappa}(\bv))_i
-            = (1-\kappa/|\bv_i|)_{+}\bv_i
-        \quad\quad
-        \bx_{+} = \max(\bx,0)
-    \]
-    \item Let $f(\bx) = (1/2)\bx^T(\bx-\sD(\bx))$ for some denoiser $\sD$, the explicit regularizer in RED.\cite{romanoLittleEngineThat2016}. We use one fixed point iteration evaluate the approximate proximal operator for $\lambda f$. Specifically, we want to evaluate 
-    \[
-        \prox_{(\lambda/\rho)f} (\bv)
-            = \argmin_{\bx} \frac{\lambda}{2}\bx^T(\bx-\sD(\bx)) + \frac{\rho}{2} \norm{\bx-\bv}_2^2
-    \]
-    Setting the gradient to zero, we arrive at the fixed point iteration
-    \[
-        \bx^{(k)} \leftarrow \frac{1}{\rho+\lambda}(
-            \lambda \sD(\bx^{(k-1)}) + \rho \bv
-        )
-    \]
-    If we only iterate once, then 
-    \[
-        \prox_{(\lambda/\rho)f} (\bv)
-            = \frac{1}{\rho+\lambda}( \lambda \sD(\bx^{(0)}) + \rho \bv )
-    \]
-    for some initialization value $\bx^{(0)}$
-\end{enumerate}
-
-
-\section{Methods}
-
-\subsection{A Linear Inverse Problem}
-
-We consider the problem of recovering full resolution images $\bX$ under $S$ illuminations from a two-bucket image $\bY$ as an linear inverse problem. Let $\bA \in \R^{2P\times SP}$ represent a linear map that illumination multiplexes and subsamples $\bX$,
-\[
-    \bA = \bB(\bW\otimes \bI_P)
-\]
-where $\bI_P\in\R^{P\times P}$ is identity. From (\ref{eq:subsampling_relation}) and (\ref{eq:image_formation}), there exists a linear relationship between $\bx$ and $\by$,
-\begin{equation}
-    \label{eq:linear_mapping}
-    \by = \bB \vec{\sI} = \bB \vec{\bX \bW^T} = \bB(\bW \otimes \bI_P) \vec{\bX} = \bA\bx
-\end{equation}
-Note (\ref{eq:linear_mapping}) is an underdetermined system. Given 2 images, we want to recover $S$ images - the larger the number of subframes, the harder the recovery becomes. This asks for stronger prior knowledge of the underlying distribution of $\bx$ to restrict search space for solutions as $S$ increases. Jointly upsample and demultiplex enforces a prior knowledge of image formation. Instead of treating upsampling (recover $2F$ images $\sI$ from $2$ images $\bY$) and demultiplexing (recover $S$ images $\bX$ from $2F$ images $\sI$) as distinct steps, we aim to recover $\bX$ directy from $\bY$, in a single step, by solving the following unconstrained optimization problem,
-\begin{equation}
-    \label{eq:generic_inverse_problem}
-    \begin{aligned}
-        \minimize & \norm{\bA\bx - \by}_2^2 + \lambda\rho(\bx) \\
-    \end{aligned}
-\end{equation}
-where $\rho:\R^{SP}\to\R$ are regularizers for $\bx$, the optimization variable. The problem (\ref{eq:generic_inverse_problem}) has a bayesian interpretation. Specifically, the $\ell$-2 norm can be interpreted as a log-likelihood \textit{data term} that captures the following probablistic relationship between recovered image $\bx$ and observation $\by$, 
-\[
-    \by = \bA\bx + \be    
-\]
-where $\be$ is the noise random variable, usually assumed to be Gaussian. The regularizer can be then interpreted as \textit{prior} knowledge on the distribution of $\bx$. The data term is continuous and fully differentiable in all of $\R^n$. Therefore, tractability of (\ref{eq:generic_inverse_problem}) usually depends on how well behaved $\rho$ is. If $\rho$ is convex but possibly non-smooth, e.g. $\rho(\bx)=\norm{\bx}_1$, the problem can be efficiently solved with standard convex optimization methods like proximal gradients with guaranteed convergence and global optimality.\cite{beckFastIterativeShrinkageThresholding2009} More realistic priors, i.e. regularizers that more precisely capture the prior knowledge of image distributions, might potentially make (\ref{eq:generic_inverse_problem}) a much harder problem that compromises convergence and optimality properties.\cite{ulyanovDeepImagePrior2017}
-
-$ $\\
-We first note that the illumination ratios are albedo quasi-invariant, and therefore smooth within object boundaries. Therefore, total variation regularization on illuination ratio images could be particularly effective. To avoid extra notations, we use $\bx,\by$ as the corresponding illumination ratios that we want to reconstruct. Additionally, we adapt algorithm in \cite{romanoLittleEngineThat2016} for imposing algorithm induced priors with state-of-the-art denoisers. In summary, we want to optimize the following constrained problem with a set of affine constraints,
-\begin{align*}
-    \minimize  & \norm{\bA\bx_1 - \by}_2^2 + \frac{\lambda_2}{2} \bx_2^T(\bx_2 - \sD(\bx_2)) + \lambda_3 \norm{\bx_3}_1 \\
-    \subjectto & \bx_1 - \bx_2 = 0 \\
-               & \bG\bx_1 - \bx_3 = 0 \\
-\end{align*}
-where $\bx_1,\bx_2\in\R^{SP}$, $\bx_3\in\R^{2SP}$. $\lambda_2,\lambda_3>0$ are weights to the regularizers. $\bG\in \R^{2SP\times SP}$ is the discrete image gradient for $S$ images 
-\[
-    \bG =
-    \begin{bmatrix}
-        \bI_S \otimes \bG_x \\
-        \bI_S \otimes \bG_y \\
-    \end{bmatrix} 
-\]
-where $\bG_x,\bG_y\in\R^{P\times P}$ are the discrete image gradients for a single image computed using forward difference. We can gather constraints into a single linear system 
-\[
-    \bH\bx = 0
-    \quad\quad \text{where}\quad\quad
-    \bH = 
-    \begin{bmatrix}
-        \bI_{SP} & -\bI_{SP} & 0  \\
-        \bG    & 0    & -\bI_{SP}  \\
-    \end{bmatrix}
-    \quad
-    \bx = 
-    \begin{bmatrix}
-        \bx_1 \\ \bx_2 \\ \bx_3
-    \end{bmatrix}
-\]
-and arrive at an equivalent optimization problem
-\begin{equation}
-    \label{eq:method_optimization_problem}
-    \begin{aligned}
-        \minimize  & f_1(\bx_1) + \lambda_2 f_2(\bx_2) + \lambda_3 f_3(\bx_3) \\
-        \subjectto & (\bx_1,\bx_2,\bx_3) \in \sC
-    \end{aligned}
-\end{equation}
-where $\sC = \{\bx\in\R^{4SP} \;\mid\; \bH\bx = 0\}$ and 
-\begin{align*}
-    f_1(\bx_1)
-        &=\norm{\bA\bx_1 - \by}_2^2 \\
-    f_2(\bx_2)
-        &=\frac{1}{2} \bx_2^T(\bx_2 - \sD(\bx_2)) \\
-    f_3(\bx_3)
-        &=\norm{\bx_3}_1
-\end{align*}
-
-\subsection{Optimization}
-
-As shown previously, the scaled form ADMM for solving (\ref{eq:method_optimization_problem}) is given by 
-\begin{align*}
-    \bx_1^{k+1}
-        &= \prox_{(1/\rho)f_1}(\bz_1^k - \bu_1^k) 
-        = (I + \frac{2}{\rho} A^TA)^{-1} ( \bz_1^k - \bu_1^k + \frac{2}{\rho}A^T y) \\
-    \bx_2^{k+1}
-        &= \prox_{(\lambda_2/\rho)f_2}(\bz_2^k - \bu_2^k) 
-        = \frac{1}{\lambda_2+\rho} (\lambda_2 \sD(\bx_2^k) + \rho(\bz_2^k - \bu_2^k)) \\
-    \bx_3^{k+1}
-        &= \prox_{(\lambda_3/\rho)f_3} (\bz_3^k - \bu_3^k) 
-        = \sS_{\lambda_3/\rho}(\bz_3^k - \bu_3^k) \\
-    \bz^{k+1}
-        &= \prox_{(1/\rho)\sI_{\sC}}(\bx^{k+1} + \bu^k)
-        = (I - \bH^{\dagger}\bH)(\bx^{k+1}+\bu^k) \\
-    \bu^{k+1}
-        &= \bu^{k} + \bx^{k+1} - \bz^{k+1}
-\end{align*}
-
- 
-
+\subfile{camera/summary}
+\subfile{methods/summary}
+\subfile{details/summary}
 
 
 \newpage

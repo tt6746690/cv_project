@@ -9,12 +9,12 @@ function [phase,zncc,I] = DecodeZNCC(X,P,lb,ub,varargin)
     %           S demultiplexed images
     %       P       [0,1]^hprojxS
     %           S projector patterns along a column
-    %       depthbounds     [0,2pi]^(h*w)
+    %       depthbounds     [0,hproj-1]^(h*w)
     %           lb  hxw         pixel-wise phase lower bound
     %           ub  hxw         pixel-wise phase upper bound
     %
     % Outputs:
-    %       phase   [0,2pi]^(h*w)
+    %       phase   [0,hproj-1]^(h*w)
     %           unwrapped phase 
     %
 
@@ -50,13 +50,9 @@ function [phase,zncc,I] = DecodeZNCC(X,P,lb,ub,varargin)
     
     [hproj,~] = size(P);
 
-    % maintain same range for depth bounds as SLTriangulation
-    %       [0,2pi] => [0,hproj]
-    lb = lb*hproj/(2*pi);
-    ub = ub*hproj/(2*pi);
-
-    % prevents ceil(ub(i)) yielding invalid index to zncc
-    ub(ub<=0) = eps;
+    % \to [1,hproj]
+    lb = lb + 1;
+    ub = ub + 1;
 
     [h,w,S] = size(X);
     X = reshape(X,[],S);
@@ -75,18 +71,19 @@ function [phase,zncc,I] = DecodeZNCC(X,P,lb,ub,varargin)
 
     X = normalize_(X);
     P = normalize_(P);
+    zncc = X*P'; % h*w x hproj
 
-    zncc = X*P';
+    % zncc = pdist2(X,P,'euclidean');
 
-    % for i = 1:size(zncc,1)
-    %     zncc(i, 1 : floor(lb(i)) ) = -inf;
-    %     zncc(i, ceil(ub(i)) : end) = -inf; 
-    % end
+    for i = 1:size(zncc,1)
+        zncc(i, 1 : floor(lb(i)) ) = -inf;
+        zncc(i, ceil(ub(i)) : end) = -inf; 
+    end 
 
     [~,I] = max(zncc,[],2);
 
     phase = reshape(I,h,w);
-    phase = (2*pi)*phase/hproj;
 
     % cellfun(@(v) assignin('base',v,evalin('caller',v)),who);
 end
+

@@ -56,7 +56,7 @@ Ss = [4 5 6 7];
 m = {}; iter = 1;
 
 %% experimentally try to determine the shifts required 
-%  for computing SLTriangulation 
+%  for computing DecodePhaseShiftWithDepthBound 
 
 ims = zeros(numel(Ss)*h,8*w);
 
@@ -93,7 +93,7 @@ for s = 1:numel(Ss)
 
         
     % for shiftby = 1:S
-    %     [orig_im_albedo,~,orig_im_phase] = SLTriangulation(circshift(orig_im,shiftby,3),W,Bounds,4,transpose((0:S-1)*2*pi/S));
+    %     [orig_im_albedo,~,orig_im_phase] = DecodePhaseShiftWithDepthBound(circshift(orig_im,shiftby,3),W,Bounds,4,transpose((0:S-1)*2*pi/S));
     %     orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
 
     %     [S,shiftby,mean(orig_im_disparity,'all')]
@@ -102,7 +102,7 @@ for s = 1:numel(Ss)
 
     
 
-    [orig_im_albedo,~,orig_im_phase] = SLTriangulation(admm_intensity_im,W,Bounds,4);
+    [orig_im_albedo,~,orig_im_phase] = DecodePhaseShiftWithDepthBound(admm_intensity_im,W,Bounds,4);
     orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
     
 
@@ -117,7 +117,7 @@ for s = 1:numel(Ss)
     %     shifts = transpose((0:S-1)*2*pi/S);
     
 
-    %     [orig_im_albedo,~,orig_im_phase] = SLTriangulation(circshift(orig_im,i,3),W,Bounds,4,shifts);
+    %     [orig_im_albedo,~,orig_im_phase] = DecodePhaseShiftWithDepthBound(circshift(orig_im,i,3),W,Bounds,4,shifts);
     %     orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
         
     %     ims(:,((i-1)*w+1):i*w) = orig_im_disparity;
@@ -234,9 +234,9 @@ for s = 1:numel(Ss)
     
     %% Photemetric stereo
 
-    [orig_im_albedo,~,orig_im_phase] = SLTriangulation(orig_im,W,Bounds,4);
-    [intensity_im_albedo,~,intensity_im_phase] = SLTriangulation(admm_intensity_im,W,Bounds,4);
-    [ratio_im_albedo,~,ratio_im_phase] = SLTriangulation(ratio_mult_inputsum_im,W,Bounds,4);
+    [orig_im_albedo,~,orig_im_phase] = DecodePhaseShiftWithDepthBound(orig_im,W,Bounds,4);
+    [intensity_im_albedo,~,intensity_im_phase] = DecodePhaseShiftWithDepthBound(admm_intensity_im,W,Bounds,4);
+    [ratio_im_albedo,~,ratio_im_phase] = DecodePhaseShiftWithDepthBound(ratio_mult_inputsum_im,W,Bounds,4);
     
     orig_im_disparity = disparityFunc((orig_im_phase*hproj/(2*pi)),Y);
     intensity_im_disparity = disparityFunc((intensity_im_phase*hproj/(2*pi)),Y);

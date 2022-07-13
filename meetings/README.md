@@ -1,6 +1,44 @@
 
 # Meeting Notes
 
+
+
+## How to use the camera system
+
++ bitfile 
+
++ lightcrafter gui
+    + display mode: stored pattern sequence
+    + connection
+        + first connect usb to projector
+        + check ip address in network settings
+        + fill in ip to connection tab
+    + stored pattern sequence
+        + bit depth: 1
+        + pattern count: # images
+        + pattern type: normal 
+        + input trigger: external (positive)
+        + LED select: Green
+        + exposure: 2000
+
++ imagegui
+    + bit file: fixedFPN
+    + pattern file: 
+        + the code tensor
+        + for groundtruth stuff: the 5black
+    + exposure: 60
+    + masks: 1
+    + trigger num: 12
+
+
+
++ camera setup 
+    + physical size of the field
+    + object to image distance
++ textured objects
+    + 
+
+
 ## 2018.11.09
 
 + what was tried before
@@ -527,3 +565,34 @@ I think from last meeting with Kyros and you, it seems that a more general frame
     + neural network inspired
         + extract features from 5 neighbors, before going to zncc layer
         + adapt to different noise levels
+
+
+## 2020.05.27
+
++ read more on how ratio images are important
+    + read proofs in c2b paper
++ how to choose the subsampling mask 
++ what is trade-off between spatial resolution / #patterns
+    + challenging casses
+    + depth discontinuity
+    + texture discontinuity
+    + resolution
++ ratio image vs. intensity images
+    + motivation: ratio images do not have texture
+    + RED does a lot better in ratio space ~dB increase in perf
+    + yet to test: performance carry over to disparity reconstruction
++ denoiser      
+    + re-train on noise characteristic of c2b camera
++ do denoising in another domain!
+    + optimized variable should be albedo, disparity, denoised image etc.
++ end-to-end optimization 
+    + think about ways to regularize disparity etc.
+    + relationship between ratio images and disparity/phase
++ do zncc on optimized code
++ think about fast algorithm for video decoding
++ matrix inversion lemma on quadratic update! to simply 
+    + See if can use simplification in DeSCI paper here
++ optimization 
+    + decreasing noise level 
+    + adaptive rate, lr, gamma, etc. 
+    + termination condition (insufficient update terminates the optimization)
