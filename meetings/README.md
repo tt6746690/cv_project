@@ -596,3 +596,108 @@ I think from last meeting with Kyros and you, it seems that a more general frame
     + decreasing noise level 
     + adaptive rate, lr, gamma, etc. 
     + termination condition (insufficient update terminates the optimization)
+
+
+
+## 2020.07.24
+
++ talk about
+    + zncc decoding does not work because of noise and/or red reconstruction
+    + correspondence refinement
++ T4
+    + 300x320
+    + higher frame rate ... 100, 200 subframes
+    + worse noise performance
++ wenjian parsa
+    + optimization of coding scheme
+    + c2b -> decoded images
+    + potential problem 
+        + computational speed 
+        + python version ?
+    + 1000 iterations 
++ packing patterns, performance ?
+    + robust to noise ?
+    + 3 patterns -> 2 pixels
+    + 4 patterns -> 3 pixels
+
+## 2020.09.03
+
+
++ about mian's involvement 
++ 2 ways
+    + general problem of imaging pipeline w.r.t. coded bucket cameras 
+        + what is an appropriate image processing pipeline dealing with these images 
+        + what is different from other pipeline ? reconstruct channeled images agnostic to task
+        + similar to flexisp, multiple tasks
+        + non-fixed encoding scheme, generalize to time ... spatial-temporal coding  ...
+    + more focused on a particular application 
+        + focused on structured light + photometric stereo combination
+            + photometric stereo: 3 unknown, albedo (1 dof), unit normal/disparity (2 dof) 
+                + albedo might be difference since light direction different
+                + why don't assume ambient light
+            + structured light: 3 unknown, albedo, disparity, black level
+                + brdf is constant per pixel since light source direction fixed  ?
+            + combined: albedo shared, low frequency component of normal (smoothed normal) should be consistent with depth map. low frequency component of normal map can be obtained from disparity. high frequency component of normal map 
+                + idea can be solved with <6 images 
+                + what is high frequency component of normal?
+        + simulationor
+            + mitsuba a version allows projector 
+            + noise models...
+            + adding photometric stereo is trivial
+        + rahul or mian ask if do it together
+        + photometric stereo dataset
+            + dealing with more general reflectance ...
+                + MERL dataset
+            + structured light does not rely on lambertian reflectance ...
+        + photometric papers ... 
+
+## 2020.09.09
+
+
++ read some paper / 
++ questions
+    + why low component of normal map obtained from disparity (does it have to do with finite difference) ? 
+        + nehab et al, siggraph 2005
+            + normal/depth map constructed independently, task is to integrate them
+            + depth map is low accuracy ... depends on baseline, and taking derivative (needs smoothing) to get normal you get low frequency component of normal
+            + PS lot more sensitive to change in orientation. to get depth, needs to integrate normal to get depth, might result in low-frequency distortions.
+        + adelson ?
+        + Aliaga, photo-geometric structured light
+            + https://www.cs.purdue.edu/cgvlab/papers/aliaga/cvpr08.pdf
+        + this project
+            + enforce constraint and potentially need less images to recover geometry
++ representations 
+    + use normals, fine details in normals
+    + dof = 3
+        + depth, albedo, ambient
++ PS
+    + do svd .. solving for surface globally. extract normals ...
+        + uncalibrated case (  )
++ aware 
+    + difficulty with projecting structured light quickly 
+        + projector: 120 frames / second
+        + ideally do one structured light pattern,  get the rest from PS; can switch at very high rate ...
+    + aother view
+        + think of structured light projector as an additional source for PS illumination
++ optimize pattern/decoder from data
++ still valid to understand the constraint/problem before going trying to optimize it! 
++ more recent method on PS
+    + solving for BRDFs (per-wise materials) as well as normal
++ realistic/real
+    + no assumption of static scene, Lambertian etc., fast 
++ note
+    + structured light not fixed to a particular brdf, can utilize this ?
+    + structured light the albeo is tossed out.
++ think about
+    + far-field point source (no spatial information)
+    + structrueed light pattern (spatial information, )
+    + 1 camera, PS w/ 50 light sources, project thin striped pattern
+    + question is do PS/SL ?
+    + 
+
+
+
+
+
+
+
